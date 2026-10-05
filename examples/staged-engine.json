@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "runtime": {
+    "backend": "local",
+    "image": null,
+    "memory_mb": 512,
+    "cpu_millis": 1000,
+    "pids_limit": 128,
+    "tmp_mb": 128,
+    "uid": 1000,
+    "gid": 1000
+  },
+  "model": {
+    "provider": "openai",
+    "model": "set-your-model-id",
+    "api_key_env": "OPENAI_API_KEY",
+    "pricing": null
+  },
+  "response_limits": {
+    "max_output_tokens": 4096,
+    "timeout_seconds": 120,
+    "max_request_bytes": 1048576,
+    "max_response_bytes": 2097152,
+    "final_reserve_tokens": 0,
+    "final_reserve_cost_microunits": 0
+  },
+  "evaluator_keys": [
+    {
+      "key_id": "project-reviewer",
+      "role": "reviewer",
+      "check_ids": [
+        "review"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "id": "fix",
+      "depends_on": [],
+      "criterion_ids": [
+        "empty-whitespace"
+      ],
+      "write_allow": [
+        "slug.py"
+      ],
+      "write_deny": []
+    },
+    {
+      "id": "compatibility",
+      "depends_on": [
+        "fix"
+      ],
+      "criterion_ids": [
+        "preserve-behavior"
+      ],
+      "write_allow": [
+        "slug.py"
+      ],
+      "write_deny": []
+    }
+  ]
+}

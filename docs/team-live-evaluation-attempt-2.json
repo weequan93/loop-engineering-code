@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-03T01:18:56.626428+00:00",
+  "evaluation": "explicit_bounded_codex_cli_spec_to_team_smoke",
+  "cli_version": "codex-cli 0.159.2",
+  "authentication_available": true,
+  "configured_model": null,
+  "observed_models": [],
+  "offline_tests_before_dispatch": 283,
+  "source_manifest_digest": "sha256:b1ab944e52941956e2cc1581a118edeacaaaeb14012aeead503bf56168c5fafd",
+  "fixture": "Existing Python slug compatibility bug; unchanged external oracle",
+  "project": "/private/tmp/loop-team-live-evaluation-fixed/project",
+  "private_state": "/private/tmp/loop-team-live-evaluation-fixed/private-state",
+  "team_id": "team-a165a2224d1f4830aaf395a71f735228",
+  "elapsed_ms_this_invocation": 494679,
+  "baseline": {
+    "exit_code": 1,
+    "passed": false,
+    "log": "/private/tmp/loop-team-live-evaluation-fixed/baseline.txt",
+    "log_sha256": "sha256:cca5347fe6b36b2297c6402b821de3686d54ce967c40133ceab2a46b335fc387"
+  },
+  "final_oracle": {
+    "exit_code": 1,
+    "passed": false,
+    "log": "/private/tmp/loop-team-live-evaluation-fixed/final-oracle.txt",
+    "log_sha256": "sha256:cca5347fe6b36b2297c6402b821de3686d54ce967c40133ceab2a46b335fc387"
+  },
+  "protected_tests_unchanged": true,
+  "verified_success": false,
+  "status": {
+    "team_id": "team-a165a2224d1f4830aaf395a71f735228",
+    "status": "AWAITING_INPUT",
+    "revision": 21,
+    "team_budget": {
+      "tokens_upper": null,
+      "cost_upper_microunits": null,
+      "known_tokens": 64608,
+      "known_cost_microunits": 0,
+      "actual_tokens": null,
+      "actual_cost_microunits": null,
+      "currency": null,
+      "unknown_requests": 1,
+      "violated_bound": false,
+      "dispatches": 3,
+      "reworks": 2,
+      "remaining_wall_seconds": 262,
+      "limits": {
+        "schema_version": "1.0",
+        "max_parallel": 2,
+        "max_dispatches": 22,
+        "max_reworks": 2,
+        "max_wall_seconds": 757,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD",
+        "timeout_seconds": 180,
+        "final_reserve_tokens": 0,
+        "final_reserve_cost_microunits": 0
+      },
+      "scope": "All coordinator, worker, evaluator and receipt operations in this team, including rework"
+    },
+    "stage": "INTAKE",
+    "pending_operations": [],
+    "scope": "Replace with the reviewed delivery scope and prepared task contracts.",
+    "inputs_current": true,
+    "input_problem": null,
+    "reason": "Team command timeout, exit=-9; diagnostics: /private/tmp/loop-team-live-evaluation-fixed/private-state/runs/team-a165a2224d1f4830aaf395a71f735228/operation-bfcd1c75e0cc482c87b6a83d4eae14ea/command-logs/stderr.txt",
+    "ready_tasks": [],
+    "tasks": {},
+    "final_candidate_current": null,
+    "assurance": "Controller-verified workflow with host-declared receipts; completion covers this workflow's accepted contracts. Automatic teams use cumulative accounting and isolated workers with serial integration. Host identities and external usage are not independently attested."
+  },
+  "operation_summary": [
+    {
+      "id": "operation-3e48d0d3ecb54bdcaba1398e388dee60",
+      "kind": "team-coordinator-request",
+      "role": null,
+      "status": "RESPONDED",
+      "error": null,
+      "host": {
+        "adapter_id": "codex-cli",
+        "capabilities": {
+          "text_input": true,
+          "headless_execution": true,
+          "structured_output": true,
+          "structured_events": true,
+          "usage_reporting": true
+        },
+        "configured_model": null
+      }
+    },
+    {
+      "id": "operation-eeddc273c3b340ecaeeca6ed0d8c3384",
+      "kind": "team-coordinator-request",
+      "role": null,
+      "status": "RESPONDED",
+      "error": null,
+      "host": {
+        "adapter_id": "codex-cli",
+        "capabilities": {
+          "text_input": true,
+          "headless_execution": true,
+          "structured_output": true,
+          "structured_events": true,
+          "usage_reporting": true
+        },
+        "configured_model": null
+      }
+    },
+    {
+      "id": "operation-bfcd1c75e0cc482c87b6a83d4eae14ea",
+      "kind": "team-coordinator-request",
+      "role": null,
+      "status": "FAILED",
+      "error": "Team command timeout, exit=-9; diagnostics: /private/tmp/loop-team-live-evaluation-fixed/private-state/runs/team-a165a2224d1f4830aaf395a71f735228/operation-bfcd1c75e0cc482c87b6a83d4eae14ea/command-logs/stderr.txt",
+      "host": {
+        "adapter_id": "codex-cli",
+        "capabilities": {
+          "text_input": true,
+          "headless_execution": true,
+          "structured_output": true,
+          "structured_events": true,
+          "usage_reporting": true
+        },
+        "configured_model": null
+      }
+    }
+  ],
+  "limitations": [
+    "One small Python task; no representative quality/performance claim",
+    "No deployed Docker containment verified",
+    "Codex cost and billing prices unknown; hard spend caps unavailable for this CLI host",
+    "No direct-provider or Claude Desktop conformance tested"
+  ],
+  "previous_attempt_report": "docs/team-live-evaluation-attempt-1.json",
+  "combined_admitted_operations": 5,
+  "combined_known_tokens": 96290,
+  "combined_actual_cost_microunits": null,
+  "combined_elapsed_ms_of_evaluation_invocations": 637669,
+  "aggregate_bounds": {
+    "max_admitted_operations": 24,
+    "max_evaluation_invocation_seconds": 900,
+    "development_and_offline_revalidation_time_included": false
+  },
+  "cleanup_status": "CANCELLED",
+  "retest_reason": "Actual coordinator iterations omitted native independent-review plumbing, then returned a role/phase mismatch, then timed out. No worker ran and no partial contracts were installed. Runtime plumbing is being moved into the deterministic preparation layer."
+}

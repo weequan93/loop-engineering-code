@@ -1,0 +1,387 @@
+{
+  "schema_version": "macare-loop-job-review-1",
+  "reviewed_project": "/Users/super/Documents/ai/macare",
+  "framework": "/Users/super/Documents/ai/loop-engineering-code",
+  "observed_utc": "2026-10-05T06:55:33.530+00:00",
+  "observed_singapore": "2026-10-05T14:55:33.530+08:00",
+  "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+  "revision": 289,
+  "status": "ACTIVE",
+  "records": [
+    {
+      "task": "r1-foundation",
+      "status": "COMPLETE",
+      "controller_status": "SUCCEEDED",
+      "child_run_id": "run-b1e558b2e51f40378f317944a80e0509",
+      "usage": {
+        "wall_seconds": 21,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "limits": {
+        "max_iterations": 20,
+        "max_wall_seconds": 7200,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD"
+      },
+      "reason": "All required checks passed on the delivered candidate"
+    },
+    {
+      "task": "r1-services",
+      "status": "COMPLETE",
+      "controller_status": "SUCCEEDED",
+      "child_run_id": "run-dba5e0d2d2cc4f7aba48fb0b9cc99177",
+      "usage": {
+        "wall_seconds": 19,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "limits": {
+        "max_iterations": 20,
+        "max_wall_seconds": 7200,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD"
+      },
+      "reason": "All required checks passed on the delivered candidate"
+    },
+    {
+      "task": "r1-storage-actions",
+      "status": "COMPLETE",
+      "controller_status": "SUCCEEDED",
+      "child_run_id": "run-61ae328c90a04ee4901f020c1a50b13a",
+      "usage": {
+        "wall_seconds": 20,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "limits": {
+        "max_iterations": 20,
+        "max_wall_seconds": 7200,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD"
+      },
+      "reason": "All required checks passed on the delivered candidate"
+    },
+    {
+      "task": "r1-native-ui",
+      "status": "COMPLETE",
+      "controller_status": "SUCCEEDED",
+      "child_run_id": "run-80ffc608014241b0be8e6af880196aeb",
+      "usage": {
+        "wall_seconds": 58,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "limits": {
+        "max_iterations": 20,
+        "max_wall_seconds": 7200,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD"
+      },
+      "reason": "All required checks passed on the delivered candidate"
+    },
+    {
+      "task": "r1-integrated-validation",
+      "status": "COMPLETE",
+      "controller_status": "SUCCEEDED",
+      "child_run_id": "run-693a80a56c8b4e9f9c567e435b374881",
+      "usage": {
+        "wall_seconds": 78,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "limits": {
+        "max_iterations": 20,
+        "max_wall_seconds": 7200,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD"
+      },
+      "reason": "All required checks passed on the delivered candidate"
+    },
+    {
+      "task": "r1-performance",
+      "status": "RUNNING",
+      "controller_status": "PLANNING",
+      "child_run_id": "run-9ca7ce0f9ee44a42a0b2883a93848d11",
+      "usage": {
+        "wall_seconds": 10736,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "limits": {
+        "max_iterations": 20,
+        "max_wall_seconds": 28800,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD"
+      },
+      "reason": "Authorized revision accepted; cumulative usage preserved"
+    },
+    {
+      "task": "r1-security",
+      "status": "PENDING",
+      "controller_status": null,
+      "child_run_id": null,
+      "usage": null,
+      "limits": null,
+      "reason": null
+    },
+    {
+      "task": "r1-review",
+      "status": "PENDING",
+      "controller_status": null,
+      "child_run_id": null,
+      "usage": null,
+      "limits": null,
+      "reason": null
+    },
+    {
+      "task": "r1-acceptance",
+      "status": "PENDING",
+      "controller_status": null,
+      "child_run_id": null,
+      "usage": null,
+      "limits": null,
+      "reason": null
+    }
+  ],
+  "worker_counts": {
+    "COLLECTED": 44,
+    "RUNNING": 2
+  },
+  "worker_assignment_count": 46,
+  "role_assignment_counts": {
+    "architect": 4,
+    "tester": 5,
+    "backend": 13,
+    "database": 6,
+    "security": 6,
+    "frontend": 7,
+    "requirements_reviewer": 2,
+    "performance": 3
+  },
+  "collections_after_deadline": 34,
+  "collection_timing_limitation": "Collection after a deadline is not proof of writer activity after the deadline.",
+  "phase_workbench_to_handoff_seconds": {
+    "foundation": 2767,
+    "services": 2012,
+    "storage-actions": 1798,
+    "native-ui": 42025,
+    "integrated-validation": 4595
+  },
+  "phase_timing_limitation": "Includes host work, waiting, approvals and interruptions; not coding CPU or controller-only time.",
+  "native_usage": "unknown; host conversation and delegation calls are outside the controller ledger",
+  "performance": {
+    "artifact": "/private/tmp/macare-r1-performance/run-20261005T031333-d82047c0/run.json",
+    "sha256": "8006a2bf78d06c1dc51545530554170fe2be5125641c85466c7f934e58ac53fa",
+    "overall": "UNVERIFIED",
+    "actual_total_seconds": 10725.078651666001,
+    "execution_failures": [
+      "scan-million: actual original-scale command failed/timed out",
+      "Actual total deadline cannot accommodate the original next workload; no shortened substitute"
+    ],
+    "source_unchanged": true,
+    "commands": [
+      {
+        "stdout": "build.stdout",
+        "started_utc": "2026-10-05T03:13:33.987237+00:00",
+        "ended_utc": "2026-10-05T03:14:14.171989+00:00",
+        "elapsed_seconds": 40.18503604197758,
+        "exit_code": 0,
+        "timed_out": false
+      },
+      {
+        "stdout": "core.stdout",
+        "started_utc": "2026-10-05T03:14:14.175770+00:00",
+        "ended_utc": "2026-10-05T03:44:20.078308+00:00",
+        "elapsed_seconds": 1805.915230750019,
+        "exit_code": 0,
+        "timed_out": false
+      },
+      {
+        "stdout": "owned-memory-preflight.stdout",
+        "started_utc": "2026-10-05T03:44:20.084173+00:00",
+        "ended_utc": "2026-10-05T03:44:26.132690+00:00",
+        "elapsed_seconds": 6.048563459014986,
+        "exit_code": 0,
+        "timed_out": false
+      },
+      {
+        "stdout": "owned-memory-before.stdout",
+        "started_utc": "2026-10-05T03:44:27.126962+00:00",
+        "ended_utc": "2026-10-05T03:44:33.218734+00:00",
+        "elapsed_seconds": 6.091820165980607,
+        "exit_code": 0,
+        "timed_out": false
+      },
+      {
+        "stdout": "owned-memory-component.stdout",
+        "started_utc": "2026-10-05T03:44:33.227830+00:00",
+        "ended_utc": "2026-10-05T03:45:09.442920+00:00",
+        "elapsed_seconds": 36.215347125020344,
+        "exit_code": 0,
+        "timed_out": false
+      },
+      {
+        "stdout": "owned-memory-after.stdout",
+        "started_utc": "2026-10-05T03:45:09.458646+00:00",
+        "ended_utc": "2026-10-05T03:45:15.543055+00:00",
+        "elapsed_seconds": 6.084458292025374,
+        "exit_code": 0,
+        "timed_out": false
+      },
+      {
+        "stdout": "scan-million.stdout",
+        "started_utc": "2026-10-05T03:45:20.614542+00:00",
+        "ended_utc": "2026-10-05T06:12:18.943140+00:00",
+        "elapsed_seconds": 8818.384927915991,
+        "exit_code": -15,
+        "timed_out": true
+      }
+    ],
+    "core_partial_measurement": {
+      "cpu_one_logical_core_percent": 1.4859058343777445,
+      "cpu_scope": "headless same SamplingSession and local HistoryStore; excludes application UI/XPC packaging",
+      "duration_seconds": 1800.27254575,
+      "evidence_class": "M",
+      "frames": 1659,
+      "minimum_observed_real_processes": 392,
+      "mode": "core-benchmark",
+      "peak_footprint_bytes": 16122408,
+      "peak_resident_bytes": 43204608,
+      "schema_version": "observatory-validation-result-1",
+      "status": "MEASURED",
+      "unverified": [
+        "p95 and spikes",
+        "1000 controlled real processes",
+        "UI additional footprint",
+        "native Dock incremental matched baseline"
+      ]
+    },
+    "area_status_counts": {
+      "UNVERIFIED": 12,
+      "N/A": 2
+    }
+  },
+  "native_interaction_route": "signed_import; authority declared; no automatic executor configured; actual evaluator connection not established",
+  "pure_function_audits": {
+    "pending_process_next_action": {
+      "kind": "pending_effect",
+      "tool": null,
+      "continue_work": false
+    },
+    "command_with_available_python_missing_producer": {
+      "automatic_available": true,
+      "problems": []
+    }
+  },
+  "events": [
+    {
+      "revision": 1,
+      "event": "team.accepted",
+      "updated_at": "2026-10-04T11:25:26.871+00:00"
+    },
+    {
+      "revision": 11,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-04T11:38:52.362+00:00"
+    },
+    {
+      "revision": 45,
+      "event": "handoff.received",
+      "updated_at": "2026-10-04T12:24:59.159+00:00"
+    },
+    {
+      "revision": 49,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-04T12:25:05.466+00:00"
+    },
+    {
+      "revision": 88,
+      "event": "handoff.received",
+      "updated_at": "2026-10-04T12:58:37.079+00:00"
+    },
+    {
+      "revision": 92,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-04T12:58:43.246+00:00"
+    },
+    {
+      "revision": 116,
+      "event": "handoff.received",
+      "updated_at": "2026-10-04T13:28:41.060+00:00"
+    },
+    {
+      "revision": 120,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-04T13:28:49.384+00:00"
+    },
+    {
+      "revision": 164,
+      "event": "handoff.received",
+      "updated_at": "2026-10-05T01:09:14.595+00:00"
+    },
+    {
+      "revision": 168,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-05T01:09:24.082+00:00"
+    },
+    {
+      "revision": 217,
+      "event": "handoff.received",
+      "updated_at": "2026-10-05T02:25:58.784+00:00"
+    },
+    {
+      "revision": 221,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-05T02:26:08.154+00:00"
+    },
+    {
+      "revision": 263,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-05T06:14:59.332+00:00"
+    },
+    {
+      "revision": 282,
+      "event": "host.authorized_task_amendment_complete",
+      "updated_at": "2026-10-05T06:51:39.859+00:00"
+    },
+    {
+      "revision": 285,
+      "event": "host.workbench_prepared",
+      "updated_at": "2026-10-05T06:53:05.625+00:00"
+    }
+  ],
+  "skill_sha256": {
+    "installed": "af986ce583cd21a725ba33803c7486861b49032ec9eb03beb4378467a3af905b",
+    "framework_template": "18225575a5a3a5ef2d80342a046def37dcc1fe96a6dbf0c0bf19208c0643b1d7"
+  },
+  "limitations": [
+    "State is a timestamped observation of an active job.",
+    "Copied database records were inspected; this review does not independently attest every external result.",
+    "No new product performance workload, live model evaluation or job control action was run."
+  ]
+}

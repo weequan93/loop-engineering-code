@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1",
+  "runtime_id": "local-supervised",
+  "version": "0.2.0",
+  "capabilities": {
+    "snapshot_capture": true,
+    "bounded_execution": true,
+    "durable_state": true,
+    "run_cancellation": true,
+    "isolated_workspace": false,
+    "policy_enforcement": false,
+    "trusted_evidence": false,
+    "spend_accounting": false
+  },
+  "verification_note": "Local POSIX process-group checks and file journaling; shared OS authority. No process sandbox or hard spend reservation.",
+  "extensions": {
+    "effective_autonomy": "manual",
+    "production_conformance": "unverified"
+  }
+}

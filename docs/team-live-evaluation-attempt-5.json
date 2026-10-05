@@ -1,0 +1,216 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-03T01:49:11.921060+00:00",
+  "evaluation": "explicit_bounded_codex_cli_prepared_team_smoke",
+  "cli_version": "codex-cli 0.159.2",
+  "authentication_available": true,
+  "configured_model": null,
+  "observed_models": [],
+  "offline_tests_before_dispatch": 292,
+  "source_manifest_digest": "sha256:59e8f45be14aeb976291d3b3ebf5ba0310749c7d838d957d440709dcaa8a6deb",
+  "fixture": "Existing Python slug compatibility bug; unchanged external oracle",
+  "project": "/private/tmp/loop-team-live-evaluation-corrected/project",
+  "private_state": "/private/tmp/loop-team-live-evaluation-corrected/private-state",
+  "team_id": "team-4535f4f03c5a43a481264f2e158f1378",
+  "elapsed_ms_this_invocation": 25512,
+  "baseline": {
+    "exit_code": 1,
+    "passed": false,
+    "log": "/private/tmp/loop-team-live-evaluation-corrected/baseline.txt",
+    "log_sha256": "sha256:ab69181b7e3f4d1ce6c2ec86dd633afb7c4e6fabe56739443e12fa9c546cdbd0"
+  },
+  "final_oracle": {
+    "exit_code": 0,
+    "passed": true,
+    "log": "/private/tmp/loop-team-live-evaluation-corrected/final-oracle.txt",
+    "log_sha256": "sha256:76f11f3826dde8a0889c45bf87ecad5be3c3c6d22095eb3ee926305eb358ca33"
+  },
+  "protected_tests_unchanged": true,
+  "verified_success": false,
+  "status": {
+    "team_id": "team-4535f4f03c5a43a481264f2e158f1378",
+    "status": "AWAITING_INPUT",
+    "revision": 14,
+    "team_budget": {
+      "tokens_upper": 23845,
+      "cost_upper_microunits": null,
+      "known_tokens": 23845,
+      "known_cost_microunits": 0,
+      "actual_tokens": 23845,
+      "actual_cost_microunits": null,
+      "currency": null,
+      "unknown_requests": 0,
+      "violated_bound": false,
+      "dispatches": 1,
+      "reworks": 0,
+      "remaining_wall_seconds": 87,
+      "limits": {
+        "schema_version": "1.0",
+        "max_parallel": 2,
+        "max_dispatches": 16,
+        "max_reworks": 2,
+        "max_wall_seconds": 113,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD",
+        "timeout_seconds": 180,
+        "final_reserve_tokens": 0,
+        "final_reserve_cost_microunits": 0
+      },
+      "scope": "All coordinator, worker, evaluator and receipt operations in this team, including rework"
+    },
+    "stage": "EXECUTION",
+    "pending_operations": [],
+    "scope": "Proposal for a single-file Python fix. Inspect source, tests and applicable role instructions before implementation; preserve all tests byte-for-byte. Serialize implementation, integrated review and final independent acceptance. Scheduler enforces shared limits: 262 seconds, at most 19 dispatches and 2 reworks; preserve at least 20 seconds for final verification. No execution or evidence is asserted by this plan.",
+    "inputs_current": true,
+    "input_problem": null,
+    "reason": "Required handoff output is missing or empty: Integrated candidate changing only slug.py",
+    "ready_tasks": [],
+    "tasks": {
+      "implement-slug": {
+        "status": "RUNNING",
+        "child_run_id": "run-985239368a1a420695307e3d85f3566d",
+        "request": null,
+        "handoff": null,
+        "receipts": {},
+        "reason": null,
+        "workspace": "/private/tmp/loop-team-live-evaluation-corrected/private-state/runs/team-4535f4f03c5a43a481264f2e158f1378/workspace-3a78fe29c7f54702a5a39ec51f97d244",
+        "base_snapshot": {
+          "digest": "sha256:891af601f91c6b54ef2f73f829c91df92ad4225757ba223d963457ada85a5fa4",
+          "manifest": {
+            "algorithm": "full-tree-v1",
+            "files": [
+              {
+                "path": "LOOP.md",
+                "kind": "file",
+                "mode": 420,
+                "size": 8596,
+                "sha256": "sha256:19d39fc92210a73d14c8148ecdb3a58ad5cc9f36a15b0ae51c960eb279d9b0a4"
+              },
+              {
+                "path": "slug.py",
+                "kind": "file",
+                "mode": 420,
+                "size": 154,
+                "sha256": "sha256:51750f8131ecafd9a94beab420355df7bc02935220bca5bfa905eae293681746"
+              },
+              {
+                "path": "task.json",
+                "kind": "file",
+                "mode": 420,
+                "size": 2224,
+                "sha256": "sha256:12c215ae4e07c9ae3c193c5cebe771c147297aecd858b92df404b87958f41216"
+              },
+              {
+                "path": "tests/__init__.py",
+                "kind": "file",
+                "mode": 420,
+                "size": 46,
+                "sha256": "sha256:2e8813554fc2b4cc4d623a2b1bbcd9463351673d3d9781e07df3f252e7a798b1"
+              },
+              {
+                "path": "tests/test_slug.py",
+                "kind": "file",
+                "mode": 420,
+                "size": 574,
+                "sha256": "sha256:f279fc5a4711f448208ab9fa56953da9d8a82e821305d3ec16c59cbb17d60999"
+              }
+            ],
+            "policy_digest": "sha256:444f2a8c45a59d06c5c4a57fee9c3762762e13d5bcc617576a0b7b554467c79e"
+          }
+        },
+        "integration_run_id": "run-bbcee5070fae4f06be37a3e2de517e2a",
+        "pending_merge": null,
+        "controller_status": "SUCCEEDED",
+        "usage": {
+          "wall_seconds": 25,
+          "tokens": 23845,
+          "cost_microunits": null,
+          "cost_currency": "USD"
+        },
+        "integration_status": "SUCCEEDED",
+        "integration_usage": {
+          "wall_seconds": 1,
+          "tokens": null,
+          "cost_microunits": null,
+          "cost_currency": "USD"
+        }
+      },
+      "review-slug": {
+        "status": "PENDING",
+        "child_run_id": null,
+        "request": null,
+        "handoff": null,
+        "receipts": {},
+        "reason": null
+      },
+      "accept-slug": {
+        "status": "PENDING",
+        "child_run_id": null,
+        "request": null,
+        "handoff": null,
+        "receipts": {},
+        "reason": null
+      }
+    },
+    "final_candidate_current": null,
+    "assurance": "Controller-verified workflow with host-declared receipts; completion covers this workflow's accepted contracts. Automatic teams use cumulative accounting and isolated workers with serial integration. Host identities and external usage are not independently attested."
+  },
+  "operation_summary": [
+    {
+      "id": "operation-f1d54a10fa3746bc8196b61e079cedaf",
+      "kind": "team-host-request",
+      "role": "backend",
+      "status": "RESPONDED",
+      "error": null,
+      "host": {
+        "adapter_id": "codex-cli",
+        "capabilities": {
+          "text_input": true,
+          "headless_execution": true,
+          "structured_output": true,
+          "structured_events": true,
+          "usage_reporting": true
+        },
+        "configured_model": null
+      }
+    }
+  ],
+  "limitations": [
+    "One small Python task; no representative quality/performance claim",
+    "No deployed Docker containment verified",
+    "Codex cost and billing prices unknown; hard spend caps unavailable for this CLI host",
+    "No direct-provider or Claude Desktop conformance tested"
+  ],
+  "previous_attempt_reports": [
+    "docs/team-live-evaluation-attempt-1.json",
+    "docs/team-live-evaluation-attempt-2.json",
+    "docs/team-live-evaluation-attempt-3.json",
+    "docs/team-live-evaluation-attempt-4.json"
+  ],
+  "reasoning_effort_override_for_bounded_smoke": "low",
+  "reasoning_config_source": "https://learn.chatgpt.com/docs/config-file/config-reference",
+  "combined_admitted_operations": 9,
+  "combined_known_tokens": 175103,
+  "combined_actual_cost_microunits": null,
+  "combined_elapsed_ms_of_evaluation_invocations": 812260,
+  "aggregate_bounds": {
+    "max_admitted_operations": 24,
+    "max_evaluation_invocation_seconds": 900,
+    "development_and_offline_revalidation_time_included": false
+  },
+  "prepared_plan_source": {
+    "project": "/private/tmp/loop-team-live-evaluation-final/project",
+    "report": "docs/team-live-evaluation-attempt-3.json",
+    "origin": "Actual CLI coordinator response, validated and installed during attempt 3",
+    "unchanged_controls": [
+      "team.json",
+      "workflow-tasks.json",
+      "questions.json",
+      "tasks/*"
+    ],
+    "fresh_intake_this_attempt": false
+  },
+  "cleanup_status": "CANCELLED",
+  "diagnosis": "Actual backend proposal and checks succeeded, but generated workflow outputs contained prose rather than scoped file paths. Output scope feasibility needs validation during preparation."
+}

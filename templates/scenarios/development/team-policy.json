@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "max_parallel": 2,
+  "max_dispatches": 40,
+  "max_reworks": 3,
+  "max_wall_seconds": 3600,
+  "max_tokens": null,
+  "max_cost_microunits": null,
+  "cost_currency": "USD",
+  "timeout_seconds": 180,
+  "final_reserve_tokens": 0,
+  "final_reserve_cost_microunits": 0
+}

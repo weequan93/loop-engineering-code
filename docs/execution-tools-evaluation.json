@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "kind": "controlled_local_runtime_fixture",
+  "live_model_calls": 0,
+  "live_agent_calls": 0,
+  "fixture_directory": "/private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976",
+  "run_id": "run-8268262102454bcc97b2b5ca3e5af619",
+  "status": "SUCCEEDED",
+  "results": {
+    "ui-flow": {
+      "schema_version": "0.1",
+      "evidence_id": "evidence-b8da50c06bf84bac89a6f7494a57e812",
+      "task_id": "fix-whitespace-slug",
+      "contract_digest": "sha256:a0d0eeb4c80669c9f828504f9accf7b6ef48e04dd180ebf5992310a194593fea",
+      "snapshot_digest": "sha256:2a450383f4a7723149ffa88f361813b8a8e02400205282784d04df1d9104b911",
+      "environment_digest": "sha256:f70fbdf35c366a7d95a017fb1dd72aabf1487330fb989f6cc0f590bf7f233442",
+      "check_id": "ui-flow",
+      "check_digest": "sha256:e74f1c44b084d0d27a5686599ca6bb0911fe3df5031042dbb6c51757b2ee823e",
+      "executor_run_id": "review-context-5368552b6b8d424a8b9ca7815ba7e97b",
+      "started_at": "2026-10-03T07:19:55.380+00:00",
+      "finished_at": "2026-10-03T07:19:56.525+00:00",
+      "result": "pass",
+      "exit_code": null,
+      "artifacts": [
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/dbb63fde49cf4dd387b3f32eb1988fa3/0-stdout.txt",
+          "sha256": "sha256:eb580b80b66a6595d533a53d22bbfbbfc99db0821fe33e7ed695da7801871cd5"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/dbb63fde49cf4dd387b3f32eb1988fa3/1-stderr.txt",
+          "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/dbb63fde49cf4dd387b3f32eb1988fa3/2-report.json",
+          "sha256": "sha256:f1f69c2401b688099797a15e94f077db51d419c128898a062a4c8cdcddaf3dc3"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/dbb63fde49cf4dd387b3f32eb1988fa3/3-screenshot.png",
+          "sha256": "sha256:e29400b4d7e3b173cda3a6443f49410c7c307478f6afa551dfbfda3abb2fa29b"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/dbb63fde49cf4dd387b3f32eb1988fa3/4-trace.zip",
+          "sha256": "sha256:a9dfdbdd8259342ed82fe1ce856c3537b91e6ba654d6e6d650eebcc0efcb89d2"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/dbb63fde49cf4dd387b3f32eb1988fa3/5-outcome.json",
+          "sha256": "sha256:f6f16a9ba9673051c21b2f2a754bb26977c0ba549bf34f3545afde588345f834"
+        }
+      ],
+      "summary": "browser: completed, exit=0, pass",
+      "extensions": {
+        "outcome": "evaluator",
+        "request_id": "evaluation-fde3f718f2bc42478a33973a044532b1",
+        "context_id": "review-context-5368552b6b8d424a8b9ca7815ba7e97b",
+        "findings": [],
+        "origin_digest": "sha256:fa69c4d64246b1829b3455e203958cf7649ef841d3d03b5663a144f84abd76b9"
+      }
+    },
+    "api-load": {
+      "schema_version": "0.1",
+      "evidence_id": "evidence-ba98f367f1ba4466a181cf88feada26d",
+      "task_id": "fix-whitespace-slug",
+      "contract_digest": "sha256:a0d0eeb4c80669c9f828504f9accf7b6ef48e04dd180ebf5992310a194593fea",
+      "snapshot_digest": "sha256:2a450383f4a7723149ffa88f361813b8a8e02400205282784d04df1d9104b911",
+      "environment_digest": "sha256:f70fbdf35c366a7d95a017fb1dd72aabf1487330fb989f6cc0f590bf7f233442",
+      "check_id": "api-load",
+      "check_digest": "sha256:7f4151ca95862ed9e24e5ebf4bb4cd396d2ac74d8bda87c70c0384a2e9914d45",
+      "executor_run_id": "review-context-a28d2813624f4a59b441ff2f89bcfb0a",
+      "started_at": "2026-10-03T07:19:56.789+00:00",
+      "finished_at": "2026-10-03T07:19:57.448+00:00",
+      "result": "pass",
+      "exit_code": null,
+      "artifacts": [
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/00610df22dec42f99fa7a57be4f30a01/0-stdout.txt",
+          "sha256": "sha256:fe7754506c5e3935ebda62836475d95b77f395a5ae568471d6ecb10839325961"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/00610df22dec42f99fa7a57be4f30a01/1-stderr.txt",
+          "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/00610df22dec42f99fa7a57be4f30a01/2-report.json",
+          "sha256": "sha256:20442c142ebb1b95abe3a8dd1249e98f550092b573b4cc389a8b3b085f224c9e"
+        },
+        {
+          "uri": "file:///private/tmp/loop-execution-runtime-c210c3f5c7194920a7a204bc9a883976/state/runs/run-8268262102454bcc97b2b5ca3e5af619/artifacts/00610df22dec42f99fa7a57be4f30a01/3-outcome.json",
+          "sha256": "sha256:fab551ff1eff70769874efad3bc856eabf1aae5f0e14f29a0ad8b9eb36c4db0e"
+        }
+      ],
+      "summary": "http_load: completed, exit=0, pass",
+      "extensions": {
+        "outcome": "evaluator",
+        "request_id": "evaluation-7eb5a327d0f54f1396fa1b8eb5042f15",
+        "context_id": "review-context-a28d2813624f4a59b441ff2f89bcfb0a",
+        "findings": [],
+        "origin_digest": "sha256:5b3cd3131483b341d2bee7a5ddd44774ef7eb3d0b301019e4ff7791156483f71"
+      }
+    }
+  },
+  "source_files": {
+    "scripts/browser_check.cjs": "sha256:b40fb9a9d21aab4bc2b460bf2fa436cf9b5c540bf7922dcf590a878d7ddb9669",
+    "scripts/execute_check.py": "sha256:9132e01fc220b627cbb4556bb68810b9135e7ebfdd61b8ad82c0bf6987c8ce67",
+    "loop_engineering/external_execution.py": "sha256:f879c0a7cb776f236b6b79cb75d6951b62f6ed0fbb586b43cdd4e6c9c71c7165",
+    "loop_engineering/execution_tools.py": "sha256:ae8ec31c6a9eb0502d35387d53eb072cec6fecad1744fc798c54172013b896c8",
+    "loop_engineering/provision.py": "sha256:683a15483cf186b2aadf6b6a0ed56223baa47faaf5640e4faa70e06dabd4d1a1"
+  },
+  "limits": "Only this temporary HTML page and loopback HTTP fixture; no deployed or live-model performance claim.",
+  "recorded_at": "2026-10-03T07:23:38.533595+00:00",
+  "browser_runtime": {
+    "node": "24.19.0",
+    "playwright": "1.62.1",
+    "browser": "Installed Google Chrome, fresh nonpersistent headless context"
+  },
+  "http_workload": {
+    "requests": 8,
+    "concurrency": 2,
+    "requests_per_second": 20,
+    "target": "temporary loopback fixture",
+    "result": "pass"
+  },
+  "earlier_fixture_attempts": [
+    {
+      "report": "/private/tmp/loop-execution-runtime-eb61aefc67dd4535a8471e3083f9f18d/report.json",
+      "result": "inconclusive browser / passing HTTP",
+      "reason": "Declared Playwright cache browser was absent; no false pass."
+    },
+    {
+      "report": "/private/tmp/loop-execution-runtime-5c51f887c54e4e82a0a3a801880768bc/report.json",
+      "result": "passing browser and HTTP / total PLANNING",
+      "reason": "Existing compatibility checks rejected the temporary library fixture; original oracles retained and fixture corrected."
+    }
+  ]
+}

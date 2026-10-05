@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.1",
+  "adapter_id": "codex-cli",
+  "kind": "agent",
+  "backend": "codex-cli",
+  "version": "0.2.0",
+  "control_model": "externally_managed",
+  "capabilities": {
+    "text_input": true,
+    "headless_execution": true,
+    "structured_output": true,
+    "structured_events": true,
+    "usage_reporting": true
+  },
+  "extensions": {
+    "protocol": "agent-step-v0.2",
+    "live_backend_conformance": "unverified"
+  }
+}

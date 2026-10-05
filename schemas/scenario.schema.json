@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:loop-engineering-code:scenario:1.0",
+  "title": "Host-orchestrated scenario preset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "title", "description", "execution", "coordinator", "roles", "workflow"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+    "title": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "execution": {"const": "host_orchestrated"},
+    "coordinator": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+    "team_selection": {"const": ".loop/team.json"},
+    "agent_protocol": {"const": ".loop/agent-protocol.md"},
+    "execution_tools": {"const": ".loop/execution-tools.json"},
+    "context_max_bytes": {"type": "integer", "minimum": 1024, "maximum": 10485760},
+    "roles": {
+      "type": "array", "minItems": 1, "maxItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "title", "instructions", "responsibilities", "outputs", "independent"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+          "title": {"type": "string", "minLength": 1},
+          "instructions": {"type": "string", "pattern": "^\\.loop/agents/[a-z][a-z0-9_-]*\\.md$"},
+          "responsibilities": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "outputs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "independent": {"type": "boolean"},
+          "activation": {
+            "type": "object", "additionalProperties": false,
+            "required": ["required", "when", "covered_by"],
+            "properties": {
+              "required": {"type": "boolean"},
+              "when": {"type": "string", "minLength": 1},
+              "covered_by": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"}}
+            }
+          }
+        }
+      }
+    },
+    "workflow": {
+      "type": "array", "minItems": 1, "maxItems": 32,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "title", "roles", "depends_on"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+          "title": {"type": "string", "minLength": 1},
+          "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "depends_on": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

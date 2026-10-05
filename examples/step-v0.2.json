@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.2",
+  "step_id": "illustrative-fix",
+  "task_id": "fix-whitespace-slug",
+  "contract_digest": "sha256:b12530d3cd8687f12cf1f5845ac7307f36c29f294a1a9fe399c1460e899ddb2b",
+  "base_snapshot_digest": "sha256:1498751f2e8a80e0a669cc221cdab6b222c56be6ae5bfea3ec93460c46755542",
+  "intent": "act",
+  "criterion_ids": [
+    "empty-whitespace",
+    "preserve-behavior"
+  ],
+  "summary": "Return empty for whitespace-only strings; preserve existing nonempty behavior.",
+  "expected_observation": "Both required checks pass on the new candidate.",
+  "changes": [
+    {
+      "path": "src/slug.py",
+      "expected_sha256": "sha256:51750f8131ecafd9a94beab420355df7bc02935220bca5bfa905eae293681746",
+      "new_content": "def slug(text: str) -> str:\n    if not text.strip():\n        return \"\"\n    return \"-\".join(text.lower().split(\" \"))\n"
+    }
+  ],
+  "evidence_refs": [],
+  "blocker": null,
+  "next_action": null
+}

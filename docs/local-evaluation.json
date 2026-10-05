@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.2",
+  "framework_version": "1.0.0",
+  "recorded_at": "2026-10-03T10:13:23.567+00:00",
+  "evaluation_kind": "local-controller-integration",
+  "backend": "scripted-file-proposals",
+  "model": null,
+  "python": "3.13.5",
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "baseline": [
+    {
+      "check_id": "regression",
+      "result": "fail",
+      "exit_code": 1,
+      "snapshot_digest": "sha256:891af601f91c6b54ef2f73f829c91df92ad4225757ba223d963457ada85a5fa4"
+    },
+    {
+      "check_id": "suite",
+      "result": "pass",
+      "exit_code": 0,
+      "snapshot_digest": "sha256:891af601f91c6b54ef2f73f829c91df92ad4225757ba223d963457ada85a5fa4"
+    }
+  ],
+  "overbroad_fix": {
+    "status": "PLANNING",
+    "gate": {
+      "outcome": "REVISE",
+      "reasons": [
+        "Required check failed: suite"
+      ]
+    },
+    "checks": [
+      {
+        "check_id": "regression",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:29bfa1614377051f4d56bd73b042a302b9111f904505ce74b2f288d6a6e2442c"
+      },
+      {
+        "check_id": "suite",
+        "result": "fail",
+        "exit_code": 1,
+        "snapshot_digest": "sha256:29bfa1614377051f4d56bd73b042a302b9111f904505ce74b2f288d6a6e2442c"
+      }
+    ]
+  },
+  "final": {
+    "status": "SUCCEEDED",
+    "checks": [
+      {
+        "check_id": "regression",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      },
+      {
+        "check_id": "suite",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      }
+    ],
+    "iterations": 2,
+    "wall_seconds": 1,
+    "tokens": null,
+    "cost_microunits": null,
+    "delivered_source_digest": "sha256:7e215085b06d4e2d79520a054a36db7468a0b06951435fdd85aa50fd525842b3"
+  },
+  "resume_preserved_iteration_count": true,
+  "restored_snapshot_matches": true,
+  "event_count": 61,
+  "limitations": [
+    "Proposals are scripted; this is not a model benchmark.",
+    "Records are authenticated, but arbitrary local subprocesses share host OS authority.",
+    "The example is one small Python bug, not a representative task corpus."
+  ]
+}

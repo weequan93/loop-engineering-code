@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:loop-engineering-code:readiness:0.1",
+  "title": "Implementation inventory and live evaluation prerequisite",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "target": {
+      "const": "1.0"
+    },
+    "test_policy": {
+      "const": {
+        "live_agent_model_tests": "deferred_until_implementation_complete",
+        "automatic_live_dispatch": false
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "enum": [
+              "task_contracts",
+              "proposal_bridge",
+              "completion_gate",
+              "snapshots_recovery",
+              "bounded_processes",
+              "lifecycle_control",
+              "protected_runtime",
+              "typed_broker",
+              "authenticated_evidence",
+              "hard_spend_reservations",
+              "native_model_drivers",
+              "external_evaluators",
+              "staged_workflow",
+              "replayable_events",
+              "context_handoff",
+              "offline_conformance",
+              "scenario_presets",
+              "team_execution"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definition": {
+            "enum": [
+              "complete",
+              "partial",
+              "missing"
+            ]
+          },
+          "implementation": {
+            "enum": [
+              "complete",
+              "partial",
+              "missing"
+            ]
+          },
+          "offline_coverage": {
+            "enum": [
+              "complete",
+              "partial",
+              "missing"
+            ]
+          },
+          "definition_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "implementation_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "test_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "remaining_work": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "definition",
+          "implementation",
+          "offline_coverage",
+          "definition_refs",
+          "implementation_refs",
+          "test_refs",
+          "remaining_work"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "target",
+    "test_policy",
+    "items"
+  ],
+  "additionalProperties": false
+}

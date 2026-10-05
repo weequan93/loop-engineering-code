@@ -1,0 +1,8 @@
+{
+  "schema_version": "0.1",
+  "runtime_id": "manual-host",
+  "version": "example",
+  "capabilities": {},
+  "verification_note": "Template: no runtime capability has been verified. A human performs and evaluates actions in manual mode.",
+  "extensions": {}
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "provision": {
+    "inputs": [],
+    "output_dirs": [],
+    "steps": [],
+    "max_output_files": 20000,
+    "max_output_bytes": 268435456
+  },
+  "executors": []
+}

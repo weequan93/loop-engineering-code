@@ -1,0 +1,12 @@
+{
+  "schema_version": "0.1",
+  "adapter_id": "manual-text",
+  "kind": "manual",
+  "backend": "human-supervised-text-model",
+  "version": "example",
+  "control_model": "human_operated",
+  "capabilities": {
+    "text_input": true
+  },
+  "extensions": {}
+}

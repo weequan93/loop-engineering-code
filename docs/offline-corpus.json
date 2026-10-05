@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-03T03:26:10.074605+00:00",
+  "live_model_calls": 0,
+  "cases": [
+    {
+      "case": "notes-collaboration",
+      "baseline_failed": true,
+      "final_oracle_passed": true,
+      "final_oracle_log_sha256": "sha256:cfd5dd49c1e23db37edaf64e5c242c34cef9cb728d263bd77b7977dcd4964057",
+      "protected_tests_unchanged": true,
+      "status": "COMPLETE",
+      "reason": null,
+      "verified_success": true,
+      "role_ids": [
+        "database",
+        "frontend",
+        "backend",
+        "security",
+        "performance",
+        "reviewer",
+        "acceptance"
+      ],
+      "backend_attempts": 1,
+      "actual_failed_check_records": 0,
+      "independent_requests": 6,
+      "dispatches": 20,
+      "elapsed_ms": 32935,
+      "journal_audit": "pass",
+      "local_workload_recorded": true,
+      "live_model_calls": 0,
+      "judgments": "deterministic offline fixtures",
+      "browser_or_deployed_load_claim": false
+    },
+    {
+      "case": "notes-regression-recovery",
+      "baseline_failed": true,
+      "final_oracle_passed": true,
+      "final_oracle_log_sha256": "sha256:8ad6692a655a7fe57d8417c3305b2d319b593d3b458d04094f9edd47f9707bfe",
+      "protected_tests_unchanged": true,
+      "status": "COMPLETE",
+      "reason": null,
+      "verified_success": true,
+      "role_ids": [
+        "database",
+        "frontend",
+        "backend",
+        "security",
+        "performance",
+        "reviewer",
+        "acceptance"
+      ],
+      "backend_attempts": 2,
+      "actual_failed_check_records": 1,
+      "independent_requests": 6,
+      "dispatches": 21,
+      "elapsed_ms": 35330,
+      "journal_audit": "pass",
+      "local_workload_recorded": true,
+      "live_model_calls": 0,
+      "judgments": "deterministic offline fixtures",
+      "browser_or_deployed_load_claim": false
+    }
+  ]
+}

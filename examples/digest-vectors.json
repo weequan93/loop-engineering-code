@@ -1,0 +1,49 @@
+{
+  "schema_version": "0.1",
+  "vectors": [
+    {
+      "id": "empty-object",
+      "input": {},
+      "canonical_json": "{}",
+      "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "id": "object-key-order",
+      "input": {
+        "z": [
+          true,
+          null
+        ],
+        "a": 1
+      },
+      "canonical_json": "{\"a\":1,\"z\":[true,null]}",
+      "digest": "sha256:d79ef1418118f481e327f7703cda523ad18181b74f2779b866bc9d0cb41d11dc"
+    },
+    {
+      "id": "unicode-scalar-key-order",
+      "input": {
+        "😀": "astral",
+        "": "bmp"
+      },
+      "canonical_json": "{\"\":\"bmp\",\"😀\":\"astral\"}",
+      "digest": "sha256:4874d36535a1b5dfdad7f2b3af83f87debd2f0795ae7d2d09447e17223c42dd0"
+    },
+    {
+      "id": "escaped-text",
+      "input": {
+        "line": "a\nb\t\"\\",
+        "nonascii": "café"
+      },
+      "canonical_json": "{\"line\":\"a\\nb\\t\\\"\\\\\",\"nonascii\":\"café\"}",
+      "digest": "sha256:2955fd3bab5a467d690fd01b6b1655365d3547fc97553b6adf42bba41acc6595"
+    },
+    {
+      "id": "maximum-safe-integer",
+      "input": {
+        "n": 9007199254740991
+      },
+      "canonical_json": "{\"n\":9007199254740991}",
+      "digest": "sha256:e1da48c6a6089f06ecb4e0a2259e658e3786b2420f52baccdf929ec6460d7b41"
+    }
+  ]
+}

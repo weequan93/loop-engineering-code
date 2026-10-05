@@ -1,0 +1,371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:loop-engineering-code:task:0.1",
+  "title": "Loop Engineering task v0.1",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "bugfix",
+        "feature",
+        "refactor",
+        "ui",
+        "maintenance"
+      ]
+    },
+    "workflow": {
+      "enum": [
+        "quick",
+        "standard",
+        "staged"
+      ]
+    },
+    "autonomy": {
+      "enum": [
+        "manual",
+        "assisted",
+        "unattended"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "write_allow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "write_deny": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "write_allow",
+        "write_deny"
+      ],
+      "additionalProperties": false
+    },
+    "authorization": {
+      "type": "object",
+      "properties": {
+        "allowed_actions": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "read_workspace",
+              "edit_workspace",
+              "run_checks",
+              "commit",
+              "create_pr",
+              "push",
+              "merge",
+              "publish",
+              "delete_remote"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "allowed_actions"
+      ],
+      "additionalProperties": false
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "check_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_-]*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "check_ids"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "type": {
+            "enum": [
+              "command",
+              "interaction",
+              "review",
+              "human",
+              "artifact"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "procedure": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "independent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "description"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "command"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "argv",
+                "timeout_seconds"
+              ],
+              "not": {
+                "required": [
+                  "procedure"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "procedure"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "argv"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "timeout_seconds"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "independent": {
+                  "const": true
+                }
+              },
+              "required": [
+                "independent"
+              ]
+            },
+            "then": {
+              "properties": {
+                "type": {
+                  "const": "review"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "required_capabilities": {
+      "type": "object",
+      "properties": {
+        "agent": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "text_input",
+              "structured_output",
+              "structured_events",
+              "headless_execution",
+              "cancellation",
+              "session_resume",
+              "usage_reporting",
+              "tool_requests",
+              "vision"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "runtime": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "snapshot_capture",
+              "trusted_evidence",
+              "bounded_execution",
+              "isolated_workspace",
+              "policy_enforcement",
+              "durable_state",
+              "run_cancellation",
+              "browser_interaction",
+              "spend_accounting"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "agent",
+        "runtime"
+      ],
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_iterations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "max_wall_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "max_stalled_iterations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "max_repeat_failure": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "max_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "max_cost_microunits": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "cost_currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      },
+      "required": [
+        "max_iterations",
+        "max_wall_seconds",
+        "max_stalled_iterations",
+        "max_repeat_failure",
+        "max_tokens",
+        "max_cost_microunits",
+        "cost_currency"
+      ],
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "revision",
+    "objective",
+    "kind",
+    "workflow",
+    "autonomy",
+    "scope",
+    "authorization",
+    "criteria",
+    "checks",
+    "required_capabilities",
+    "limits"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.1",
+  "runtime_id": "native-runtime-fixture",
+  "version": "fixture",
+  "capabilities": {
+    "snapshot_capture": true,
+    "trusted_evidence": true,
+    "bounded_execution": true,
+    "isolated_workspace": true,
+    "policy_enforcement": true,
+    "durable_state": true,
+    "run_cancellation": true,
+    "browser_interaction": false,
+    "spend_accounting": false
+  },
+  "verification_note": "Synthetic decision manifest only. It does not attest a deployed runtime; actual controls require host probes and conformance.",
+  "extensions": {}
+}

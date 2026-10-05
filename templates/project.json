@@ -1,0 +1,57 @@
+{
+  "schema_version": "0.2",
+  "project_id": "example-python-project",
+  "languages": [
+    "python"
+  ],
+  "commands": {
+    "build": null,
+    "test": {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "source": "detected tests; review command",
+      "confirmed": false
+    },
+    "lint": null,
+    "start": null
+  },
+  "conventions": [
+    "Keep changes focused on the requested behavior.",
+    "Preserve approved acceptance tests."
+  ],
+  "context_paths": [],
+  "snapshot": {
+    "exclude": [
+      ".git",
+      ".git/**",
+      ".loop",
+      ".loop/**",
+      "**/__pycache__/**",
+      "__pycache__/**",
+      "*.pyc",
+      ".venv/**",
+      "venv/**",
+      "node_modules/**",
+      "**/node_modules/**",
+      ".pytest_cache/**",
+      ".env",
+      ".env.*",
+      "**/.env",
+      "**/.env.*"
+    ],
+    "max_file_bytes": 10485760,
+    "max_total_bytes": 104857600
+  },
+  "context_max_bytes": 60000,
+  "notes": [
+    "Detected commands are candidates; confirm them after review or execution."
+  ]
+}

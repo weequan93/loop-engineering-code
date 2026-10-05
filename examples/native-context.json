@@ -1,0 +1,225 @@
+{
+  "schema_version": "1.0",
+  "context_id": "synthetic-implementer-context",
+  "contract_digest": "sha256:feaaa029ad13ffe844c855f634fa952ed399e5742c10593845f12bca7886e855",
+  "base_snapshot_digest": "sha256:1dc47ff1c8383fd2a0a78f3b24ed5037a6b927412995bd29f6c5975df4fdc2f6",
+  "bundle": {
+    "schema_version": "0.2",
+    "mode": "proposal_only",
+    "run_id": "run-00000000000000000000000000000000",
+    "task": {
+      "schema_version": "0.2",
+      "task_id": "fix-whitespace-slug",
+      "revision": 1,
+      "objective": "Return an empty slug for all-whitespace input while preserving existing slug behavior.",
+      "kind": "bugfix",
+      "workflow": "staged",
+      "autonomy": "assisted",
+      "scope": {
+        "write_allow": [
+          "slug.py"
+        ],
+        "write_deny": [
+          "tests/**",
+          ".git/**",
+          ".loop/**"
+        ]
+      },
+      "authorization": {
+        "allowed_actions": [
+          "read_workspace",
+          "edit_workspace",
+          "run_checks"
+        ]
+      },
+      "criteria": [
+        {
+          "id": "empty-whitespace",
+          "description": "An input containing only whitespace produces the empty string.",
+          "check_ids": [
+            "regression"
+          ]
+        },
+        {
+          "id": "preserve-behavior",
+          "description": "Existing supported slug behavior continues to pass the relevant suite.",
+          "check_ids": [
+            "suite"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "regression",
+          "type": "command",
+          "description": "Run the regression assertion for whitespace-only input.",
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_slug.TestSlug.test_whitespace_only"
+          ],
+          "timeout_seconds": 5
+        },
+        {
+          "id": "suite",
+          "type": "command",
+          "description": "Run the target repository's existing slug suite.",
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_slug.TestSlug.test_existing_behavior"
+          ],
+          "timeout_seconds": 5
+        },
+        {
+          "id": "review",
+          "type": "review",
+          "independent": true,
+          "description": "Inspect behavior and compatibility on the verified candidate",
+          "procedure": [
+            "Inspect slug.py and both command results on the requested candidate.",
+            "Record blocking findings against the acceptance criteria."
+          ]
+        }
+      ],
+      "required_capabilities": {
+        "agent": [
+          "text_input"
+        ],
+        "runtime": []
+      },
+      "limits": {
+        "max_iterations": 3,
+        "max_wall_seconds": 300,
+        "max_stalled_iterations": 3,
+        "max_repeat_failure": 2,
+        "max_tokens": null,
+        "max_cost_microunits": null,
+        "cost_currency": "USD",
+        "verification_reserve_seconds": 20
+      },
+      "extensions": {},
+      "non_goals": [
+        "Do not change behavior for nonempty inputs.",
+        "Do not alter or disable acceptance tests."
+      ],
+      "assumptions": [
+        "The existing supported input type remains string."
+      ],
+      "dependencies": [],
+      "compatibility_requirements": [
+        "Preserve existing outputs for supported nonempty inputs."
+      ]
+    },
+    "contract_digest": "sha256:feaaa029ad13ffe844c855f634fa952ed399e5742c10593845f12bca7886e855",
+    "base_snapshot_digest": "sha256:1dc47ff1c8383fd2a0a78f3b24ed5037a6b927412995bd29f6c5975df4fdc2f6",
+    "state": {
+      "schema_version": "0.1",
+      "task_id": "fix-whitespace-slug",
+      "contract_digest": "sha256:feaaa029ad13ffe844c855f634fa952ed399e5742c10593845f12bca7886e855",
+      "status": "PLANNING",
+      "pending_status": null,
+      "snapshot_digest": "sha256:1dc47ff1c8383fd2a0a78f3b24ed5037a6b927412995bd29f6c5975df4fdc2f6",
+      "environment_digest": "sha256:de332c30f41cc69c1912ec7f27994d2f24fc1f69955253d31fd5ab4d804900e9",
+      "iteration": 0,
+      "stalled_iterations": 0,
+      "repeated_failure_count": 0,
+      "event_sequence": 1,
+      "lease_token": 1,
+      "checkpoint": null,
+      "progress": {
+        "passed_criteria": [],
+        "confirmed_fact_ids": [],
+        "resolved_dependency_ids": []
+      },
+      "usage": {
+        "wall_seconds": 0,
+        "tokens": 0,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "outstanding_action_ids": [],
+      "reason": null,
+      "next_action": "Illustrative context only; export a fresh context for real proposals.",
+      "updated_at": "2026-10-02T05:00:02Z",
+      "extensions": {
+        "synthetic_fixture": true
+      }
+    },
+    "sources": [
+      {
+        "path": "slug.py",
+        "sha256": "sha256:51750f8131ecafd9a94beab420355df7bc02935220bca5bfa905eae293681746",
+        "content": "\"\"\"Deliberately buggy sample used for local and live integration exercises.\"\"\"\n\n\ndef slug(text: str) -> str:\n    return \"-\".join(text.lower().split(\" \"))\n"
+      }
+    ],
+    "omitted_paths": [],
+    "baseline": [],
+    "recent_evidence": [],
+    "confirmed_facts": {},
+    "failure_policy": null,
+    "previous_steps": [],
+    "project": {
+      "languages": [
+        "python"
+      ],
+      "conventions": [
+        "Preserve compatibility"
+      ]
+    },
+    "context_policy": {
+      "max_bytes": 60000,
+      "omitted_source_count": 0,
+      "omitted_history_count": 0
+    },
+    "instructions": "Synthetic fixture only. Real runs require a fresh controller context and actual snapshot hashes."
+  },
+  "repository_instructions": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:ff24e156f4b8534165265010eaddfe6a221252b8454ceffc4cfb606d35dfb61b",
+      "content": "Synthetic instruction example: preserve approved acceptance tests."
+    }
+  ],
+  "active_stage": {
+    "id": "fix",
+    "depends_on": [],
+    "criterion_ids": [
+      "empty-whitespace"
+    ],
+    "write_allow": [
+      "slug.py"
+    ],
+    "write_deny": []
+  },
+  "budget": {
+    "tokens_upper": 0,
+    "cost_upper_microunits": 0,
+    "known_tokens": 0,
+    "known_cost_microunits": 0,
+    "actual_tokens": 0,
+    "actual_cost_microunits": 0,
+    "currency": null,
+    "unknown_requests": 0,
+    "violated_bound": false
+  },
+  "runtime": {
+    "backend": "local",
+    "verified": false,
+    "capabilities": {
+      "snapshot_capture": true,
+      "bounded_execution": true,
+      "durable_state": true,
+      "run_cancellation": true,
+      "isolated_workspace": false,
+      "policy_enforcement": false,
+      "trusted_evidence": false,
+      "spend_accounting": false
+    },
+    "reason": "Supervised processes share host authority",
+    "identity": "local-supervised"
+  },
+  "pending_findings": []
+}

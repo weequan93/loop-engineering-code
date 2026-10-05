@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1",
+  "task_id": "fix-whitespace-slug",
+  "contract_digest": "sha256:b12530d3cd8687f12cf1f5845ac7307f36c29f294a1a9fe399c1460e899ddb2b",
+  "status": "VERIFYING",
+  "pending_status": null,
+  "snapshot_digest": "sha256:1dc47ff1c8383fd2a0a78f3b24ed5037a6b927412995bd29f6c5975df4fdc2f6",
+  "environment_digest": "sha256:de332c30f41cc69c1912ec7f27994d2f24fc1f69955253d31fd5ab4d804900e9",
+  "iteration": 1,
+  "stalled_iterations": 0,
+  "repeated_failure_count": 0,
+  "event_sequence": 8,
+  "lease_token": 1,
+  "checkpoint": null,
+  "progress": {
+    "passed_criteria": [
+      "empty-whitespace"
+    ],
+    "confirmed_fact_ids": [],
+    "resolved_dependency_ids": []
+  },
+  "usage": {
+    "wall_seconds": 30,
+    "tokens": null,
+    "cost_microunits": null,
+    "cost_currency": "USD"
+  },
+  "outstanding_action_ids": [],
+  "reason": null,
+  "next_action": "Collect the suite check result before requesting completion.",
+  "updated_at": "2026-10-02T05:00:02Z",
+  "extensions": {
+    "synthetic_fixture": true
+  }
+}

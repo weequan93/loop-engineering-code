@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:loop-engineering-code:adapter:0.1",
+  "title": "Loop Engineering adapter v0.1",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "adapter_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "kind": {
+      "enum": [
+        "model",
+        "agent",
+        "manual"
+      ]
+    },
+    "backend": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "control_model": {
+      "enum": [
+        "engine_owned",
+        "externally_managed",
+        "human_operated"
+      ]
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "text_input": {
+          "type": "boolean"
+        },
+        "structured_output": {
+          "type": "boolean"
+        },
+        "structured_events": {
+          "type": "boolean"
+        },
+        "headless_execution": {
+          "type": "boolean"
+        },
+        "cancellation": {
+          "type": "boolean"
+        },
+        "session_resume": {
+          "type": "boolean"
+        },
+        "usage_reporting": {
+          "type": "boolean"
+        },
+        "tool_requests": {
+          "type": "boolean"
+        },
+        "vision": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "adapter_id",
+    "kind",
+    "backend",
+    "version",
+    "control_model",
+    "capabilities"
+  ],
+  "additionalProperties": false
+}

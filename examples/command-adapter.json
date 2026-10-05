@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1",
+  "adapter_id": "command",
+  "kind": "agent",
+  "backend": "command",
+  "version": "0.2.0",
+  "control_model": "externally_managed",
+  "capabilities": {
+    "text_input": true,
+    "headless_execution": true
+  },
+  "extensions": {
+    "protocol": "agent-step-v0.2",
+    "live_backend_conformance": "unverified"
+  }
+}

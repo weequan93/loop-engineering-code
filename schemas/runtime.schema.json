@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:loop-engineering-code:runtime:0.1",
+  "title": "Loop Engineering runtime v0.1",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "runtime_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "snapshot_capture": {
+          "type": "boolean"
+        },
+        "trusted_evidence": {
+          "type": "boolean"
+        },
+        "bounded_execution": {
+          "type": "boolean"
+        },
+        "isolated_workspace": {
+          "type": "boolean"
+        },
+        "policy_enforcement": {
+          "type": "boolean"
+        },
+        "durable_state": {
+          "type": "boolean"
+        },
+        "run_cancellation": {
+          "type": "boolean"
+        },
+        "browser_interaction": {
+          "type": "boolean"
+        },
+        "spend_accounting": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "verification_note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "runtime_id",
+    "version",
+    "capabilities",
+    "verification_note"
+  ],
+  "additionalProperties": false
+}

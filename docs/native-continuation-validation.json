@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-05T08:01:14.622424+00:00",
+  "result": "pass_with_partition_retry",
+  "source_manifest_digest": "sha256:7d337cc309ebf55350727de60283a2117afecdbb442be8434f1d96644b7da711",
+  "source_files": 215,
+  "policy": {
+    "live_agent_calls": 0,
+    "live_model_calls": 0,
+    "active_project_mutations": 0
+  },
+  "full_offline": {
+    "unique_tests": 644,
+    "skipped": 0,
+    "accepted_partitions_cover_default_discovery_exactly_once": true,
+    "execution": "Four module partitions; the partition with the timing-sensitive Desktop fixture was rerun without parallel contention. Other passing partitions are retained against unchanged code.",
+    "groups": [
+      {
+        "group": 1,
+        "modules": [
+          "test_team_automation",
+          "test_team_memory"
+        ],
+        "tests": 54,
+        "successful": true,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "log": "/private/tmp/loop-continuation-full-group-1.log",
+        "log_sha256": "sha256:ade82e5c517d27f011784f35131f3a54a2bbbfcdb95d0d6af5fba7c88be41b24"
+      },
+      {
+        "group": 2,
+        "modules": [
+          "test_file_operations",
+          "test_native_preflight",
+          "test_native_review",
+          "test_native_workbench",
+          "test_output_schema",
+          "test_processes",
+          "test_setup",
+          "test_team_executors"
+        ],
+        "tests": 110,
+        "successful": true,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "log": "/private/tmp/loop-continuation-full-group-2.log",
+        "log_sha256": "sha256:914ceef6aaaafb34eddbf9966c8f7204b6d007863ff6416dd0910291e020068e"
+      },
+      {
+        "group": 3,
+        "modules": [
+          "test_agent_roles",
+          "test_core",
+          "test_host_install",
+          "test_http_worker",
+          "test_native_flow",
+          "test_native_host",
+          "test_native_plan_repair",
+          "test_native_readiness",
+          "test_native_workers",
+          "test_readiness",
+          "test_spec_setup",
+          "test_team_corpus"
+        ],
+        "tests": 235,
+        "successful": true,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "log": "/private/tmp/loop-continuation-full-group-3.log",
+        "log_sha256": "sha256:ef18249a34fac188d61a78cf68a65f73aebd9c1149d80c5d9eff00c39fc5c4f4"
+      },
+      {
+        "group": 4,
+        "modules": [
+          "test_desktop_bridge",
+          "test_engine",
+          "test_execution_tools",
+          "test_external_execution",
+          "test_native",
+          "test_native_operations",
+          "test_provisioning",
+          "test_scenarios",
+          "test_team"
+        ],
+        "tests": 245,
+        "successful": true,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "log": "/private/tmp/loop-continuation-final-group-4.log",
+        "log_sha256": "sha256:de5ab82cb8751eab7243428e7a99c4d9c691698bef74eeedc78276c299d33375"
+      }
+    ]
+  },
+  "initial_attempt": {
+    "tests": 644,
+    "elapsed_ms": 422393,
+    "result": "fail",
+    "failures": [
+      "test_desktop_bridge.DesktopTests.test_desktop_work_and_fresh_review_import_reach_verified_native_acceptance"
+    ],
+    "reason": "Desktop fixture reached its own 25-second test-loop deadline under parallel load; isolated recheck passed in 24.460 seconds.",
+    "log": "/private/tmp/loop-continuation-full-offline.log",
+    "log_sha256": "sha256:2324e4eef094869f08fb2e07135705569cc7260eb037a64b9e5a38060959d1fe"
+  },
+  "serial_partition_retry": {
+    "tests": 245,
+    "elapsed_ms": 121710,
+    "result": "pass",
+    "log": "/private/tmp/loop-continuation-final-group-4.log",
+    "log_sha256": "sha256:de5ab82cb8751eab7243428e7a99c4d9c691698bef74eeedc78276c299d33375"
+  },
+  "additional_checks": {
+    "schema_files": 18,
+    "saved_examples_templates": 27,
+    "python_ast_files": 107,
+    "documentation_links": 136,
+    "skill_validation": "pass using system Python quick_validate.py",
+    "readiness": "18/18 complete; does not dispatch a live provider",
+    "background_independent_review": "Deterministic local reviewer subprocess reached signed-result handoff; no live Codex/provider launch"
+  },
+  "coverage": [
+    "Early decision and measurement coverage validation before plan freeze",
+    "No preflight writes, key creation or provider dispatch",
+    "Stable draft capture before asynchronous execution",
+    "Responsive local subprocess progress/cancellation",
+    "Duplicate submissions and cross-connection ownership",
+    "Server crash cleanup, retained child budgets and no blind proposal replay",
+    "Completed child survives operation journal interruption",
+    "Failure-to-repair-to-receipt-to-completion in one bounded offline host driver",
+    "Expired consumed worker deadline no longer blocks the next repair",
+    "Exact previous skill upgrade with preserved project settings"
+  ],
+  "limits": [
+    "No live native-host adherence or current macare acceptance evaluation was performed.",
+    "Host session must remain active; MCP cannot wake an ended turn. Service shutdown pauses owned work.",
+    "Unknown process ownership, missing required evidence/capabilities, terminal budgets and milestone boundaries remain gates.",
+    "Native host model tokens, cost and identity remain outside controller accounting; shared OS authority is supervised.",
+    "Measurement coverage is a validated declaration, not proof of an actual producer or successful acceptance."
+  ]
+}

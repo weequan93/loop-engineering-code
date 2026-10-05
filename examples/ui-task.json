@@ -1,0 +1,88 @@
+{
+  "schema_version": "0.1",
+  "task_id": "login-validation-ui",
+  "revision": 1,
+  "objective": "Show an inline error for an empty login form and clear it after valid input.",
+  "kind": "ui",
+  "workflow": "standard",
+  "autonomy": "assisted",
+  "scope": {
+    "write_allow": [
+      "src/**",
+      "tests/**"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".loop/control/**"
+    ]
+  },
+  "authorization": {
+    "allowed_actions": [
+      "read_workspace",
+      "edit_workspace",
+      "run_checks"
+    ]
+  },
+  "criteria": [
+    {
+      "id": "empty-form",
+      "description": "Submitting an empty form shows an inline error without navigation.",
+      "check_ids": [
+        "login-interaction"
+      ]
+    },
+    {
+      "id": "valid-input",
+      "description": "Entering valid fixture credentials clears the error and continues the expected login flow.",
+      "check_ids": [
+        "login-interaction"
+      ]
+    },
+    {
+      "id": "visible-error",
+      "description": "The error is readable at the target desktop and mobile viewport sizes.",
+      "check_ids": [
+        "visual-review"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "login-interaction",
+      "type": "interaction",
+      "description": "Exercise empty and valid input in the running application.",
+      "procedure": [
+        "Start the application with the approved test-user fixture.",
+        "Submit an empty login form; assert an inline error and no navigation.",
+        "Enter valid fixture credentials; assert the error clears and the approved login destination opens."
+      ]
+    },
+    {
+      "id": "visual-review",
+      "type": "human",
+      "description": "An identified human evaluates the rendered error at the agreed viewports.",
+      "procedure": [
+        "Render the login error at 1280x800 and 390x844.",
+        "Confirm readable text, intact layout, and no overlap; preserve screenshots and evaluator attribution."
+      ]
+    }
+  ],
+  "required_capabilities": {
+    "agent": [
+      "text_input"
+    ],
+    "runtime": [
+      "browser_interaction"
+    ]
+  },
+  "limits": {
+    "max_iterations": 12,
+    "max_wall_seconds": 3600,
+    "max_stalled_iterations": 3,
+    "max_repeat_failure": 2,
+    "max_tokens": null,
+    "max_cost_microunits": null,
+    "cost_currency": "USD"
+  },
+  "extensions": {}
+}

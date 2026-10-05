@@ -1,0 +1,25 @@
+{
+  "schema_version": "0.1",
+  "evidence_id": "fixture-regression",
+  "task_id": "fix-whitespace-slug",
+  "contract_digest": "sha256:b12530d3cd8687f12cf1f5845ac7307f36c29f294a1a9fe399c1460e899ddb2b",
+  "snapshot_digest": "sha256:1dc47ff1c8383fd2a0a78f3b24ed5037a6b927412995bd29f6c5975df4fdc2f6",
+  "environment_digest": "sha256:de332c30f41cc69c1912ec7f27994d2f24fc1f69955253d31fd5ab4d804900e9",
+  "check_id": "regression",
+  "check_digest": "sha256:ee5741e96129517e1fd24eb3a051cc32a2957d42a90c66861df8fe8669c62bb7",
+  "executor_run_id": "synthetic-run",
+  "started_at": "2026-10-02T05:00:00Z",
+  "finished_at": "2026-10-02T05:00:01Z",
+  "result": "pass",
+  "exit_code": 0,
+  "artifacts": [
+    {
+      "uri": "memory://synthetic/regression.txt",
+      "sha256": "sha256:64a24e1276795a31c43d9be680b626c67f09e132304938e07d81ce655e2024ac"
+    }
+  ],
+  "summary": "Synthetic passing result. No check was actually executed.",
+  "extensions": {
+    "synthetic_fixture": true
+  }
+}

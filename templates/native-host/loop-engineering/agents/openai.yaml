@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop Engineering"
+  short_description: "Coordinate development and show verified progress"
+  default_prompt: "Use $loop-engineering to develop this project from its docs and my answers, and show the team's progress in this chat."

@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.0",
+  "id": "development",
+  "title": "Software development team",
+  "description": "Give a coding host a spec; its coordinator selects from sixteen professional roles, records responsibility coverage and organizes design, implementation, integration, verification and acceptance.",
+  "execution": "host_orchestrated",
+  "coordinator": "coordinator",
+  "team_selection": ".loop/team.json",
+  "agent_protocol": ".loop/agent-protocol.md",
+  "execution_tools": ".loop/execution-tools.json",
+  "context_max_bytes": 120000,
+  "roles": [
+    {
+      "id": "coordinator", "title": "Product and delivery coordinator",
+      "activation": {"required": true, "when": "Every project: own planning, selection and delivery.", "covered_by": []},
+      "instructions": ".loop/agents/coordinator.md",
+      "responsibilities": ["Own intake, team selection, scoped tasks, integration and budgets."],
+      "outputs": ["Questions, team decisions, contracts, plan and delivery."],
+      "independent": false
+    },
+    {
+      "id": "requirements_reviewer", "title": "Requirements review specialist",
+      "activation": {"required": true, "when": "Every project: establish clear, testable requirements.", "covered_by": ["coordinator"]},
+      "instructions": ".loop/agents/requirements_reviewer.md",
+      "responsibilities": ["Review ambiguity, boundaries, business rules and verifiability."],
+      "outputs": ["Sourced requirement IDs, scope decisions and acceptance scenarios."],
+      "independent": false
+    },
+    {
+      "id": "designer", "title": "Product, UX and UI designer",
+      "activation": {"required": false, "when": "New or changed user journeys, screens or interactions.", "covered_by": ["frontend"]},
+      "instructions": ".loop/agents/designer.md",
+      "responsibilities": ["Design journeys, interactions and accessibility; inspect conformance."],
+      "outputs": ["Flow/state specifications, design decisions and findings."],
+      "independent": false
+    },
+    {
+      "id": "architect", "title": "Architecture and interface specialist",
+      "activation": {"required": true, "when": "Every project: assess interfaces, compatibility and quality risks; scale depth to scope.", "covered_by": ["coordinator"]},
+      "instructions": ".loop/agents/architect.md",
+      "responsibilities": ["Define architecture, interfaces, data ownership and compatibility."],
+      "outputs": ["Technical contracts, tradeoffs and implementation slices."],
+      "independent": false
+    },
+    {
+      "id": "frontend", "title": "Frontend and interaction specialist",
+      "activation": {"required": false, "when": "Browser or client UI implementation.", "covered_by": ["backend"]},
+      "instructions": ".loop/agents/frontend.md",
+      "responsibilities": ["Implement agreed interfaces, states and user interactions."],
+      "outputs": ["Scoped UI changes, interaction evidence and integration notes."],
+      "independent": false
+    },
+    {
+      "id": "backend", "title": "Backend and data specialist",
+      "activation": {"required": false, "when": "Business logic, services, APIs or library implementation.", "covered_by": ["frontend"]},
+      "instructions": ".loop/agents/backend.md",
+      "responsibilities": ["Implement business logic, APIs, persistence and failure handling."],
+      "outputs": ["Scoped code, behavioral tests and compatibility notes."],
+      "independent": false
+    },
+    {
+      "id": "tester", "title": "Functional, integration and regression tester",
+      "activation": {"required": true, "when": "Every project: define and execute meaningful behavioral checks.", "covered_by": ["coordinator"]},
+      "instructions": ".loop/agents/tester.md",
+      "responsibilities": ["Map requirements to functional, integration and regression checks."],
+      "outputs": ["Traceable checks, actual results and reproducible defects."],
+      "independent": false
+    },
+    {
+      "id": "security", "title": "Security engineering and review specialist",
+      "activation": {"required": false, "when": "Changed trust boundaries, sensitive data, permissions, dependencies or security requirements.", "covered_by": []},
+      "instructions": ".loop/agents/security.md",
+      "responsibilities": ["Define security controls; independently review the candidate and fixes."],
+      "outputs": ["Scoped requirements, findings and verification results."],
+      "independent": true
+    },
+    {
+      "id": "performance", "title": "Performance and load testing specialist",
+      "activation": {"required": false, "when": "Performance targets, scaling changes, heavy workloads or regression risks.", "covered_by": ["tester"]},
+      "instructions": ".loop/agents/performance.md",
+      "responsibilities": ["Plan bounded workloads/targets, measure results and diagnose regressions."],
+      "outputs": ["Reproducible benchmarks, raw measurements and threshold results."],
+      "independent": false
+    },
+    {
+      "id": "reviewer", "title": "Independent implementation reviewer",
+      "activation": {"required": true, "when": "Every project: independent assessment of the integrated candidate.", "covered_by": []},
+      "instructions": ".loop/agents/reviewer.md",
+      "responsibilities": ["Independently review the integrated implementation and compatibility."],
+      "outputs": ["Candidate-specific procedure, findings and review result."],
+      "independent": true
+    },
+    {
+      "id": "acceptance", "title": "Requirements acceptance specialist",
+      "activation": {"required": true, "when": "Every project: independently match delivered behavior to the spec.", "covered_by": []},
+      "instructions": ".loop/agents/acceptance.md",
+      "responsibilities": ["Plan coverage; independently assess delivered business/quality requirements."],
+      "outputs": ["Requirement/evidence matrix, gaps and acceptance recommendation."],
+      "independent": true
+    },
+    {
+      "id": "integrator", "title": "Integration engineer",
+      "activation": {"required": false, "when": "Multiple implementation workers, shared interfaces or cross-module changes; coordinator covers simple integration.", "covered_by": ["coordinator"]},
+      "instructions": ".loop/agents/integrator.md",
+      "responsibilities": ["Coordinate interfaces, merge scoped changes and check integration."],
+      "outputs": ["Combined candidate, conflict decisions and integration evidence."],
+      "independent": false
+    },
+    {
+      "id": "devops", "title": "Build and delivery engineer",
+      "activation": {"required": false, "when": "Build, packaging, CI/CD, environment or deployment changes.", "covered_by": ["backend"]},
+      "instructions": ".loop/agents/devops.md",
+      "responsibilities": ["Prepare reproducible builds, delivery and rollback procedures."],
+      "outputs": ["Build/configuration evidence, artifact and release procedure."],
+      "independent": false
+    },
+    {
+      "id": "database", "title": "Database and migration engineer",
+      "activation": {"required": false, "when": "Complex schemas, migrations, transactions, query/index tuning or data compatibility changes.", "covered_by": ["backend"]},
+      "instructions": ".loop/agents/database.md",
+      "responsibilities": ["Design compatible data contracts, migrations and query behavior."],
+      "outputs": ["Data/migration code, compatibility and recovery evidence."],
+      "independent": false
+    },
+    {
+      "id": "documentation", "title": "Documentation and developer experience engineer",
+      "activation": {"required": false, "when": "Changed user/API behavior, installation, integration, operation or handover instructions.", "covered_by": ["coordinator"]},
+      "instructions": ".loop/agents/documentation.md",
+      "responsibilities": ["Document delivered behavior and verify setup, examples and guidance."],
+      "outputs": ["User/API docs, verified examples and handover notes."],
+      "independent": false
+    },
+    {
+      "id": "reliability", "title": "Reliability and operations engineer",
+      "activation": {"required": false, "when": "Long-running services, availability targets, monitoring, recovery or operational changes.", "covered_by": ["devops"]},
+      "instructions": ".loop/agents/reliability.md",
+      "responsibilities": ["Define health signals, recovery behavior and operational readiness."],
+      "outputs": ["Monitoring, runbooks, bounded recovery evidence and findings."],
+      "independent": false
+    }
+  ],
+  "workflow": [
+    {"id": "intake", "title": "Read the spec and clarify material gaps", "roles": ["coordinator"], "depends_on": []},
+    {"id": "requirements_review", "title": "Review requirements and define acceptance coverage", "roles": ["requirements_reviewer", "acceptance", "coordinator"], "depends_on": ["intake"]},
+    {"id": "team_selection", "title": "Select roles and record responsibility coverage from the spec", "roles": ["coordinator", "architect"], "depends_on": ["requirements_review"]},
+    {"id": "design", "title": "Design the experience, architecture and quality targets", "roles": ["designer", "architect", "security", "performance", "database", "devops", "reliability"], "depends_on": ["team_selection"]},
+    {"id": "plan", "title": "Prepare scoped tasks, test plans and quality checks", "roles": ["coordinator", "architect", "tester", "performance", "acceptance", "integrator"], "depends_on": ["design"]},
+    {"id": "implement", "title": "Implement scoped code, infrastructure and documentation", "roles": ["frontend", "backend", "database", "devops", "documentation", "reliability"], "depends_on": ["plan"]},
+    {"id": "integrate", "title": "Integrate changes and identify the candidate", "roles": ["integrator", "coordinator"], "depends_on": ["implement"]},
+    {"id": "verify", "title": "Verify integrated behavior, design and data compatibility", "roles": ["tester", "designer", "database"], "depends_on": ["integrate"]},
+    {"id": "security_review", "title": "Verify scoped security requirements and fixes", "roles": ["security"], "depends_on": ["verify"]},
+    {"id": "performance_test", "title": "Measure agreed workloads and performance targets", "roles": ["performance"], "depends_on": ["verify"]},
+    {"id": "review", "title": "Independently review implementation and architecture", "roles": ["reviewer", "architect"], "depends_on": ["verify"]},
+    {"id": "delivery_readiness", "title": "Verify build, documentation and operational readiness", "roles": ["devops", "documentation", "reliability"], "depends_on": ["verify"]},
+    {"id": "acceptance", "title": "Accept the delivered requirements against all required evidence", "roles": ["acceptance", "requirements_reviewer"], "depends_on": ["verify", "security_review", "performance_test", "review", "delivery_readiness"]},
+    {"id": "deliver", "title": "Save the accepted integrated result and handoff", "roles": ["coordinator", "devops", "documentation"], "depends_on": ["acceptance"]}
+  ]
+}

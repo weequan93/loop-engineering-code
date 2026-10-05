@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1",
+  "adapter_id": "native-model-fixture",
+  "kind": "model",
+  "backend": "synthetic-native-driver",
+  "version": "fixture",
+  "control_model": "engine_owned",
+  "capabilities": {
+    "text_input": true,
+    "structured_output": true,
+    "structured_events": true,
+    "headless_execution": true,
+    "cancellation": true,
+    "session_resume": false,
+    "usage_reporting": false,
+    "tool_requests": true,
+    "vision": false
+  },
+  "extensions": {}
+}

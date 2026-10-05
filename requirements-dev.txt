@@ -1,0 +1,2 @@
+# Required for the local CLI and integration tests; the pure decision core uses only Python.
+jsonschema>=4.18,<5

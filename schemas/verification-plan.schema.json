@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["measurements", "decision_ids", "repair_reserve_seconds"],
+  "properties": {
+    "decision_ids": {"$ref": "#/$defs/strings"},
+    "repair_reserve_seconds": {"type": "integer", "minimum": 0},
+    "external_timeouts": {"type": "object", "maxProperties": 128,
+      "additionalProperties": {"type": "integer", "minimum": 1, "maximum": 86400}},
+    "measurements": {
+      "type": "array", "maxItems": 128,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["check_id", "required", "produced", "producer_paths"],
+        "properties": {
+          "check_id": {"type": "string", "minLength": 1, "maxLength": 128},
+          "required": {"$ref": "#/$defs/strings"},
+          "produced": {"$ref": "#/$defs/strings"},
+          "producer_paths": {"$ref": "#/$defs/strings"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "strings": {"type": "array", "maxItems": 128, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}}
+  }
+}

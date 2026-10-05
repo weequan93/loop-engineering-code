@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "framework_version": "1.0.0",
+  "recorded_at": "2026-10-03T10:08:06.278568+00:00",
+  "feature": "document-first setup requirements assignment",
+  "role": "requirements_reviewer",
+  "role_count": 16,
+  "status": "implemented_with_deterministic_offline_coverage",
+  "python": "3.11.7",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "test_policy": {
+    "live_model_calls": 0,
+    "live_agent_calls": 0,
+    "responses": "injectable fake provider and local deterministic command wrappers"
+  },
+  "targeted_validation": {
+    "command": ".venv/bin/python -m unittest tests.test_spec_setup tests.test_output_schema -q",
+    "result": "pass",
+    "tests": 34,
+    "requirements_setup_tests": 30,
+    "transport_schema_tests": 4,
+    "elapsed_ms": 20308,
+    "log_sha256": "sha256:38b9623b74b29e9d43a3f2b95bffe0fd72a7accbad153716bff5a3a0e60b2496"
+  },
+  "full_suite_execution": {
+    "command": ".venv/bin/python -m unittest discover -s tests -v",
+    "result": "pass",
+    "tests": 414,
+    "elapsed_ms": 454447,
+    "log_sha256": "sha256:3f203c89cb8999ef161474db74341765a89dcdcc70ee62c84ad202f5fbbf0f92",
+    "source_manifest_digest_at_start": "sha256:b60072a85a6a7f854e653a7f299164ae54a873fb56fe08f98292e10ab71093d2",
+    "source_changed_during_run": true,
+    "changed_recorded_paths": [
+      "README.md",
+      "docs/implementation-status.json",
+      "docs/implementation-status.md",
+      "docs/team-execution.md",
+      "docs/team-memory.zh-CN.md",
+      "loop_engineering/team_memory.py",
+      "templates/scenarios/development/agent-protocol.md"
+    ],
+    "current_workspace_certification": false,
+    "limitation": "Parallel team-memory work changed source files and adds coverage outside this run; this passing execution is not a current complete-source validation of that unfinished work."
+  },
+  "contracts": {
+    "result": "pass",
+    "schema_files": 17,
+    "saved_examples_templates": 27,
+    "evidence_fixtures": 2
+  },
+  "readiness": {
+    "required_items": 18,
+    "complete_items": 16,
+    "automatic_live_dispatch": false,
+    "remaining": [
+      {
+        "id": "context_handoff",
+        "unfinished": [
+          "definition",
+          "implementation",
+          "offline_coverage"
+        ],
+        "remaining_work": "Integrate bounded role/task team memory with source bindings, invalidated repair history, durable stage reports, inspection CLI and offline recovery/retention cases."
+      },
+      {
+        "id": "team_execution",
+        "unfinished": [
+          "definition",
+          "implementation",
+          "offline_coverage"
+        ],
+        "remaining_work": "Integrate bounded role/task team memory with source bindings, invalidated repair history, durable stage reports, inspection CLI and offline recovery/retention cases."
+      }
+    ]
+  },
+  "additional_checks": {
+    "python_ast_files": 76,
+    "local_documentation_links": 124,
+    "missing_links": []
+  },
+  "feature_scope_digest": "sha256:079f07dce85a83364e286db51f53d0eb955bf43f093f17034eb3dc3ce4838474",
+  "feature_scope_files_changed_after_recording": [],
+  "coverage": [
+    "Empty-spec admission and static setup without any dispatch",
+    "Grounded document/brief/answer sources, three-question limit and frozen instructions",
+    "Shared cumulative accounting through questions, restart, repair and development handoff",
+    "Journaled draft/spec installation, partial writes, cancellation and stale-source/user-edit refusal",
+    "Existing planning-only team conversion preserves prior paid calls and actual answers; execution, outstanding operation and pause refusal",
+    "Actual local CLI command-wrapper route and transport-compatible Codex generation schema; no live backend"
+  ],
+  "unverified": [
+    "Actual model requirements interpretation quality",
+    "Live provider and Desktop interoperability",
+    "Parallel team-memory work complete-source validation"
+  ]
+}

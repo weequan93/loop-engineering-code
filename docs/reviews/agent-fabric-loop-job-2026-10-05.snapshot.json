@@ -1,0 +1,229 @@
+{
+  "schema_version": "1.0",
+  "review_kind": "read-only repository, state and host-conversation review",
+  "state_observed_at": "2026-10-05T08:11:02.619533+00:00",
+  "artifact_observed_at": "2026-10-05T08:22:33.226401+00:00",
+  "project": "/Users/super/Documents/ai/agent-fabric",
+  "team": {
+    "team_id": "team-b8733841c4e64668b730d6e5f132581d",
+    "revision": 170,
+    "status": "ACTIVE",
+    "updated_at": "2026-10-05T07:47:48.650+00:00"
+  },
+  "formal_task_counts": {
+    "COMPLETE": 6,
+    "RUNNING": 1,
+    "PENDING": 1
+  },
+  "children": [
+    {
+      "task": "g1_local_baseline",
+      "child_status": "SUCCEEDED",
+      "iterations": 1,
+      "usage": {
+        "wall_seconds": 10,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 9765,
+      "pending_process": null,
+      "pending_edit": false
+    },
+    {
+      "task": "g1_local_backend",
+      "child_status": "SUCCEEDED",
+      "iterations": 1,
+      "usage": {
+        "wall_seconds": 13,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 12535,
+      "pending_process": null,
+      "pending_edit": false
+    },
+    {
+      "task": "g1_local_http",
+      "child_status": "SUCCEEDED",
+      "iterations": 1,
+      "usage": {
+        "wall_seconds": 13,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 12916,
+      "pending_process": null,
+      "pending_edit": false
+    },
+    {
+      "task": "g1_local_web",
+      "child_status": "SUCCEEDED",
+      "iterations": 1,
+      "usage": {
+        "wall_seconds": 16,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 15814,
+      "pending_process": null,
+      "pending_edit": false
+    },
+    {
+      "task": "g1_local_desktop",
+      "child_status": "SUCCEEDED",
+      "iterations": 1,
+      "usage": {
+        "wall_seconds": 20,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 19131,
+      "pending_process": null,
+      "pending_edit": false
+    },
+    {
+      "task": "g1_local_mobile",
+      "child_status": "SUCCEEDED",
+      "iterations": 1,
+      "usage": {
+        "wall_seconds": 33,
+        "tokens": null,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 32495,
+      "pending_process": null,
+      "pending_edit": false
+    },
+    {
+      "task": "g1_local_verify",
+      "child_status": "PLANNING",
+      "iterations": 0,
+      "usage": {
+        "wall_seconds": 2,
+        "tokens": 0,
+        "cost_microunits": 0,
+        "cost_currency": "USD"
+      },
+      "elapsed_ms": 1386,
+      "pending_process": null,
+      "pending_edit": false
+    }
+  ],
+  "workers": {
+    "assignments": 15,
+    "status_counts": {
+      "COLLECTED": 15
+    },
+    "role_counts": {
+      "architect": 1,
+      "tester": 7,
+      "backend": 2,
+      "frontend": 4,
+      "devops": 1
+    },
+    "distinct_recorded_agent_ids": 3,
+    "interpretation": "Assignment counts do not establish distinct agents or accepted deliverables."
+  },
+  "verification_workbench": {
+    "id": "workbench-0c3103bb819d456a9b9ba5801002313a",
+    "task_id": "g1_local_verify",
+    "status": "DRAFT",
+    "directory": "/private/var/folders/zc/8zfqkrh55wz4825ghhhp5lr80000gn/T/loop-native-workbench-8ikeiqgm/project"
+  },
+  "draft_artifacts": {
+    "source_scope_file_count": 53,
+    "source_scope_digest": "sha256:b901f53b806e2499035704037d000a023dd4436f5a98921db161bdc7ec50e85e",
+    "load": {
+      "startedAt": "2026-10-05T06:58:41.642Z",
+      "finishedAt": "2026-10-05T06:58:42.099Z",
+      "candidateDigest": "sha256:ad11711f746155fe20ffe0c9ac466985dd4dc91b3eb8ffce54f9d344f67a3138",
+      "concurrency": 4,
+      "p95Ms": 20.768584000000004,
+      "errors": 0
+    },
+    "load_sample_count": 100,
+    "load_warmup_count": 10,
+    "load_matches_current_scope": false,
+    "ui_report_exists": false,
+    "verification_report_exists": false,
+    "limitation": "Unsubmitted draft observations are not accepted project evidence; temporary files may expire."
+  },
+  "installation": {
+    "installed_skill_sha256": "af986ce583cd21a725ba33803c7486861b49032ec9eb03beb4378467a3af905b",
+    "shipped_skill_sha256": "09256c6240b750ff761b0f6f5a1f59395a769ad9bd01e70dca4bf16be36bfd74",
+    "task_contract_count": 8,
+    "verification_plan_count": 0,
+    "project_interaction_executor_count": 0,
+    "running_server_version": "not established"
+  },
+  "final_contract": {
+    "max_wall_seconds": 2400,
+    "embedded_command_timeouts_seconds": 600,
+    "review_count": 3,
+    "review_timeout_seconds_as_declared_in_plan": 600,
+    "registration_runtime_not_independently_probed": true
+  },
+  "storage": {
+    "database_bytes": 333590528,
+    "table_rows_sum_bytes_max_row_bytes": {
+      "teams": [
+        6,
+        817683,
+        216986
+      ],
+      "team_events": [
+        653,
+        92431971,
+        217472
+      ],
+      "runs": [
+        29,
+        2939146,
+        194003
+      ],
+      "events": [
+        2175,
+        2463616,
+        240781
+      ]
+    },
+    "performance_bottleneck_demonstrated": false
+  },
+  "offline_reproduction": {
+    "test": "tests.test_native_preflight.NativePreflightTests.test_cached_failure_routes_actual_findings_to_frozen_owner_and_does_not_repeat_review",
+    "outcome": "passed",
+    "tests": 1,
+    "seconds": 4.819,
+    "live_provider_dispatch": false
+  },
+  "mutations": {
+    "agent_fabric_files": false,
+    "team_controls": false,
+    "provider_configuration": false
+  },
+  "limitations": [
+    "Snapshot, not live host liveness monitoring",
+    "Host provider token and cost totals unavailable",
+    "No fresh product acceptance or full framework suite run",
+    "No remote connection information, credentials or complete chat content retained"
+  ],
+  "host_conversation": {
+    "id": "01a10524-e293-7b52-86b6-ce151e9aa5ab",
+    "title": "使用 $loop_engineering 阅读文档",
+    "loaded_status": "notLoaded",
+    "turn_id": "01a109f1-b04f-7b21-b64c-39f10be1881b",
+    "turn_status": "interrupted",
+    "turn_started_at": 1791168196,
+    "turn_completed_at": null,
+    "computer_use_tool_calls": 235,
+    "command_execution_records": 214,
+    "context_compactions": 4,
+    "limitation": "Read-only chat retrieval is not a live CLI/process liveness probe; call counts are not action counts or elapsed-work measurements."
+  }
+}

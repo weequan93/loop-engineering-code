@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:loop-engineering-code:state:0.1",
+  "title": "Loop Engineering state v0.1",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "contract_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "NEW",
+        "PREPARING",
+        "PLANNING",
+        "EXECUTING",
+        "VERIFYING",
+        "REVIEWING",
+        "CHECKPOINTING",
+        "SUCCEEDED",
+        "AWAITING_INPUT",
+        "BLOCKED",
+        "STALLED",
+        "BUDGET_EXHAUSTED",
+        "PAUSED",
+        "CANCELLED",
+        "FAILED"
+      ]
+    },
+    "pending_status": {
+      "anyOf": [
+        {
+          "enum": [
+            "NEW",
+            "PREPARING",
+            "PLANNING",
+            "EXECUTING",
+            "VERIFYING",
+            "REVIEWING",
+            "CHECKPOINTING",
+            "SUCCEEDED",
+            "AWAITING_INPUT",
+            "BLOCKED",
+            "STALLED",
+            "BUDGET_EXHAUSTED",
+            "PAUSED",
+            "CANCELLED",
+            "FAILED"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "snapshot_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "environment_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "iteration": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "stalled_iterations": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "repeated_failure_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "event_sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "lease_token": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "checkpoint": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "passed_criteria": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "confirmed_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "resolved_dependency_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "passed_criteria",
+        "confirmed_fact_ids",
+        "resolved_dependency_ids"
+      ],
+      "additionalProperties": false
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "wall_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cost_microunits": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cost_currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      },
+      "required": [
+        "wall_seconds",
+        "tokens",
+        "cost_microunits",
+        "cost_currency"
+      ],
+      "additionalProperties": false
+    },
+    "outstanding_action_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "next_action": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "contract_digest",
+    "status",
+    "pending_status",
+    "snapshot_digest",
+    "environment_digest",
+    "iteration",
+    "stalled_iterations",
+    "repeated_failure_count",
+    "event_sequence",
+    "lease_token",
+    "checkpoint",
+    "progress",
+    "usage",
+    "outstanding_action_ids",
+    "reason",
+    "next_action",
+    "updated_at"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "CHECKPOINTING"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "pending_status": {
+            "enum": [
+              "NEW",
+              "PREPARING",
+              "PLANNING",
+              "EXECUTING",
+              "VERIFYING",
+              "REVIEWING",
+              "CHECKPOINTING",
+              "SUCCEEDED",
+              "AWAITING_INPUT",
+              "BLOCKED",
+              "STALLED",
+              "BUDGET_EXHAUSTED",
+              "PAUSED",
+              "CANCELLED",
+              "FAILED"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "pending_status": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

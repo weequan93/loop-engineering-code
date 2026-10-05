@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-05T09:59:49.761720+00:00",
+  "framework_version": "1.0.0",
+  "native_protocol_version": "2.0",
+  "result": "pass",
+  "source_manifest_digest": "sha256:06fe6c116e470c22c302760961409e3b5f5862870165f50324a5e6a0c16ee3bb",
+  "source_files": 231,
+  "source_manifest_scope": {
+    "directories": [
+      "loop_engineering",
+      "reference",
+      "tests",
+      "scripts",
+      "schemas",
+      "templates",
+      "examples",
+      ".github"
+    ],
+    "files": [
+      "AGENTS.md",
+      "LOOP.md",
+      "README.md",
+      "docs/adapters.md",
+      "docs/adoption.md",
+      "docs/architecture.md",
+      "docs/contracts.md",
+      "docs/desktop-mcp.md",
+      "docs/development-agents.zh-CN.md",
+      "docs/evaluation.md",
+      "docs/execution-tools.zh-CN.md",
+      "docs/how-to-use.md",
+      "docs/implementation-status.json",
+      "docs/implementation-status.md",
+      "docs/local-controller.md",
+      "docs/native-engine.md",
+      "docs/native-host.zh-CN.md",
+      "docs/offline-corpus.json",
+      "docs/reinitialize.zh-CN.md",
+      "docs/requirements-setup.zh-CN.md",
+      "docs/scenarios.md",
+      "docs/team-execution.md",
+      "docs/team-memory.zh-CN.md",
+      "docs/verification.md",
+      "requirements-dev.txt",
+      "docs/native-review.zh-CN.md",
+      "docs/native-continuation.md",
+      "docs/native-rework-verification.md",
+      "docs/native-autonomy.md"
+    ],
+    "encoding": "SHA256 of UTF-8 JSON mapping relative paths to hex SHA256 byte digests; ensure_ascii=False, sort_keys=True, separators=(comma,colon). Directory entries use .py/.json/.md/.yml/.yaml/.cjs; generated validation reports and __pycache__ excluded.",
+    "file_count": 231
+  },
+  "full_offline_validation": {
+    "exit_code": 0,
+    "tests": 684,
+    "command": "/opt/anaconda3/bin/python3 -m unittest discover -s tests -v",
+    "log": "/private/tmp/loop-autonomy-full-offline.log",
+    "elapsed_seconds": 1055.846,
+    "sha256": "7bbfcb9c2399a1dd8a2ee04c2735357acce6ab2d33feeddff133e569c63ec837",
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O"
+  },
+  "new_tests_since_previous_644_test_report": 40,
+  "native_tool_count": 36,
+  "live_model_calls": 0,
+  "targeted_runs": [
+    {
+      "tests": 66,
+      "result": "pass",
+      "log": "/private/tmp/loop-autonomy-combined.log",
+      "sha256": "81967e4cfa7a552cd92503c6c2544676f8e3da00cbfd7ce0cfac8bee5de514ca"
+    },
+    {
+      "tests": 3,
+      "result": "pass",
+      "log": "/private/tmp/loop-autonomy-final-boundaries.log",
+      "sha256": "a9327c02f691e30a104db7d58bd7067380141996553f63028c961f02560877fd"
+    }
+  ],
+  "prior_incomplete_attempts": [
+    {
+      "log": "/private/tmp/loop-rework-full-offline.log",
+      "result": "interrupted",
+      "reason": "Sandbox denied loopback/process inspection needed by owned offline fixtures; this run is not accepted validation."
+    },
+    {
+      "log": "/private/tmp/loop-rework-full-offline-local.log",
+      "result": "incomplete",
+      "reason": "Turn interruption left no terminal result; process absence was confirmed before replacement. This run is not accepted validation."
+    }
+  ],
+  "additional_checks": {
+    "schema_files": 20,
+    "saved_examples_templates": 27,
+    "evidence_fixtures": 2,
+    "skill_validation": "passed quick_validate.py",
+    "documentation_links_checked": 27,
+    "readiness": {
+      "target": "1.0",
+      "implementation_complete": true,
+      "live_evaluation_prerequisite": "met",
+      "automatic_live_dispatch": false,
+      "complete_items": 18,
+      "required_items": 18,
+      "remaining": [],
+      "additional_prerequisites": [
+        "Current full offline validation passes",
+        "Explicit operator dispatch"
+      ],
+      "assurance": "Reviewed inventory and existing file references; no runtime attestation or test execution"
+    },
+    "local_demo": {
+      "status": "SUCCEEDED",
+      "log": "/private/tmp/loop-autonomy-demo-local.json",
+      "sha256": "a897072c32c9317c74ec4e8e81ead15d21321d1d6355aa1e7ea087eee50f6ddc"
+    },
+    "native_demo": {
+      "status": "SUCCEEDED",
+      "log": "/private/tmp/loop-autonomy-demo-native.json",
+      "sha256": "d556bed31cb025d3adfaab4a5665c6d4ebbf218019bdf78232d17c9fcaccc87a"
+    }
+  },
+  "coverage": [
+    "Bounded failed independent review -> same completed repair owner/children -> material repair -> fresh checks and final handoff",
+    "Original task scope/criteria/usage/counters, full hashed findings and failure history survive rework",
+    "Rework crash, pause, source conflict, missing policy, active writer and exhausted allowances",
+    "Durable scenario attempts, captured artifacts, idempotent reports, explicit effect reconciliation and no blind replay",
+    "Unknown cancelled host actions cannot escape into a fresh batch; inspection-only reconciliation never resumes work",
+    "Parallel independent drafts, frozen exact ownership, serial original checks and final integrated acceptance",
+    "Inspected stale-base refresh with original child/deadline and journal replay after crash or pause",
+    "Conflicting/uninspected writes and direct proposals outside parallel ownership refuse integration",
+    "Unchanged transitive input closure reuses host observations with original provenance; shared changes invalidate affected observations",
+    "Unknown/ambiguous dependency coverage, changed environment, missing/corrupt artifacts and invalid graphs refuse reuse",
+    "Host heartbeat expiry, competing owner, stopped team, honest elapsed/controller/unknown usage separation",
+    "Read-only version/capability handshake, customized instruction preservation, exact prior skill upgrades and changed-code reconnect gate",
+    "Effective registered reviewer durations, repeated command passes, unknown external timing and pre-freeze overflow rejection"
+  ],
+  "limitations": [
+    "Native progress depends on an active App/CLI host; MCP cannot wake an ended conversation.",
+    "Host activity/identity/environment reports and specialist receipts are not independently attested.",
+    "Native host-wide tokens, cost and thinking time remain outside the controller ledger; hard caps are unsupported.",
+    "Concurrent drafts share OS authority; effects/checks integrate serially.",
+    "Dependency reuse covers host observation artifacts only, not formal evidence or final checks. Semantic dependency completeness needs review.",
+    "The bridge records host actions but does not operate a browser, desktop application or emulator.",
+    "No live model/provider/device evaluation, production rollout or installed-project migration was performed.",
+    "agent-fabric and macare batches, contracts, answers and history were not modified."
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1",
+  "task_id": "fix-whitespace-slug",
+  "revision": 1,
+  "objective": "Return an empty slug for all-whitespace input while preserving existing slug behavior.",
+  "kind": "bugfix",
+  "workflow": "quick",
+  "autonomy": "assisted",
+  "scope": {
+    "write_allow": [
+      "src/**",
+      "tests/**"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".loop/control/**"
+    ]
+  },
+  "authorization": {
+    "allowed_actions": [
+      "read_workspace",
+      "edit_workspace",
+      "run_checks"
+    ]
+  },
+  "criteria": [
+    {
+      "id": "empty-whitespace",
+      "description": "An input containing only whitespace produces the empty string.",
+      "check_ids": [
+        "regression"
+      ]
+    },
+    {
+      "id": "preserve-behavior",
+      "description": "Existing supported slug behavior continues to pass the relevant suite.",
+      "check_ids": [
+        "suite"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "regression",
+      "type": "command",
+      "description": "Run the regression assertion for whitespace-only input.",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_slug.TestSlug.test_whitespace_only"
+      ],
+      "timeout_seconds": 60
+    },
+    {
+      "id": "suite",
+      "type": "command",
+      "description": "Run the target repository's existing slug suite.",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "timeout_seconds": 300
+    }
+  ],
+  "required_capabilities": {
+    "agent": [
+      "text_input"
+    ],
+    "runtime": []
+  },
+  "limits": {
+    "max_iterations": 12,
+    "max_wall_seconds": 3600,
+    "max_stalled_iterations": 3,
+    "max_repeat_failure": 2,
+    "max_tokens": null,
+    "max_cost_microunits": null,
+    "cost_currency": "USD"
+  },
+  "extensions": {}
+}

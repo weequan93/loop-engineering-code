@@ -1,0 +1,27 @@
+name: Framework checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  local-controller:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m unittest discover -s tests -v
+      - run: python scripts/validate_contracts.py
+      - run: python scripts/check_readiness.py --for-live-evaluation
+      - run: python scripts/demo_local.py
+      - run: python scripts/demo_native.py
+      - run: python scripts/loop.py --version

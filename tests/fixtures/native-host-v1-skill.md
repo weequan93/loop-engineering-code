@@ -1,0 +1,40 @@
+---
+name: loop-engineering
+description: Coordinate a development project through the project-scoped Loop MCP tools inside Codex or Claude. Collect requirements from docs and actual answers, organize specialist work, apply verified proposals, and show durable progress. Use for a project connected to loop-native, including starting, continuing, pausing, inspecting or accepting that team's work.
+---
+
+# Loop Engineering
+
+Own the conversation in the current App/CLI. The user supplies an idea/spec and answers questions; operate the Loop tools yourself. Do not make the user copy repeated scheduler commands. The MCP server launches no model and does not continue thinking after this host turn ends.
+
+## Start or reconnect
+
+1. Call `loop_progress` to inspect this project's existing teams. Keep the same native team and its records when continuing. An unfinished automatic team cannot be taken over; show its actual state. Cancel it only when the user has authorized stopping it or changing its execution mode, preserving its history and unknown usage.
+2. Call `loop_begin`, including `brief` only for a new actual user idea. Missing controls are initialized; existing specs and project instructions are preserved. Reconnect without a replacement brief.
+3. Show the current stage, role/task, completed/total task counts, checks and blockers. Open the returned `dashboard_url` in the host's browser panel when available, or offer the local link. If a loopback viewer is unavailable, use `dashboard_path` with a local HTML preview. The page updates while this MCP connection is alive; an old snapshot is not live progress. Use concise text progress in a CLI.
+
+## Requirements and planning
+
+Call `loop_stage_request` in SPEC or INTAKE. Read its mandatory instructions, role memory, actual documents, milestone stop points and exact `response_schema`. Use the host's read tools for omitted source files; do not claim unseen sources were reviewed.
+
+For requirements, produce grounded spec/draft and questions. Ask at most three material questions together in this chat. Send only actual human replies to `loop_answer_question`, then request fresh context. Cite only supplied `allowed_source_refs`; preserve unknowns and project scope. Submit through `loop_stage_submit`. Do not edit frozen `.loop` files directly. Completing SPEC advances to INTAKE without executing development tasks.
+
+For planning, resolve the existing role roster, activation/coverage decisions, task contracts, dependency/phase boundaries, actual relative output files, checks and final acceptance scope. Match the returned planning schema, including its JSON-string fields. Read `loop_role_context` for assigned professionals. Required independent review needs a registered evaluator; merely assigning a reviewer role cannot satisfy that check.
+
+## Specialist execution
+
+Use actual native sub-agents when the host provides them and the work benefits from delegation. Give each a professional role and bounded assignment. The main agent coordinates dependencies and consumes separate results. Without native delegation, cover roles serially and identify that limitation; do not claim a multi-agent team ran just because role instructions exist. Do not create unrelated user-owned chats to simulate workers.
+
+For each ready task, call `loop_task_request` and supply that bound packet and `response_schema` to its worker. Workers return one AgentStep using the exact task, contract and candidate hashes. They must not edit the shared project, execute effects or delegate from that proposal-only context. The coordinator may analyze roles in parallel; Loop integrates task effects serially.
+
+Submit with `loop_task_submit`. Inspect actual controller status and checks. Collect results with `loop_collect_task` after interruption or external verification. For recoverable failed checks, inspect findings, use `loop_team_control` with resume to return the child to planning, then request a fresh bound proposal; cumulative child limits remain. A user pause requires an actual resume instruction, and a BLOCKED/terminal team needs a reviewed new batch. For a bound handoff, have the assigned recipient inspect the real outputs/checks and record its actual decision through `loop_receive_handoff`. Receipts are host-declared and do not replace required evaluator evidence.
+
+Use `loop_evaluation_run` only for an already registered matching executor, or `loop_evaluation_request`/`loop_evaluation_import` for an actual registered evaluator's signed result. Never sign your own work as an independent reviewer, invent an unsigned pass, treat native-agent text as authenticated evidence, or waive a missing human/UI/load check. Missing evaluators remain a visible blocker. The MCP bridge cannot attest which native sub-agent authored a chat response.
+
+## Progress and recovery
+
+Refresh `loop_progress` at meaningful transitions and at least once per minute during ongoing host work. Report what is happening and what will resolve the current uncertainty. Use actual task counts; no invented percent, ETA or spend. A check belongs to its recorded candidate. Only claim completion when the team is COMPLETE and `final_candidate_current` is true, and state that batch's accepted scope.
+
+Use `loop_memory` when rebuilding context after a conversation reset. Continue the existing team; preserve questions, sources, checks and receipts. Use `loop_team_control` for the user's pause/resume/cancel instructions. A cancelled team is terminal. Recoverable stage writes are journaled; changed frozen inputs need a reviewed new batch rather than silent overwrite.
+
+Native conversations/delegation are outside scheduler accounting, with unknown tokens/cost. Hard spend caps and missing required capabilities fail closed. Ordinary native-host work stays in this conversation; do not launch `team-run` or a nested coding CLI to replace it. Registered check executors retain their own limits and actual platform restrictions.

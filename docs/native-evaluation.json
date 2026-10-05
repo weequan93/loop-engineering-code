@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "framework_version": "1.0.0",
+  "recorded_at": "2026-10-03T10:13:24.175+00:00",
+  "evaluation_kind": "offline-native-integration",
+  "network_requests": 0,
+  "live_model_calls": 0,
+  "python": "3.13.5",
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "fixtures": {
+    "provider_responses": "synthetic OpenAI/Anthropic protocol objects",
+    "usage": "fictional counters",
+    "pricing": "fictional USD microcurrency rates",
+    "review": "synthetic registered evaluator judgment"
+  },
+  "baseline": [
+    {
+      "check_id": "regression",
+      "result": "fail",
+      "exit_code": 1,
+      "snapshot_digest": "sha256:891af601f91c6b54ef2f73f829c91df92ad4225757ba223d963457ada85a5fa4"
+    },
+    {
+      "check_id": "suite",
+      "result": "pass",
+      "exit_code": 0,
+      "snapshot_digest": "sha256:891af601f91c6b54ef2f73f829c91df92ad4225757ba223d963457ada85a5fa4"
+    }
+  ],
+  "ambiguous_response": {
+    "iteration": 1,
+    "budget": {
+      "tokens_upper": 228,
+      "cost_upper_microunits": 356,
+      "known_tokens": 0,
+      "known_cost_microunits": 0,
+      "actual_tokens": null,
+      "actual_cost_microunits": null,
+      "currency": "USD",
+      "unknown_requests": 1,
+      "violated_bound": false
+    }
+  },
+  "awaiting_review": {
+    "status": "REVIEWING",
+    "checks": [
+      {
+        "check_id": "regression",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      },
+      {
+        "check_id": "suite",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      }
+    ]
+  },
+  "provider_operations": {
+    "openai_fixture": [
+      "count",
+      "respond"
+    ],
+    "anthropic_fixture": [
+      "count",
+      "respond"
+    ]
+  },
+  "final": {
+    "status": "SUCCEEDED",
+    "iterations": 2,
+    "checks": [
+      {
+        "check_id": "regression",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      },
+      {
+        "check_id": "suite",
+        "result": "pass",
+        "exit_code": 0,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      },
+      {
+        "check_id": "independent-review",
+        "result": "pass",
+        "exit_code": null,
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      }
+    ],
+    "stages": [
+      {
+        "id": "fix",
+        "status": "passed",
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      },
+      {
+        "id": "compatibility",
+        "status": "passed",
+        "snapshot_digest": "sha256:602e86e0ba269b49a5b6b75b5ca0cb6942a0597a7c6a0e9aa59f2f7c65a919fa"
+      }
+    ],
+    "usage": {
+      "wall_seconds": 1,
+      "tokens": null,
+      "cost_microunits": null,
+      "cost_currency": "USD"
+    },
+    "budget": {
+      "tokens_upper": 348,
+      "cost_upper_microunits": 496,
+      "known_tokens": 120,
+      "known_cost_microunits": 140,
+      "actual_tokens": null,
+      "actual_cost_microunits": null,
+      "currency": "USD",
+      "unknown_requests": 1,
+      "violated_bound": false
+    }
+  },
+  "resume_preserved_iteration_and_reservations": true,
+  "authenticated_replay_matches": true,
+  "restored_snapshot_matches": true,
+  "effective_autonomy": "manual",
+  "limitations": [
+    "One small Python task; no model-performance measurement.",
+    "Local supervised checks; no deployed Docker boundary was exercised.",
+    "Authentication is exercised, but keys and controller share the host OS administrator.",
+    "An ambiguous fixture retains unknown actual usage; known subtotals are not total spend."
+  ]
+}

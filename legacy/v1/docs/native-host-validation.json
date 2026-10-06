@@ -1,0 +1,1977 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-06T09:09:32.523583+00:00",
+  "framework_version": "1.0.0",
+  "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+  "source_files": 257,
+  "test_policy": {
+    "live_model_calls": 0,
+    "live_agent_calls": 0,
+    "real_project_runs": 0,
+    "docker_execution": "not_exercised",
+    "scope": "Current persistent supervisor full offline validation; previous project observations remain historical and no actual project or model run was started."
+  },
+  "full_offline_validation": {
+    "report": "docs/native-cli-route-validation.json",
+    "result": "offline_functionality_pass_with_existing_staged_whitespace",
+    "unique_tests": 839,
+    "live_model_calls": 0
+  },
+  "targeted_validation": {
+    "registered_review": {
+      "result": "pass",
+      "tests": 31,
+      "elapsed_ms": 114875,
+      "log_sha256": "sha256:71defbb9e3f7bc49bf6c4f25c15c5729a863645719d34b43a0aacd68ea1d4d61",
+      "command": ".venv/bin/python -m unittest tests.test_native_review -v"
+    },
+    "preflight_and_recovery": {
+      "result": "pass",
+      "tests": 42,
+      "elapsed_ms": 82229,
+      "log_sha256": "sha256:92e968ef7ddd31b91d2a47ed6b025d88cb56776cd261bbbf93ad3680b91db7da",
+      "command": ".venv/bin/python -m unittest tests.test_native_preflight tests.test_native_flow -v"
+    },
+    "professional_final_gates": {
+      "result": "pass",
+      "tests": 8,
+      "elapsed_ms": 23479,
+      "log_sha256": "sha256:efe0b08fc4a2a14a8e75c1a1e72155ade11e8f34dcffdbbeeb2bdf4e0c68ddcf"
+    },
+    "nested_context": {
+      "result": "pass",
+      "tests": 5,
+      "elapsed_ms": 13308,
+      "log_sha256": "sha256:ea614a93c641db5123c1b0e810016388367b61a1827aaf95018400da26ccde8e"
+    },
+    "nested_context_and_repair_integration": {
+      "result": "pass",
+      "tests": 7,
+      "elapsed_ms": 18799,
+      "log_sha256": "sha256:827967820cb743dd33b2769292fa7b25803682d62dcdab68952f0bcdb79de8e0"
+    },
+    "installer": {
+      "result": "pass",
+      "tests": 17,
+      "elapsed_ms": 52,
+      "log_sha256": "sha256:8cb40602f24cacf4273fa800eab90d34c2c77049e6c401639f032e7ab648bec2",
+      "command": ".venv/bin/python -m unittest tests.test_host_install -v"
+    },
+    "executor_compatibility": {
+      "result": "pass",
+      "tests": 13,
+      "elapsed_ms": 6354,
+      "log_sha256": "sha256:01db6862fab489406a63e74ad771f568a1007d9b8f3c26dfd6932ea22dd1b3af",
+      "command": ".venv/bin/python -m unittest tests.test_external_execution -v"
+    },
+    "planning_stage_recovery": {
+      "stage_freeze": {
+        "result": "pass",
+        "tests": 10,
+        "elapsed_ms": 8893,
+        "scope": "New native-host freeze and direct TeamController build stage cases; included in current full suite"
+      },
+      "stage_repair": {
+        "result": "pass",
+        "tests": 14,
+        "elapsed_ms": 8616,
+        "command": ".venv/bin/python -m unittest tests.test_native_plan_repair",
+        "log_sha256": "sha256:17a999108d3e3c38481e84c9f080cb84b4a9a3e5cb2020a82165accdde8c87c6"
+      },
+      "supporting_flow_install": {
+        "result": "pass",
+        "tests": 43,
+        "elapsed_ms": 36398,
+        "scope": "Supporting repair/flow/installer run before final pause/conflict cases; final source covered by full suite",
+        "log_sha256": "sha256:24eee5d89e4ee1269b692dc24f86cc39726d782b822f23479f3eb2224c5ba7f1"
+      },
+      "prior_attempts": [
+        {
+          "tests": 8,
+          "result": "fail",
+          "failures": 1,
+          "errors": 2,
+          "log_sha256": "sha256:8a0d9065b884637a1a5a5a64ef01e460e7267d462f2406a8f748b09a99865fa2",
+          "reason": "Reproduced missing reserved-child continuation; fixed native next action. Corrected fixture reuse and MCP initialization."
+        },
+        {
+          "tests": 99,
+          "result": "fail",
+          "failures": 1,
+          "log_sha256": "sha256:be38bf698ff3a68399233933bb118de8510c27f9d336b6853fc1682a6e24203c",
+          "reason": "Process imported former 25-tool assertion before the new 26th tool. Current assertion and RPC presence passed in a fresh process and full suite."
+        }
+      ]
+    },
+    "complete_review_material": {
+      "report": "docs/native-review-material-validation.json",
+      "new_tests": 10,
+      "included_in_full_suite": true
+    }
+  },
+  "coverage": [
+    "Actual deterministic spec/intake, real user answers, plan preparation and cumulative per-child limits",
+    "Real local checks, guarded changes, receipts, signed evaluator import and registered executor completion",
+    "Candidate and input staleness refusal, missing evaluators, hard spend caps and unavailable capability refusal",
+    "Pause/resume/cancel, journaled control writes, crash recovery and cancellation arriving during commit",
+    "Bounded role memory and large-source intake; actual source-linked context and omitted-source accounting",
+    "Actual stdio subprocess, closed typed tool schemas and refusal of unsupported generic authority",
+    "Read-only loopback progress page, path/Host/control refusal, refresh watcher, escaped content and HTML fallback",
+    "Project-scoped installation, preserved settings, idempotence, collision/symlink/malformed-config refusal, rollback and concurrent settings edits",
+    "Three actual required answers in SPEC and INTAKE retain AWAITING_INPUT until the last answer; no resume workaround or model call",
+    "Explicit next actions and bounded cached packets; document/answer/spec/typed-plan/real task checks/recipient/final completion in one offline flow",
+    "Planning activity bound to the current request/candidate, escaped persisted actual host reports and history; no implementation task or independent-evidence claim",
+    "Paused assigned tasks stay recorded and display waiting for resume; legacy ownership, frozen-input conflicts, cancellation priority and cancellation during activity commit refuse continuation",
+    "Exact previous official skill upgrades once; customized instructions refuse replacement and unrelated project settings remain unchanged",
+    "Request-bound disposable workbench files, short-summary diff import, original command checks, real receipts and final current-candidate completion",
+    "Actual changed-file display, fake-clock waiting expiry and recovery next action; repeated requests and progress polls never renew the deadline",
+    "Expired drafts preserved for stable supervised collection; reassignment keeps cumulative child identity and refuses obsolete request import",
+    "Pause/cancel priority including cancellation during workbench checkpoint; stale controls/candidates, symlinks, permissions, controls and out-of-scope files refuse integration",
+    "Negotiated AgentStep 0.3 binary/deletion import; 0.2 refusal, bounded history/proposals, strict MCP schemas and missing independent evaluator refusal",
+    "Exact second published skill upgrade changes only the official skill; custom skills and unrelated preferences preserved",
+    "Bound professional subdrafts inside one accepted task: exact selected/covered role rules, actual host-declared identity, disjoint copies/files, collected same-request dependencies and frozen registered parallel slots",
+    "Real two-worker file drafting, serial collection into coordinating workbench, original command checks and final current-candidate completion; no invented model dispatch or independent pass",
+    "Idempotent assignments/collection, non-renewing expiry, stopped zero-file slot/ownership release, stale running-slot retention and refused identity/status spoofing",
+    "Frozen specialist import journal replay, stop reports during pause, explicit resume preserving pending request/child/deadlines without automatic draft effects, and writer-locked final submission guards including raced admission and collect=False refusal",
+    "Near-limit professional enrichment trims only optional code excerpts and reports omissions; mandatory task/role rules and source provenance remain, with actual collected predecessor summaries/files",
+    "Persistent observed specialist board and escaped HTML, wrong-scope problem display, readonly advisory refusal, and precise 25-tool MCP schema enumeration",
+    "Exact third published skill upgrades once; only official project instructions changed, 700 other macare files and all four cancelled historical team records preserved",
+    "Actual native child with authenticated current findings: trim optional nested sources after schema, specialist/workbench metadata and final loop_next enrichment; saved compact UTF8 bytes obey the same bound; genuine mandatory overflow refuses admission",
+    "Frozen check/type exact-match preflight distinguishes executable command, registered browser/HTTP driver, registered review, signed-import-only and missing/revoked authority; registration declaration never counts as completed evidence",
+    "Private signed and executable-identity-bound Codex review registration launches no model; deterministic actual subprocess reviews use a fresh read-only context and current copied candidate, original frozen checks, real command logs and registered signed import",
+    "Actual pass/fail/inconclusive judgments; no default paid redispatch, explicit negative retry with preserved findings and cumulative limits; modified copy/candidate/config/artifact, invalid judgment, hard spend cap and wrong authority refuse completion",
+    "Durable preparation wall journal, crash-gap charge and exhausted-budget zero paid launch; concurrent preparation CAS prevents duplicate subprocess and history reset; actual pause/cancel preserve usage/cache and never implicitly unpause",
+    "Original signed cached RESULT imports after pause/resume cleared selection or ACTIVE crash gap, with no second provider/process; unresolved effects and exhausted budgets cannot consume results or count pass",
+    "Current failed review prepares a real bounded repair workbench packet only for that same running/planning task with existing edit authority and allowed scope, preserves authenticated current findings and repair ownership, and never reopens completed or cross-task work or resets deadlines",
+    "Actual succeeded controller command checks cannot bypass uncollected professional workers through direct handoff; stopped nonempty current drafts block formal request/import/run before consumption or dispatch; real collection/empty stop keeps original child/iterations/evidence",
+    "Exact prior official skill offline upgrade path tested; active project instructions deliberately preserved to avoid changing its frozen source candidate",
+    "Freeze-before-dispatch task/engine stage validation; empty-stage repairs preserve completed records and reserved child IDs, reject started/shared/meaningful graphs, replay crashes, preserve user conflicts and require explicit paused recovery."
+  ],
+  "compatibility": {
+    "legacy_desktop_bridge_tests": 13,
+    "included_in_full_suite": true,
+    "mcp_protocol": "2025 stdio protocol family through 2025-11-25",
+    "native_feature_protocol": "2.0"
+  },
+  "offline_demos": {
+    "local": {
+      "result": "pass",
+      "log_sha256": "sha256:edd415a71b05420be624c6eee67e46b3621c6d027b038423a7fcd1ac00fde6c7",
+      "model_calls": 0
+    },
+    "native": {
+      "result": "pass",
+      "log_sha256": "sha256:8f9653b150a1cbe3af3a5ecbfa4e5448668254690bab83e2b27b7905013d9a98",
+      "model_calls": 0
+    },
+    "corpus": {
+      "result": "pass",
+      "log_sha256": "sha256:5ac071e15350f54e6fa97b9cddaa4bdc099df89314344bc4ec513eea38d35643",
+      "model_calls": 0
+    },
+    "basis": "Earlier recorded deterministic demos retained as historical results; not rerun for this update. Current full suite includes end-to-end fixtures."
+  },
+  "additional_checks": {
+    "contracts": "17 schemas, 27 saved examples/templates, 2 evidence fixtures and native contract fixtures passed",
+    "readiness": "19 of 19; automatic_live_dispatch=false",
+    "python_ast_files": 107,
+    "documentation_local_links": 136,
+    "browser_worker_syntax": "pass",
+    "source_skill": "Current source quick_validate.py pass",
+    "installed_codex_skill": "Historical published skill retained in active project; no source update in this turn",
+    "tracked_diff_whitespace": "pass"
+  },
+  "progress_visual_inspection": {
+    "result": "pass",
+    "surface": "Codex in-app browser",
+    "fixture": "Temporary offline specialist board: one declared RUNNING backend fixture with actual slug.py draft, one PREPARED unspawned architecture assignment, two occupied slots, 181/180 second expired waiting and zero verified-complete tasks",
+    "model_calls": 0,
+    "temporary_viewer_closed": true,
+    "macare_state_modified": false,
+    "claim": "Visible table/layout and states only; fixture identities are not actual native model execution",
+    "basis": "Historical specialist-board visual check retained; new verification table is covered by current offline escaped-HTML cases, not a new live GUI run"
+  },
+  "project_installation": {
+    "project": "/Users/super/Documents/ai/macare",
+    "host": "codex",
+    "result": "project_files_installed",
+    "files": [
+      ".agents/skills/loop-engineering/SKILL.md",
+      ".agents/skills/loop-engineering/agents/openai.yaml",
+      ".codex/config.toml"
+    ],
+    "existing_project_files_preserved": 43,
+    "project_source_changes": 0,
+    "old_team_cancelled": false,
+    "model_dispatches": 0,
+    "client_probe": {
+      "app_server_initialized": true,
+      "effective_loop_native": true,
+      "loop_native_enabled": true,
+      "layers": [
+        {
+          "source": {
+            "type": "project",
+            "dotCodexFolder": "/Users/super/Documents/ai/macare/.codex"
+          },
+          "disabled_reason": null,
+          "contains_loop_native": true
+        },
+        {
+          "source": {
+            "type": "user",
+            "file": "/Users/super/.codex/config.toml",
+            "profile": null
+          },
+          "disabled_reason": null,
+          "contains_loop_native": false
+        },
+        {
+          "source": {
+            "type": "system",
+            "file": "/etc/codex/config.toml"
+          },
+          "disabled_reason": null,
+          "contains_loop_native": false
+        }
+      ],
+      "read_error": null,
+      "model_dispatches": 0,
+      "exit_code": 0
+    },
+    "activation": "effective_codex_configuration_enabled",
+    "global_trust_modified": true,
+    "automatic_approval_review": {
+      "result": "rejected",
+      "action": "Add macare to Codex trusted projects",
+      "reason": "Project trust persistently enables project-local configuration, hooks and execution policies; explicit authorization for this trust change was required",
+      "resolution": "Completed after explicit user authorization; no workaround or other trust changes"
+    },
+    "trust_change_scope": "Only /Users/super/Documents/ai/macare; unrelated settings compared with private backup and preserved",
+    "explicit_user_authorization_received": true,
+    "latest_upgrade": {
+      "files_before": 701,
+      "files_after": 701,
+      "changed_files": [
+        ".agents/skills/loop-engineering/SKILL.md"
+      ],
+      "other_project_files_preserved": 700,
+      "installed_skill_matches_source": true,
+      "installed_skill_sha256": "af986ce583cd21a725ba33803c7486861b49032ec9eb03beb4378467a3af905b",
+      "files_written": 1,
+      "teams_before": [
+        {
+          "team_id": "team-f9b8b15ac8e24cfdb86c919597e52e5c",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 38,
+          "updated_at": "2026-10-04T03:13:51.412+00:00",
+          "controller_record_sha256": "0415ed1cc9d95b1c25973723e04984230572c92ca2cbae618527c72b8862f149",
+          "task_counts": {
+            "COMPLETE": 3,
+            "RUNNING": 1,
+            "PENDING": 3
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-4b6902cb61d14a138bea6e3ed199369d"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-9d32186098ec46d1a50ad42b4949c9e7"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-dd465aad114a48f78b3896246dbd6332"
+            },
+            "r0-report": {
+              "status": "RUNNING",
+              "child_run_id": "run-d1bc32a8a522403f9d3e56587ca8678b"
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-9922c91daf77441caba7c89145c3d858",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 11,
+          "updated_at": "2026-10-04T02:49:06.521+00:00",
+          "controller_record_sha256": "b6111e4cd81b2a3f12d6da88ab8f265ea85c9f174a3d946f3e2db4e314338292",
+          "task_counts": {
+            "COMPLETE": 1,
+            "PENDING": 5,
+            "HANDOFF": 1
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-8ca86577c42d450b978eb7d90a6d8d9c"
+            },
+            "r0-probes": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-dock": {
+              "status": "HANDOFF",
+              "child_run_id": "run-982ba4011c1f4612adf2b912c78f1e02"
+            },
+            "r0-report": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 56,
+          "updated_at": "2026-10-04T02:31:42.989+00:00",
+          "controller_record_sha256": "6504f6189b833364aeaa4163cb67f0df4d4ca55a0a75413ea72e237aead9463d",
+          "task_counts": {
+            "COMPLETE": 4,
+            "RUNNING": 1,
+            "PENDING": 2
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-b53945936e67412c99e54426ef1b6011"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e9fac3fe70e14e639505369cb650d446"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-96d1afa86a2d412eb1c8f9dbd1a6151a"
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e08227d3af1f403389131144261032c4"
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-c2ceb6211d5d4232ba20872ef117a560"
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-5616992f7441436ab8082a714645f79b",
+          "status": "CANCELLED",
+          "stage": "INTAKE",
+          "revision": 18,
+          "updated_at": "2026-10-03T16:07:33.502+00:00",
+          "controller_record_sha256": "14e31eb786c5e3f4f48d87b9c20cc4a40f5fe1207b8a04bea4158f301ce41200",
+          "task_counts": {},
+          "formal_tasks": 0,
+          "tasks": {},
+          "workbenches": 0,
+          "professional_workers": 0
+        }
+      ],
+      "teams_after": [
+        {
+          "team_id": "team-f9b8b15ac8e24cfdb86c919597e52e5c",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 38,
+          "updated_at": "2026-10-04T03:13:51.412+00:00",
+          "controller_record_sha256": "0415ed1cc9d95b1c25973723e04984230572c92ca2cbae618527c72b8862f149",
+          "task_counts": {
+            "COMPLETE": 3,
+            "RUNNING": 1,
+            "PENDING": 3
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-4b6902cb61d14a138bea6e3ed199369d"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-9d32186098ec46d1a50ad42b4949c9e7"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-dd465aad114a48f78b3896246dbd6332"
+            },
+            "r0-report": {
+              "status": "RUNNING",
+              "child_run_id": "run-d1bc32a8a522403f9d3e56587ca8678b"
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-9922c91daf77441caba7c89145c3d858",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 11,
+          "updated_at": "2026-10-04T02:49:06.521+00:00",
+          "controller_record_sha256": "b6111e4cd81b2a3f12d6da88ab8f265ea85c9f174a3d946f3e2db4e314338292",
+          "task_counts": {
+            "COMPLETE": 1,
+            "PENDING": 5,
+            "HANDOFF": 1
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-8ca86577c42d450b978eb7d90a6d8d9c"
+            },
+            "r0-probes": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-dock": {
+              "status": "HANDOFF",
+              "child_run_id": "run-982ba4011c1f4612adf2b912c78f1e02"
+            },
+            "r0-report": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 56,
+          "updated_at": "2026-10-04T02:31:42.989+00:00",
+          "controller_record_sha256": "6504f6189b833364aeaa4163cb67f0df4d4ca55a0a75413ea72e237aead9463d",
+          "task_counts": {
+            "COMPLETE": 4,
+            "RUNNING": 1,
+            "PENDING": 2
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-b53945936e67412c99e54426ef1b6011"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e9fac3fe70e14e639505369cb650d446"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-96d1afa86a2d412eb1c8f9dbd1a6151a"
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e08227d3af1f403389131144261032c4"
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-c2ceb6211d5d4232ba20872ef117a560"
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-5616992f7441436ab8082a714645f79b",
+          "status": "CANCELLED",
+          "stage": "INTAKE",
+          "revision": 18,
+          "updated_at": "2026-10-03T16:07:33.502+00:00",
+          "controller_record_sha256": "14e31eb786c5e3f4f48d87b9c20cc4a40f5fe1207b8a04bea4158f301ce41200",
+          "task_counts": {},
+          "formal_tasks": 0,
+          "tasks": {},
+          "workbenches": 0,
+          "professional_workers": 0
+        }
+      ],
+      "all_team_records_preserved": true,
+      "state_database_preserved": true,
+      "team_control_actions": 0,
+      "project_host_settings_modified": false,
+      "global_settings_modified": false,
+      "model_dispatches": 0,
+      "new_mcp_connection_verified": false,
+      "basis": "Historical installed-source equality at the recorded revision; current source skill has changed, and the active batch retains that installed revision."
+    },
+    "historical_fields": "Original installation/trust/config probe and prior upgrades retained historically; latest_upgrade records only this professional-coordination skill update",
+    "upgrade_history": [
+      {
+        "files_before": 670,
+        "files_after": 670,
+        "changed_files": [
+          ".agents/skills/loop-engineering/SKILL.md"
+        ],
+        "other_project_files_preserved": 669,
+        "installed_skill_matches_source": true,
+        "files_written": 1,
+        "team_after": {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "PAUSED",
+          "stage": "EXECUTION",
+          "revision": 25,
+          "tasks": 7,
+          "controller_record_sha256": "e324f7e6871e1b42f35e245a7dfddbf78288c4ddff37c688da59aead77109ec3"
+        },
+        "pause_observed_before_upgrade": true,
+        "team_control_actions": 0,
+        "global_settings_modified": false,
+        "model_dispatches": 0,
+        "new_mcp_connection_verified": false
+      },
+      {
+        "files_before": 702,
+        "files_after": 702,
+        "changed_files": [
+          ".agents/skills/loop-engineering/SKILL.md"
+        ],
+        "other_project_files_preserved": 701,
+        "installed_skill_matches_source": true,
+        "files_written": 1,
+        "team_before": {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 56,
+          "updated_at": "2026-10-04T02:31:42.989+00:00",
+          "controller_record_sha256": "6504f6189b833364aeaa4163cb67f0df4d4ca55a0a75413ea72e237aead9463d",
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-b53945936e67412c99e54426ef1b6011",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 2,
+              "pending_process": false,
+              "check_artifacts": 4
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e9fac3fe70e14e639505369cb650d446",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 1,
+              "pending_process": false,
+              "check_artifacts": 2
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-96d1afa86a2d412eb1c8f9dbd1a6151a",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 2,
+              "pending_process": false,
+              "check_artifacts": 2
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e08227d3af1f403389131144261032c4",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 1,
+              "pending_process": false,
+              "check_artifacts": 3
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-c2ceb6211d5d4232ba20872ef117a560",
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null,
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null,
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            }
+          },
+          "native_wait_registered": false,
+          "native_workbenches": 0
+        },
+        "team_after": {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 56,
+          "updated_at": "2026-10-04T02:31:42.989+00:00",
+          "controller_record_sha256": "6504f6189b833364aeaa4163cb67f0df4d4ca55a0a75413ea72e237aead9463d",
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-b53945936e67412c99e54426ef1b6011",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 2,
+              "pending_process": false,
+              "check_artifacts": 4
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e9fac3fe70e14e639505369cb650d446",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 1,
+              "pending_process": false,
+              "check_artifacts": 2
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-96d1afa86a2d412eb1c8f9dbd1a6151a",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 2,
+              "pending_process": false,
+              "check_artifacts": 2
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e08227d3af1f403389131144261032c4",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 1,
+              "pending_process": false,
+              "check_artifacts": 3
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-c2ceb6211d5d4232ba20872ef117a560",
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null,
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null,
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            }
+          },
+          "native_wait_registered": false,
+          "native_workbenches": 0
+        },
+        "team_control_actions": 0,
+        "project_host_settings_modified": false,
+        "global_settings_modified": false,
+        "model_dispatches": 0,
+        "new_mcp_connection_verified": false,
+        "current_repair_team": {
+          "team_id": "team-9922c91daf77441caba7c89145c3d858",
+          "status": "ACTIVE",
+          "stage": "EXECUTION",
+          "revision": 10,
+          "updated_at": "2026-10-04T02:34:18.956+00:00",
+          "controller_record_sha256": "53cb4dbcda33987f82b5e25e711b7ea506ae864535858c01bb618658aff984ea",
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-8ca86577c42d450b978eb7d90a6d8d9c"
+            },
+            "r0-probes": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-dock": {
+              "status": "HANDOFF",
+              "child_run_id": "run-982ba4011c1f4612adf2b912c78f1e02"
+            },
+            "r0-report": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          }
+        }
+      }
+    ],
+    "current_update": {
+      "result": "registered_without_dispatch",
+      "adapter": "codex",
+      "timeout_seconds": 180,
+      "max_attempts_per_check_per_child": 3,
+      "project_files_preserved": 713,
+      "team_records_preserved": 6,
+      "state_database_preserved": true,
+      "project_skill_preserved": true,
+      "global_settings_modified": false,
+      "model_dispatches": 0,
+      "actual_host_reconnection": "pending",
+      "current_source_skill_sha256": "2a46ff2a611f1f96c98de292c512cb5adac8886f0b65c07d2c08a9b6b1d6b2d9",
+      "installed_skill_sha256": "af986ce583cd21a725ba33803c7486861b49032ec9eb03beb4378467a3af905b",
+      "reason_skill_preserved": "Active batch snapshots include project skill; reconnect loads current MCP instructions without changing its frozen source candidate."
+    }
+  },
+  "limits": [
+    "Current source module changes require reconnection of loop-native. Actual new host connection and complete current project workflow were not exercised by these offline fixtures",
+    "Cancelled batches remain terminal and preserve history; continue only the actually current authorized active batch. Read-only observations are time-stamped rather than live certification",
+    "The active host owns spawning/stopping/replenishment and recovery; MCP cannot wake an ended host turn or interrupt native agents by itself",
+    "Professional copies share host OS authority and opted-in independent formal tasks can draft concurrently while imports/checks remain serial; original formal scopes/checks/candidate/input/receipt/evaluator/stop gates remain enforced",
+    "Native total model dispatch/rework/wait/token/cost and identities outside controller operations remain unknown/host-declared; hard spend caps refuse unavailable accounting",
+    "Registered independent review uses a fresh read-only Codex CLI context and private current copy; it does not attest OS containment or third-party independence. Matching reviewer authority remains required",
+    "Saved signed results recover without new model dispatch, with preparation/process wall and bounded attempts retained. Unknown RUNNING effects require original action reconciliation; retry is explicit and does not reset budgets",
+    "Registration is configuration only, no real review pass or runtime/provider conformance. Human/GUI/load and other required artifact procedures need their own real evaluation; Dock GUI remains untested in the reported project",
+    "Active project skill is preserved because it participates in frozen source snapshots; source installer can update exact published revisions after the batch handoff",
+    "Real semantic requirements and review quality and native App/CLI end-to-end adherence remain separate evaluation",
+    "Stage repair changes only empty internal graphs of unstarted native tasks; meaningful invalid graphs and already-started configurations require their explicit reviewed recovery path. No task contract or existing budget is reset.",
+    "Dependency reuse covers host observation artifacts only, not formal evidence or final checks. Semantic dependency completeness needs review.",
+    "The bridge records host actions but does not operate a browser, desktop application or emulator.",
+    "No live model/provider/device evaluation, production rollout or installed-project migration was performed.",
+    "agent-fabric and macare batches, contracts, answers and history were not modified.",
+    "Actual Codex login, CLI/MCP conformance, native delegation and semantic adherence were not live-evaluated."
+  ],
+  "actual_project_diagnosis": {
+    "project": "/Users/super/Documents/ai/agent-fabric",
+    "conversation_title": "使用 $loop_engineering 阅读文档",
+    "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+    "observed_before": {
+      "revision": 31,
+      "existing_children": {
+        "planning_documents": true,
+        "review_plan": false,
+        "accept_plan": false
+      }
+    },
+    "initial_break": "Team dependency graph was intact; staged review/acceptance native tasks had empty internal engine stages, admitted without cross-validation. Independent registration existed only for another project.",
+    "recovery": {
+      "project": "/Users/super/Documents/ai/agent-fabric",
+      "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+      "recorded_at": "2026-10-04T09:17:38.929302+00:00",
+      "revision_before": 31,
+      "revision_after": 37,
+      "project_files": 403,
+      "changed_project_files": [
+        ".loop/tasks/accept_plan-engine.json",
+        ".loop/tasks/review_plan-engine.json"
+      ],
+      "other_project_files_preserved": 401,
+      "installed_skill_preserved": true,
+      "task_contracts_dependencies_limits_preserved": true,
+      "completed_document_record_child_evidence_and_handoff_preserved": true,
+      "reserved_review_child_id_preserved": "run-fd6a0b2a57fb44f9b219b95f2d9aee02",
+      "team_reset": false,
+      "model_dispatches": 0,
+      "formal_evaluation": "pending actual independent reviewer and acceptance",
+      "registration": {
+        "schema_version": "1.0",
+        "kind": "native-review-registration",
+        "project": "/Users/super/Documents/ai/agent-fabric",
+        "adapter": "codex",
+        "executable": "/Users/super/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+        "executable_sha256": "sha256:112fae7a5a1223e673c8a1791d32338f37df8b527ff1159bb8adac6c4dbf1b4b",
+        "model": null,
+        "timeout_seconds": 180,
+        "max_attempts": 3,
+        "created_at": "2026-10-04T09:14:23.892+00:00",
+        "digest": "sha256:dccbfd290c468685d9edd7f1e087fac53c2846ecca9e15a92f30651707447ff2"
+      },
+      "actual_local_verification": {
+        "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+        "status": "ACTIVE",
+        "revision": 37,
+        "preserved_child_id": "run-fd6a0b2a57fb44f9b219b95f2d9aee02",
+        "completed_document_delivery_preserved": true,
+        "task_counts": {
+          "total": 3,
+          "PENDING": 1,
+          "RUNNING": 1,
+          "HANDOFF": 0,
+          "COMPLETE": 1,
+          "REJECTED": 0
+        },
+        "plan_configuration": {
+          "problems": [],
+          "repairable": false,
+          "pending": false,
+          "task_ids": []
+        },
+        "check_results": [
+          {
+            "task_id": "planning_documents",
+            "check_id": "plan_package",
+            "result": "pass",
+            "candidate": "sha256:b9f36873fe0de813349f48eee666fa9c11f684748b72b42c6ab09bce2d9d0e66",
+            "summary": "plan_package: completed, exit=0, input_mutation=False"
+          },
+          {
+            "task_id": "review_plan",
+            "check_id": "plan_package",
+            "result": "pass",
+            "candidate": "sha256:b9f36873fe0de813349f48eee666fa9c11f684748b72b42c6ab09bce2d9d0e66",
+            "summary": "plan_package: completed, exit=0, input_mutation=False"
+          }
+        ],
+        "next_action": {
+          "kind": "run_evaluation",
+          "summary": "运行已注册的实际检查执行器。",
+          "tool": "loop_evaluation_run",
+          "arguments": {
+            "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+            "task_id": "review_plan",
+            "check_id": "team-independent-reviewer"
+          },
+          "continue_work": true
+        },
+        "review_runner": {
+          "registered": true,
+          "available": true,
+          "problem": null
+        },
+        "model_dispatches": 0
+      }
+    }
+  },
+  "tool_count": 41,
+  "development_collaboration": {
+    "purpose": "Framework stage admission and durable recovery; no live workflow/provider evaluation",
+    "native_subagents": 2,
+    "responsibilities": [
+      "plan admission implementation and independent recovery code inspection",
+      "offline stage-configuration regression tests"
+    ],
+    "usage": "Development collaboration outside Loop test-fixture/model-dispatch accounting"
+  },
+  "validation_history": [
+    {
+      "recorded_at": "2026-10-04T02:40:12.450892+00:00",
+      "validation": {
+        "command": ".venv/bin/python -m unittest discover -s tests -v",
+        "result": "pass",
+        "tests": 504,
+        "elapsed_ms": 539613,
+        "log_sha256": "sha256:e6670501f7dfddb55e01ba325b2b123c3e228a881b534770170deb211f78bd60",
+        "source_manifest_digest": "sha256:1c1e9b1642445e80ce9701f45a19ea0552f52f9bace03dd39c353b4de14bc2ab",
+        "prior_attempt": {
+          "tests": 504,
+          "result": "fail",
+          "failures": 1,
+          "elapsed_ms": 548721,
+          "log_sha256": "sha256:052b4c91889e6ea9564a42bd49caa1cec94b4841835f53228cfb29301c136176",
+          "reason": "Existing parallel fixture assumed 0.1-second inference overlap; replaced with a bounded two-worker barrier. Actual distinct-root integration/checks had passed; corrected case passed in 6.910s before the final full rerun"
+        }
+      },
+      "source_files": 197,
+      "native_tool_count": 21
+    },
+    {
+      "recorded_at": "2026-10-04T03:30:33.022081+00:00",
+      "validation": {
+        "command": ".venv/bin/python -m unittest discover -s tests -v",
+        "result": "pass",
+        "tests": 534,
+        "elapsed_ms": 604114,
+        "log_sha256": "sha256:c3ffb8a833162170cd9d2c6444171ee9f40c20ab91d38a1e60d55b6badb50595",
+        "source_manifest_digest": "sha256:4cd66b018d074b5457c71d7fc2a7edbd8f6768164ae753f2dad52e2940a32728"
+      },
+      "source_files": 200,
+      "targeted_validation": {
+        "command": ".venv/bin/python -m unittest tests.test_native_workers -v",
+        "result": "pass",
+        "tests": 29,
+        "elapsed_ms": 62991,
+        "log_sha256": "sha256:d314b5795d6685408c9ff3e87e2b2b586f8b802893d2267e3ee0f0376fe7fa97",
+        "installer_and_schema": {
+          "command": ".venv/bin/python -m unittest tests.test_native_host.NativeHostTests.test_mcp_strict_tool_schemas_only_and_no_model_or_generic_shell tests.test_host_install -v",
+          "result": "pass",
+          "tests": 17,
+          "elapsed_ms": 334,
+          "log_sha256": "sha256:86ae9c342af8c4549015470313674adbf72387fde1e9f6cb747d967d4ebe7311"
+        },
+        "regression_attempt": {
+          "tests": 119,
+          "result": "fail",
+          "failures": 1,
+          "elapsed_ms": 100096,
+          "log_sha256": "sha256:58f5d48d727ef1ea3867cd26206f558bcba7b4a0fad75023df508ccd065900a1",
+          "reason": "Outer workspace sandbox refused temporary loopback bind; 118 cases passed. The final full offline suite under approved local-test permissions passed all 534, including this actual loopback case."
+        }
+      },
+      "limits": [
+        "Only official skill upgraded; reconnect loop-native to load 25 tools. New actual host connection, professional model adherence and complete workflow were not exercised by offline validation",
+        "All four observed macare batches are CANCELLED; the latest historical batch has 3/7 COMPLETE. Cancellation is terminal. Preserve history and prepare a reviewed next R0 batch rather than claiming these teams resumed",
+        "The active host owns spawning, stopping, event-driven replenishment and recovery. The MCP service cannot wake an ended turn or interrupt actual native agents",
+        "Professional parallelism is inside one accepted formal task. Copies share host OS authority; original formal admission, project integration, candidate/scope/check/handoff and independent evaluator gates remain enforced",
+        "Registered max_parallel, individual supervisory deadlines and a 128-assignment record limit are enforced. Native total dispatch/rework/wait usage and model token/cost remain unknown outside the automatic-route ledger; hard spend caps refuse native admission",
+        "Preparation interruption before assignment registration can leave an orphan disposable copy; no model or shared-project effect is launched. The collection journal freezes and recovers actual drafted effects",
+        "Actual identities and professional conclusions are host-declared. Readonly specialist advice supplies no signed independent evidence; required reviews need a registered executor or valid signed import",
+        "Real semantic requirements quality, judgments and native App/CLI completion remain unverified; deterministic file fixtures do not establish live-model conformance"
+      ]
+    },
+    {
+      "recorded_at": "2026-10-04T05:46:43.920346+00:00",
+      "full_offline_validation": {
+        "result": "pass",
+        "tests": 599,
+        "elapsed_ms": 287504,
+        "log_sha256": "sha256:cc9ea85b2829913b2bc9fbe364f4100a05c2d3e9d28d934b0c20663d51c5712d",
+        "command": ".venv/bin/python /private/tmp/loop-native-review-full-offline-parallel.py",
+        "source_manifest_digest": "sha256:fca26c501b5875f732e419dda7479e31c67d99ca2ba4f044a2ebdf4e4c9c8241",
+        "default_discovery": ".venv/bin/python -m unittest discover -s tests -v",
+        "execution": "Four independent processes partition modules; cases remain serial within each group",
+        "default_test_ids_covered_exactly_once": true,
+        "runner_sha256": "sha256:f5ea60465914ad756fb7f8191d2cff1d35069a8c8ad9b2f549f5ab8af0111e72",
+        "groups": [
+          {
+            "group": 1,
+            "modules": [
+              "test_team_automation"
+            ],
+            "tests": 37,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-native-review-full-group-1.log",
+            "log_sha256": "sha256:3dd275c61bcf6406129789ef1d2508152a5330e52145ff809a7821c50a4e54d1"
+          },
+          {
+            "group": 2,
+            "modules": [
+              "test_agent_roles",
+              "test_core",
+              "test_execution_tools",
+              "test_native_preflight",
+              "test_native_review",
+              "test_native_workbench",
+              "test_provisioning",
+              "test_readiness",
+              "test_setup"
+            ],
+            "tests": 173,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-native-review-full-group-2.log",
+            "log_sha256": "sha256:d7d249018da38ee2840ddcf54a929babfbb88fdd0de7ab1e37af20f54cbbadc4"
+          },
+          {
+            "group": 3,
+            "modules": [
+              "test_file_operations",
+              "test_host_install",
+              "test_native_host",
+              "test_native_workers",
+              "test_processes",
+              "test_scenarios",
+              "test_spec_setup",
+              "test_team_corpus",
+              "test_team_executors"
+            ],
+            "tests": 169,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-native-review-full-group-3.log",
+            "log_sha256": "sha256:59bb1e4e728871cd4062efd037bc65cec1d48413aaf3c9470d4199ec0dd7ee82"
+          },
+          {
+            "group": 4,
+            "modules": [
+              "test_desktop_bridge",
+              "test_engine",
+              "test_external_execution",
+              "test_http_worker",
+              "test_native",
+              "test_native_flow",
+              "test_output_schema",
+              "test_team",
+              "test_team_memory"
+            ],
+            "tests": 220,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-native-review-full-group-4.log",
+            "log_sha256": "sha256:ca928638a4797c0fd051b8daa6f64fb0859c0e67d76725487ccf67c5b12eebd8"
+          }
+        ],
+        "prior_attempt": {
+          "command": ".venv/bin/python -m unittest discover -s tests -v",
+          "result": "fail",
+          "tests": 597,
+          "elapsed_ms": 776250,
+          "failures": 2,
+          "log_sha256": "sha256:ef66721544d93b308305fadd70343a8f631e4a8b728839d9d542d1b042da2191",
+          "source_manifest_digest": "sha256:544ce11a603a457eed0278c72639170d117b4a81937c97c4a1aa7ff759c85829",
+          "reason": "Current failed-review priority returned a repair brief before two nested-context tests received a task packet. Integrated authorized same-running-task repair packet preparation preserves real signed findings, child/budget/deadline and original scope; targeted integration and full default-discovery coverage rerun follow."
+        }
+      },
+      "targeted_validation": {
+        "registered_review": {
+          "result": "pass",
+          "tests": 31,
+          "elapsed_ms": 114875,
+          "log_sha256": "sha256:71defbb9e3f7bc49bf6c4f25c15c5729a863645719d34b43a0aacd68ea1d4d61",
+          "command": ".venv/bin/python -m unittest tests.test_native_review -v"
+        },
+        "preflight_and_recovery": {
+          "result": "pass",
+          "tests": 42,
+          "elapsed_ms": 82229,
+          "log_sha256": "sha256:92e968ef7ddd31b91d2a47ed6b025d88cb56776cd261bbbf93ad3680b91db7da",
+          "command": ".venv/bin/python -m unittest tests.test_native_preflight tests.test_native_flow -v"
+        },
+        "professional_final_gates": {
+          "result": "pass",
+          "tests": 8,
+          "elapsed_ms": 23479,
+          "log_sha256": "sha256:efe0b08fc4a2a14a8e75c1a1e72155ade11e8f34dcffdbbeeb2bdf4e0c68ddcf"
+        },
+        "nested_context": {
+          "result": "pass",
+          "tests": 5,
+          "elapsed_ms": 13308,
+          "log_sha256": "sha256:ea614a93c641db5123c1b0e810016388367b61a1827aaf95018400da26ccde8e"
+        },
+        "nested_context_and_repair_integration": {
+          "result": "pass",
+          "tests": 7,
+          "elapsed_ms": 18799,
+          "log_sha256": "sha256:827967820cb743dd33b2769292fa7b25803682d62dcdab68952f0bcdb79de8e0"
+        },
+        "installer": {
+          "result": "pass",
+          "tests": 17,
+          "elapsed_ms": 52,
+          "log_sha256": "sha256:8cb40602f24cacf4273fa800eab90d34c2c77049e6c401639f032e7ab648bec2",
+          "command": ".venv/bin/python -m unittest tests.test_host_install -v"
+        },
+        "executor_compatibility": {
+          "result": "pass",
+          "tests": 13,
+          "elapsed_ms": 6354,
+          "log_sha256": "sha256:01db6862fab489406a63e74ad771f568a1007d9b8f3c26dfd6932ea22dd1b3af",
+          "command": ".venv/bin/python -m unittest tests.test_external_execution -v"
+        }
+      },
+      "source_manifest_digest": "sha256:fca26c501b5875f732e419dda7479e31c67d99ca2ba4f044a2ebdf4e4c9c8241",
+      "tool_count": 25
+    },
+    {
+      "recorded_at": "2026-10-04T09:20:41.680268+00:00",
+      "tool_count": 26,
+      "full_offline_validation": {
+        "result": "pass",
+        "tests": 623,
+        "elapsed_ms": 296527,
+        "command": ".venv/bin/python /private/tmp/loop-planning-full-offline-parallel.py",
+        "execution": "Four independent processes partition modules; cases remain serial within each group",
+        "default_test_ids_covered_exactly_once": true,
+        "log_sha256": "sha256:84037a3739ce1c16d26bce6cd4878102b3066f7c864f42c5876f127b2933a48f",
+        "source_manifest_digest": "sha256:ee1e3827de88f3da220178b2aefe84815fae01f131d764825ea22a141cd8abab",
+        "default_discovery": ".venv/bin/python -m unittest discover -s tests -v",
+        "runner_sha256": "sha256:17bbbba22004fa79cabe68db35123b259ec695d9dce9fc69b1e24f91af10b864",
+        "groups": [
+          {
+            "group": 1,
+            "modules": [
+              "test_team_automation"
+            ],
+            "tests": 37,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-planning-full-group-1.log",
+            "log_sha256": "sha256:fbcc690318e31976087072ae597fc45493adc0e442d122b981dfa497e2ab117d"
+          },
+          {
+            "group": 2,
+            "modules": [
+              "test_agent_roles",
+              "test_core",
+              "test_execution_tools",
+              "test_native_preflight",
+              "test_native_review",
+              "test_native_workbench",
+              "test_output_schema",
+              "test_provisioning",
+              "test_setup",
+              "test_team_memory"
+            ],
+            "tests": 184,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-planning-full-group-2.log",
+            "log_sha256": "sha256:b4d0be3bbfada5b014dc5527a05dfcde6e68ea7cfa0636d62cce1ff6c1b5220f"
+          },
+          {
+            "group": 3,
+            "modules": [
+              "test_file_operations",
+              "test_host_install",
+              "test_native_host",
+              "test_native_workers",
+              "test_processes",
+              "test_readiness",
+              "test_spec_setup",
+              "test_team_corpus",
+              "test_team_executors"
+            ],
+            "tests": 153,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-planning-full-group-3.log",
+            "log_sha256": "sha256:0e2469f9bd807d6da33deb88c312ecc7f4034bbfc17c9c22f59d2ae35f52df1d"
+          },
+          {
+            "group": 4,
+            "modules": [
+              "test_desktop_bridge",
+              "test_engine",
+              "test_external_execution",
+              "test_http_worker",
+              "test_native",
+              "test_native_flow",
+              "test_native_plan_repair",
+              "test_scenarios",
+              "test_team"
+            ],
+            "tests": 249,
+            "successful": true,
+            "failures": [],
+            "errors": [],
+            "skipped": [],
+            "log": "/private/tmp/loop-planning-full-group-4.log",
+            "log_sha256": "sha256:8d052dea8af91ce43e9b9c66cdb1b04a5aea61e43ec527c3997c3cc4d01ee234"
+          }
+        ]
+      },
+      "source_manifest_digest": "sha256:ee1e3827de88f3da220178b2aefe84815fae01f131d764825ea22a141cd8abab"
+    },
+    {
+      "recorded_at": "2026-10-05T08:01:14.622424+00:00",
+      "source_manifest_digest": "sha256:7d337cc309ebf55350727de60283a2117afecdbb442be8434f1d96644b7da711",
+      "full_offline_validation": {
+        "report": "docs/native-continuation-validation.json",
+        "result": "pass_with_partition_retry",
+        "unique_tests": 644,
+        "live_model_calls": 0
+      },
+      "superseded_by": "docs/native-autonomy-validation.json"
+    },
+    {
+      "recorded_at": "2026-10-05T09:59:49.761720+00:00",
+      "source_manifest_digest": "sha256:06fe6c116e470c22c302760961409e3b5f5862870165f50324a5e6a0c16ee3bb",
+      "unittest": null,
+      "full_offline_validation": {
+        "report": "docs/native-autonomy-validation.json",
+        "result": "pass",
+        "unique_tests": 684,
+        "live_model_calls": 0
+      },
+      "superseded_by": "docs/native-review-material-validation.json"
+    },
+    {
+      "recorded_at": "2026-10-05T16:42:23.694229+00:00",
+      "source_manifest_digest": "sha256:17044ffc01f2fdfe539ef7dcb9f0037e789fcca0668d1bbafeef4629e7ac77ca",
+      "source_files": 233,
+      "full_offline_validation": {
+        "report": "docs/native-review-material-validation.json",
+        "result": "pass",
+        "unique_tests": 694,
+        "live_model_calls": 0
+      },
+      "test_policy": {
+        "live_model_calls": 0,
+        "live_agent_calls": 0,
+        "docker_execution": "not_exercised",
+        "client_probe": "Original agent-fabric child admitted and original local consistency check executed without file edits or model calls; actual Codex review/acceptance not started.",
+        "scope": "Loop validation fixtures and live-evaluation dispatch, excluding framework development collaboration"
+      },
+      "scope": "Historical native-host validation before the persistent supervisor full-suite rerun."
+    },
+    {
+      "recorded_at": "2026-10-06T06:49:09.616942+00:00",
+      "source_manifest_digest": "sha256:e5f051b67b020502036fd35f219e09476c9415e569b46752146c2681dff8bef4",
+      "source_files": 249,
+      "full_offline_validation": {
+        "report": "docs/native-supervisor-validation.json",
+        "result": "pass",
+        "unique_tests": 782,
+        "live_model_calls": 0
+      },
+      "scope": "Historical native-host validation before rejected-handoff recovery."
+    },
+    {
+      "recorded_at": "2026-10-06T07:30:48.615289+00:00",
+      "source_manifest_digest": "sha256:f79858944678f0721e8c2c1bc8fffedf15379463ae3b964a5e6975f98b89862d",
+      "source_files": 252,
+      "full_offline_validation": {
+        "report": "docs/native-handoff-rework-validation.json",
+        "result": "pass",
+        "unique_tests": 802,
+        "live_model_calls": 0
+      }
+    },
+    {
+      "recorded_at": "2026-10-06T08:03:45.555189+00:00",
+      "source_manifest_digest": "sha256:a62ca01a6dcd70d98753d188f2df9330940b78770468a154f8069779ed97c485",
+      "source_files": 252,
+      "full_offline_validation": {
+        "report": "docs/native-monitoring-validation.json",
+        "result": "offline_functionality_pass_with_staged_whitespace",
+        "unique_tests": 810,
+        "live_model_calls": 0
+      }
+    },
+    {
+      "recorded_at": "2026-10-06T08:52:53.442272+00:00",
+      "source_manifest_digest": "sha256:3a19c8b6e19b8551e26f6b2fcdc0518092e5be8de47d7ebbbcf6289d49615ea2",
+      "source_files": 257,
+      "full_offline_validation": {
+        "report": "docs/native-recovery-validation.json",
+        "result": "offline_functionality_pass_with_existing_staged_whitespace",
+        "unique_tests": 838,
+        "live_model_calls": 0
+      }
+    }
+  ],
+  "progress_visual_inspection_history": [
+    {
+      "result": "pass",
+      "surface": "Codex in-app browser",
+      "fixture": "Temporary offline execution team with actual slug.py draft, 181/180 second expired wait, recover_worker action, zero verified-complete tasks and no check substitution",
+      "model_calls": 0,
+      "temporary_viewer_closed": true,
+      "macare_state_modified": false
+    }
+  ],
+  "private_review_registration": {
+    "schema_version": "1.0",
+    "kind": "native-review-registration",
+    "project": "/Users/super/Documents/ai/macare",
+    "adapter": "codex",
+    "executable": "/Users/super/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+    "executable_sha256": "sha256:112fae7a5a1223e673c8a1791d32338f37df8b527ff1159bb8adac6c4dbf1b4b",
+    "model": null,
+    "timeout_seconds": 180,
+    "max_attempts": 3,
+    "created_at": "2026-10-04T05:44:39.696+00:00",
+    "digest": "sha256:086e8245a6031e3a7072f38b4260a67b8412587211e5be53f9f896686871dc71"
+  },
+  "current_project_activation": {
+    "project": "/Users/super/Documents/ai/agent-fabric",
+    "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+    "recorded_at": "2026-10-04T09:17:38.929302+00:00",
+    "revision_before": 31,
+    "revision_after": 37,
+    "project_files": 403,
+    "changed_project_files": [
+      ".loop/tasks/accept_plan-engine.json",
+      ".loop/tasks/review_plan-engine.json"
+    ],
+    "other_project_files_preserved": 401,
+    "installed_skill_preserved": true,
+    "task_contracts_dependencies_limits_preserved": true,
+    "completed_document_record_child_evidence_and_handoff_preserved": true,
+    "reserved_review_child_id_preserved": "run-fd6a0b2a57fb44f9b219b95f2d9aee02",
+    "team_reset": false,
+    "model_dispatches": 0,
+    "formal_evaluation": "pending actual independent reviewer and acceptance",
+    "registration": {
+      "schema_version": "1.0",
+      "kind": "native-review-registration",
+      "project": "/Users/super/Documents/ai/agent-fabric",
+      "adapter": "codex",
+      "executable": "/Users/super/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+      "executable_sha256": "sha256:112fae7a5a1223e673c8a1791d32338f37df8b527ff1159bb8adac6c4dbf1b4b",
+      "model": null,
+      "timeout_seconds": 180,
+      "max_attempts": 3,
+      "created_at": "2026-10-04T09:14:23.892+00:00",
+      "digest": "sha256:dccbfd290c468685d9edd7f1e087fac53c2846ecca9e15a92f30651707447ff2"
+    },
+    "actual_local_verification": {
+      "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+      "status": "ACTIVE",
+      "revision": 37,
+      "preserved_child_id": "run-fd6a0b2a57fb44f9b219b95f2d9aee02",
+      "completed_document_delivery_preserved": true,
+      "task_counts": {
+        "total": 3,
+        "PENDING": 1,
+        "RUNNING": 1,
+        "HANDOFF": 0,
+        "COMPLETE": 1,
+        "REJECTED": 0
+      },
+      "plan_configuration": {
+        "problems": [],
+        "repairable": false,
+        "pending": false,
+        "task_ids": []
+      },
+      "check_results": [
+        {
+          "task_id": "planning_documents",
+          "check_id": "plan_package",
+          "result": "pass",
+          "candidate": "sha256:b9f36873fe0de813349f48eee666fa9c11f684748b72b42c6ab09bce2d9d0e66",
+          "summary": "plan_package: completed, exit=0, input_mutation=False"
+        },
+        {
+          "task_id": "review_plan",
+          "check_id": "plan_package",
+          "result": "pass",
+          "candidate": "sha256:b9f36873fe0de813349f48eee666fa9c11f684748b72b42c6ab09bce2d9d0e66",
+          "summary": "plan_package: completed, exit=0, input_mutation=False"
+        }
+      ],
+      "next_action": {
+        "kind": "run_evaluation",
+        "summary": "运行已注册的实际检查执行器。",
+        "tool": "loop_evaluation_run",
+        "arguments": {
+          "team_id": "team-38a6d9ab4e99491b8c9c6e76d0c5f90d",
+          "task_id": "review_plan",
+          "check_id": "team-independent-reviewer"
+        },
+        "continue_work": true
+      },
+      "review_runner": {
+        "registered": true,
+        "available": true,
+        "problem": null
+      },
+      "model_dispatches": 0
+    }
+  },
+  "diagnosis_history": [
+    {
+      "project": "/Users/super/Documents/ai/macare",
+      "conversation_title": "检查团队并核对需求",
+      "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+      "initial_break": "Answers were incorrectly switched to ACTIVE after the first reply; plan submission was delayed while planning delegation was invisible in the task-only page",
+      "latest_observed": {
+        "team_id": "team-b6f4d4c06dc54dcfbc2bbda678403f0f",
+        "status": "ACTIVE",
+        "stage": "EXECUTION",
+        "revision": 59,
+        "updated_at": "2026-10-04T04:45:13.154+00:00",
+        "controller_record_sha256": "c25d668195de0a22c5ac54ef8a2d7b06be8c46a4a53cbf042242ae25aafad7a2",
+        "task_counts": {
+          "COMPLETE": 3,
+          "RUNNING": 1,
+          "PENDING": 3
+        },
+        "formal_tasks": 7,
+        "tasks": {
+          "r0-foundations": {
+            "status": "COMPLETE",
+            "child_run_id": "run-f0156742f22d4e35837bc377ace661cf"
+          },
+          "r0-probes": {
+            "status": "COMPLETE",
+            "child_run_id": "run-88e7ba01400e4cbf932a204b5db15ec7"
+          },
+          "r0-dock": {
+            "status": "COMPLETE",
+            "child_run_id": "run-9dd1f2e8e0c74f668fdc795cd3f6396d"
+          },
+          "r0-report": {
+            "status": "RUNNING",
+            "child_run_id": "run-18e45160edba4654b64592baec4399d5"
+          },
+          "r0-security": {
+            "status": "PENDING",
+            "child_run_id": null
+          },
+          "r0-review": {
+            "status": "PENDING",
+            "child_run_id": null
+          },
+          "r0-acceptance": {
+            "status": "PENDING",
+            "child_run_id": null
+          }
+        },
+        "workbenches": 4,
+        "professional_workers": 6
+      },
+      "inspection": "Stable read-only database image and existing chat data; all observed project batches were CANCELLED. This update sent no peer messages, performed no team controls and launched no macare/model workflow.",
+      "current_repair_team": null,
+      "execution_gap": {
+        "user_capture_revision": 28,
+        "user_capture_task": "r0-foundations",
+        "initial_inspection_controller_status": "PLANNING",
+        "initial_inspection_iterations": 0,
+        "initial_inspection_evidence": 0,
+        "protocol": "Large implementation required one full AgentStep JSON, native waiting had no recorded recovery deadline"
+      },
+      "verified_complete_tasks": 3,
+      "completed_tasks": [
+        "r0-foundations",
+        "r0-probes",
+        "r0-dock"
+      ],
+      "existing_host_results": {
+        "r0-foundations": "Nine modules built and eight original synthetic tests passed; later state repair reached nine tests, recorded by existing macare host",
+        "r0-dock": "Twenty geometry checks passed but original GUI startup observation failed, recorded by existing macare host",
+        "remaining": "Original probe/report tasks completed; existing host created an R0 repair batch after a reproduced state defect, Dock startup failure and missing reviewer stage graph. Required security/review/acceptance gates remain"
+      },
+      "observation_history": [
+        {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 56,
+          "updated_at": "2026-10-04T02:31:42.989+00:00",
+          "controller_record_sha256": "6504f6189b833364aeaa4163cb67f0df4d4ca55a0a75413ea72e237aead9463d",
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-b53945936e67412c99e54426ef1b6011",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 2,
+              "pending_process": false,
+              "check_artifacts": 4
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e9fac3fe70e14e639505369cb650d446",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 1,
+              "pending_process": false,
+              "check_artifacts": 2
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-96d1afa86a2d412eb1c8f9dbd1a6151a",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 2,
+              "pending_process": false,
+              "check_artifacts": 2
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e08227d3af1f403389131144261032c4",
+              "request_id": null,
+              "controller_status": "SUCCEEDED",
+              "iterations": 1,
+              "pending_process": false,
+              "check_artifacts": 3
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-c2ceb6211d5d4232ba20872ef117a560",
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null,
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null,
+              "request_id": null,
+              "controller_status": null,
+              "iterations": null,
+              "pending_process": false,
+              "check_artifacts": 0
+            }
+          },
+          "native_wait_registered": false,
+          "native_workbenches": 0
+        },
+        {
+          "team_id": "team-f9b8b15ac8e24cfdb86c919597e52e5c",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 38,
+          "updated_at": "2026-10-04T03:13:51.412+00:00",
+          "controller_record_sha256": "0415ed1cc9d95b1c25973723e04984230572c92ca2cbae618527c72b8862f149",
+          "task_counts": {
+            "COMPLETE": 3,
+            "RUNNING": 1,
+            "PENDING": 3
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-4b6902cb61d14a138bea6e3ed199369d"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-9d32186098ec46d1a50ad42b4949c9e7"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-dd465aad114a48f78b3896246dbd6332"
+            },
+            "r0-report": {
+              "status": "RUNNING",
+              "child_run_id": "run-d1bc32a8a522403f9d3e56587ca8678b"
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        }
+      ],
+      "historical_cancelled_teams": [
+        {
+          "team_id": "team-2590e6fd82e44baf8baa93dacdbd42b3",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 64,
+          "updated_at": "2026-10-04T04:24:37.346+00:00",
+          "controller_record_sha256": "d32e608396d5058cb7bf945460826c93792c48e0ae7418dcfa2d181902f53141",
+          "task_counts": {
+            "COMPLETE": 4,
+            "RUNNING": 1,
+            "PENDING": 2
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e800a1c9a2494f17aa6b4c820e8e0373"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-1fd524d9ebb44ffc990af3452ce53ab2"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-190b79e71097476eb307bbb025d1e36f"
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-194d3050d35c40ba81ce55fb75c0fceb"
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-2831869f93a845fa93c88237ca8929e9"
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 4,
+          "professional_workers": 4
+        },
+        {
+          "team_id": "team-f9b8b15ac8e24cfdb86c919597e52e5c",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 38,
+          "updated_at": "2026-10-04T03:13:51.412+00:00",
+          "controller_record_sha256": "0415ed1cc9d95b1c25973723e04984230572c92ca2cbae618527c72b8862f149",
+          "task_counts": {
+            "COMPLETE": 3,
+            "RUNNING": 1,
+            "PENDING": 3
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-4b6902cb61d14a138bea6e3ed199369d"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-9d32186098ec46d1a50ad42b4949c9e7"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-dd465aad114a48f78b3896246dbd6332"
+            },
+            "r0-report": {
+              "status": "RUNNING",
+              "child_run_id": "run-d1bc32a8a522403f9d3e56587ca8678b"
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-9922c91daf77441caba7c89145c3d858",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 11,
+          "updated_at": "2026-10-04T02:49:06.521+00:00",
+          "controller_record_sha256": "b6111e4cd81b2a3f12d6da88ab8f265ea85c9f174a3d946f3e2db4e314338292",
+          "task_counts": {
+            "COMPLETE": 1,
+            "PENDING": 5,
+            "HANDOFF": 1
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-8ca86577c42d450b978eb7d90a6d8d9c"
+            },
+            "r0-probes": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-dock": {
+              "status": "HANDOFF",
+              "child_run_id": "run-982ba4011c1f4612adf2b912c78f1e02"
+            },
+            "r0-report": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-security": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-27b3caa79850437b9c49ca7e13b9c5a8",
+          "status": "CANCELLED",
+          "stage": "EXECUTION",
+          "revision": 56,
+          "updated_at": "2026-10-04T02:31:42.989+00:00",
+          "controller_record_sha256": "6504f6189b833364aeaa4163cb67f0df4d4ca55a0a75413ea72e237aead9463d",
+          "task_counts": {
+            "COMPLETE": 4,
+            "RUNNING": 1,
+            "PENDING": 2
+          },
+          "formal_tasks": 7,
+          "tasks": {
+            "r0-foundations": {
+              "status": "COMPLETE",
+              "child_run_id": "run-b53945936e67412c99e54426ef1b6011"
+            },
+            "r0-probes": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e9fac3fe70e14e639505369cb650d446"
+            },
+            "r0-dock": {
+              "status": "COMPLETE",
+              "child_run_id": "run-96d1afa86a2d412eb1c8f9dbd1a6151a"
+            },
+            "r0-report": {
+              "status": "COMPLETE",
+              "child_run_id": "run-e08227d3af1f403389131144261032c4"
+            },
+            "r0-security": {
+              "status": "RUNNING",
+              "child_run_id": "run-c2ceb6211d5d4232ba20872ef117a560"
+            },
+            "r0-review": {
+              "status": "PENDING",
+              "child_run_id": null
+            },
+            "r0-acceptance": {
+              "status": "PENDING",
+              "child_run_id": null
+            }
+          },
+          "workbenches": 0,
+          "professional_workers": 0
+        },
+        {
+          "team_id": "team-5616992f7441436ab8082a714645f79b",
+          "status": "CANCELLED",
+          "stage": "INTAKE",
+          "revision": 18,
+          "updated_at": "2026-10-03T16:07:33.502+00:00",
+          "controller_record_sha256": "14e31eb786c5e3f4f48d87b9c20cc4a40f5fe1207b8a04bea4158f301ce41200",
+          "task_counts": {},
+          "formal_tasks": 0,
+          "tasks": {},
+          "workbenches": 0,
+          "professional_workers": 0
+        }
+      ],
+      "active_team_count": 1,
+      "latest_observation_recorded_at": "2026-10-04T05:45:47.042016+00:00",
+      "reported_block": {
+        "team_id": "team-2590e6fd82e44baf8baa93dacdbd42b3",
+        "reported_complete_tasks": 4,
+        "formal_tasks": 7,
+        "causes": [
+          "Nested optional native context enrichment exceeded frozen limit",
+          "Reviewer signing key existed but no review runner was implemented/registered"
+        ],
+        "source_fixes_offline_validated": true,
+        "actual_formal_review_pass": false
+      },
+      "scope": "Read-only public metadata from a stable private database copy; external project changes belong to its own host conversation; this update never resumes, cancels or resets those teams"
+    }
+  ],
+  "continuation_update": {
+    "recorded_at": "2026-10-05T08:01:14.622424+00:00",
+    "report": "docs/native-continuation-validation.json",
+    "tool_count": 29,
+    "unique_offline_tests": 644,
+    "result": "pass_with_partition_retry",
+    "active_project_changed": false
+  },
+  "native_autonomy_update": {
+    "report": "docs/native-autonomy-validation.json",
+    "protocol_version": "2.0",
+    "live_project_activation": false,
+    "installed_skill_changed": false
+  },
+  "native_review_material_update": {
+    "report": "docs/native-review-material-validation.json",
+    "result": "pass",
+    "new_tests": 10,
+    "live_model_calls": 0
+  },
+  "subsequent_targeted_validation": {
+    "report": "docs/native-continuation-validation.json",
+    "result": "pass",
+    "tests": 163,
+    "source_manifest_digest": "sha256:aca922f02834796ec82f0e3e6b19857009c734607f09ad5feb05775438d3e42a",
+    "scope": "Targeted continuation correction on subsequent source revision; full-suite historical result remains unchanged",
+    "current_full_suite_rerun": false,
+    "live_model_calls": 0
+  },
+  "project_supervision_targeted_validation": {
+    "report": "docs/native-project-supervision-validation.json",
+    "new_tests": 21,
+    "distinct_cases_covered": 222,
+    "broad_passed": 221,
+    "corrected_followup_tests": 53,
+    "source_manifest_digest": "sha256:a49c23c06429efddebe9c6000597074a4d1b8ddcbd5e30fe7481bc4dc3be41e8",
+    "scope": "Subsequent consolidated targeted regression; preceding full-suite result remains historical.",
+    "live_model_calls": 0,
+    "real_project_runs": 0
+  },
+  "project_budget_amendment_targeted_validation": {
+    "report": "docs/native-project-budget-validation.json",
+    "new_tests": 17,
+    "distinct_offline_cases": 146,
+    "result": "pass",
+    "source_manifest_digest": "sha256:9d5f6de0a06e9b6d801f2578b81214a2f73721f5386a4361e351aeb133c23183",
+    "scope": "145 sandbox cases passed; the sole blocked loopback-port fixture passed with local port access. Same source manifest, no code changes. Not a new full-suite or live-host evaluation.",
+    "real_project_runs": 0,
+    "real_project_state_mutated": false
+  },
+  "host_turn_boundary_targeted_validation": {
+    "report": "docs/native-turn-boundary-validation.json",
+    "new_tests": 6,
+    "offline_cases": 106,
+    "result": "pass",
+    "source_manifest_digest": "sha256:b6630e8f46f231c1e99587a40a48ea64cf2992b80b82e93d4bd5a03331124708",
+    "real_project_state_mutated": false,
+    "scope": "Read-only continuation signal; no host wakeup, model dispatch, evidence waiver or budget/scope change. Targeted regression, not a new full suite."
+  },
+  "persistent_host_supervision_validation": {
+    "report": "docs/native-supervisor-validation.json",
+    "result": "pass",
+    "new_tests": 32,
+    "full_offline_tests": 782,
+    "source_manifest_digest": "sha256:e5f051b67b020502036fd35f219e09476c9415e569b46752146c2681dff8bef4",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "real_project_state_mutated": false,
+    "scope": "Full stable-source offline validation; actual POSIX Codex driver conformance remains separate live evaluation."
+  },
+  "handoff_recovery_validation": {
+    "report": "docs/native-handoff-rework-validation.json",
+    "result": "pass",
+    "new_tests": 20,
+    "full_offline_tests": 802,
+    "source_manifest_digest": "sha256:f79858944678f0721e8c2c1bc8fffedf15379463ae3b964a5e6975f98b89862d",
+    "live_model_calls": 0,
+    "real_project_execution_runs": 0,
+    "official_real_project_recovery_applications": 1,
+    "actual_project_control_projections_mutated": true
+  },
+  "monitoring_validation": {
+    "report": "docs/native-monitoring-validation.json",
+    "result": "offline_functionality_pass_with_staged_whitespace",
+    "full_offline_tests": 810,
+    "new_tests": 8,
+    "source_manifest_digest": "sha256:a62ca01a6dcd70d98753d188f2df9330940b78770468a154f8069779ed97c485",
+    "live_model_calls_in_validation": 0
+  },
+  "recovery_validation": {
+    "report": "docs/native-cli-route-validation.json",
+    "result": "offline_functionality_pass_with_existing_staged_whitespace",
+    "full_offline_tests": 839,
+    "new_tests": 29,
+    "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+    "live_model_calls_in_validation": 0
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "recorded_at": "2026-10-06T09:09:32.294684+00:00",
+  "project_backend_or_supervisor_processes": [],
+  "historical_group_64549_current_members": [],
+  "signals_sent": 0,
+  "scope": "Read-only live process census; historic PGID is observation only. No original failure, guard or private ledger changed."
+}

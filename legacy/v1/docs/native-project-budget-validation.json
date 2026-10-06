@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-06T03:19:54.574307+00:00",
+  "result": "pass",
+  "scope": "Consolidated targeted offline coverage; not a current full-suite or live-host evaluation.",
+  "new_tests": 17,
+  "distinct_cases_covered": 146,
+  "source_manifest_digest": "sha256:9d5f6de0a06e9b6d801f2578b81214a2f73721f5386a4361e351aeb133c23183",
+  "source_files": 241,
+  "initial_regression": {
+    "started_at": "2026-10-06T03:14:02.623327+00:00",
+    "finished_at": "2026-10-06T03:18:36.935422+00:00",
+    "exit_code": 1,
+    "tests": 146,
+    "elapsed_seconds": 274.31341112498194,
+    "modules": [
+      "tests.test_native_project_budget",
+      "tests.test_native_project",
+      "tests.test_native_host",
+      "tests.test_host_install",
+      "tests.test_native_session",
+      "tests.test_native_preflight",
+      "tests.test_native_readiness",
+      "tests.test_native_flow"
+    ],
+    "log": "/private/tmp/loop-project-budget-regression.log",
+    "log_sha256": "sha256:882d819ddb9dfb40b7bbe599705246151e3c6e3ef5bd35cb95e80c06cd473837",
+    "source_manifest": "/private/tmp/loop-project-budget-source-manifest.json",
+    "source_manifest_digest": "sha256:9d5f6de0a06e9b6d801f2578b81214a2f73721f5386a4361e351aeb133c23183",
+    "source_files": 241,
+    "source_changed_during_validation": [],
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "scope": "targeted offline regression; not a new full-suite report"
+  },
+  "initial_regression_result": {
+    "passed": 145,
+    "failures": 1,
+    "reason": "The sandbox refused the offline loopback fixture port with [Errno 1] Operation not permitted. The test did not start its HTTP server. No code or test changed; the exact fixture was subsequently rerun with local port access."
+  },
+  "loopback_followup": {
+    "started_at": "2026-10-06T03:19:01.259960+00:00",
+    "finished_at": "2026-10-06T03:19:01.987985+00:00",
+    "exit_code": 0,
+    "tests": 1,
+    "elapsed_seconds": 0.7279271250008605,
+    "modules": [
+      "tests.test_native_host.NativeHostTests.test_loopback_progress_view_refreshes_actual_state_and_has_no_control_or_path_endpoints"
+    ],
+    "log": "/private/tmp/loop-project-budget-loopback-regression.log",
+    "log_sha256": "sha256:694f961c186f5449ceebaa27c82229fc1a345724014bba75632591aedc116065",
+    "source_manifest": "/private/tmp/loop-project-budget-loopback-source-manifest.json",
+    "source_manifest_digest": "sha256:9d5f6de0a06e9b6d801f2578b81214a2f73721f5386a4361e351aeb133c23183",
+    "source_files": 241,
+    "source_changed_during_validation": [],
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "scope": "targeted offline regression; not a new full-suite report"
+  },
+  "implementation_unchanged_between_runs": true,
+  "coverage": [
+    "Actual host-declared authorization appends an absolute larger cap to the same authenticated root ledger; original declaration and used milliseconds remain.",
+    "Root and successor IDs share one amendment history. Stable IDs recover after lost replies, failed checkpoints, reconnects and later amendments without duplicate credit.",
+    "Expected current cap refuses stale concurrent requests, decreases, invalid parameters, oversized history and conflicting IDs.",
+    "Paused/cancelled projects refuse new amendments; replay of a committed amendment never resumes or answers a question.",
+    "Missing admitted child accounting refuses amendment rather than becoming zero; per-child records/limits/checks and original accepted evidence remain byte-identical.",
+    "Preflight exposes consumed time, exact shortfall, minimum absolute cap and amendment route. Accepted increase allows original plan admission; insufficient increase still refuses.",
+    "Saved planning packets retain the latest specific budget authorization; the dashboard distinguishes original and effective caps.",
+    "Forty strict MCP tools, framework handshake, unchanged external policies, and exact published skill upgrades are covered offline."
+  ],
+  "limitations": [
+    "User authorization text is host-declared; the controller cannot independently attest that a human supplied it.",
+    "This changes only cumulative controller-time allowance. Scope, individual task/review/observation limits, paid-resource permissions and missing evidence/capabilities remain unchanged.",
+    "The concrete 20337-second example reserves the proposed F02 increment; it does not fund all remaining roadmap milestones.",
+    "Native conversation/delegation token and fee accounting remain unknown. Earlier project batch ledgers remain separate.",
+    "No live provider or real project run was performed; real project queue/state was not modified.",
+    "MCP does not wake an ended host conversation. Native sustained execution and full-project acceptance remain separately unverified.",
+    "Current full offline validation plus readiness is required before a future live framework evaluation."
+  ],
+  "live_model_calls": 0,
+  "real_project_runs": 0,
+  "real_project_state_mutated": false,
+  "full_suite_rerun": false,
+  "prior_full_suite": {
+    "report": "docs/native-review-material-validation.json",
+    "tests": 694,
+    "scope": "Historical preceding source revision."
+  },
+  "readiness": {
+    "required_items": 18,
+    "complete_items": 18,
+    "result": "pass",
+    "scope": "Inventory only; no dispatch or runtime containment certification."
+  },
+  "contracts": "Validated 20 schemas, 27 saved examples/templates and generated fixtures.",
+  "skill_validation": "pass"
+}

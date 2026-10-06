@@ -1,0 +1,365 @@
+{
+  "recorded_at": "2026-10-06T08:33:12.105784+00:00",
+  "projects": [
+    {
+      "project": "agent-fabric",
+      "authenticated_current_checkpoints": true,
+      "root_team_id": "team-a34a6700edb14a66827f5adf16491840",
+      "current_team_id": "team-aa741c058dac4bbb8e530e859445a639",
+      "team_status": "ACTIVE",
+      "team_revision": 78,
+      "team_updated_at": "2026-10-06T07:39:56.468+00:00",
+      "task_counts": {
+        "RUNNING": 1,
+        "PENDING": 1
+      },
+      "tasks": [
+        {
+          "task_id": "g1_f02_identity",
+          "status": "RUNNING",
+          "child_run_id": "run-89eb7c0d7799412f82af857439c3d219"
+        },
+        {
+          "task_id": "g1_f02_final",
+          "status": "PENDING",
+          "child_run_id": null
+        }
+      ],
+      "stop_signals": {},
+      "worker_counts": {
+        "COLLECTED": 4,
+        "STOPPED": 2
+      },
+      "recent_workers": [
+        {
+          "id": "worker-bef777685a494a258b78311a07893062",
+          "task_id": "g1_f02_identity",
+          "role": "architect",
+          "assignment_id": "f02-shared-contracts",
+          "status": "COLLECTED",
+          "agent_id": "/root/g1_f02_contracts",
+          "updated_at": null
+        },
+        {
+          "id": "worker-f598c518eeb64924bf7ac056d329a0a1",
+          "task_id": "g1_f02_identity",
+          "role": "backend",
+          "assignment_id": "f02-oidc-http",
+          "status": "COLLECTED",
+          "agent_id": "/root/g1_f02_oidc",
+          "updated_at": null
+        },
+        {
+          "id": "worker-9f0756484464448eb128a8fe9eefc3be",
+          "task_id": "g1_f02_identity",
+          "role": "database",
+          "assignment_id": "f02-pg-approval",
+          "status": "COLLECTED",
+          "agent_id": "/root/g1_f02_pg",
+          "updated_at": null
+        },
+        {
+          "id": "worker-9ccc93896dea42f68b5eb3fcebee2a20",
+          "task_id": "g1_f02_identity",
+          "role": "tester",
+          "assignment_id": "f02-preacceptance-consult",
+          "status": "COLLECTED",
+          "agent_id": "/root/g1_f02_tester_consult",
+          "updated_at": null
+        },
+        {
+          "id": "worker-a25f1505372a468e8f452197275865a7",
+          "task_id": "g1_f02_identity",
+          "role": "database",
+          "assignment_id": "f02-source-payer-repair",
+          "status": "STOPPED",
+          "agent_id": "/root/f02_source_authority",
+          "updated_at": null
+        },
+        {
+          "id": "worker-9731c1d43e574872818a6318a05314b1",
+          "task_id": "g1_f02_identity",
+          "role": "tester",
+          "assignment_id": "f02-source-payer-tests",
+          "status": "STOPPED",
+          "agent_id": "/root/f02_source_tests",
+          "updated_at": null
+        }
+      ],
+      "blocking_unanswered_questions": 0,
+      "registered_milestones": 10,
+      "registered_successors": 1,
+      "supervisors": [
+        {
+          "id": "supervisor-3c9afb5b3b134d1c9916c139fd40cd73",
+          "status": "BLOCKED",
+          "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+          "updated_at": "2026-10-06T07:40:20.700+00:00",
+          "reason": "框架文件已更新，重新连接 MCP 后核对原团队和未完成操作；保留冻结批次与历史。",
+          "turns": 1,
+          "stagnant_turns": 0,
+          "deadline_epoch": 1791300756,
+          "last_report": {
+            "status": "blocked",
+            "summary": "G1-F02 repair and regression drafts preserved; strict compile passed. Both owned writers stopped; no pending operations. Collection is blocked by stale instruction binding, and loop_next now requires MCP reconnection after a framework update. Recovery procedure: turn-1/recovery-proposal/RECOVERY.md. Original checks, reviews and handoff remain pending; no acceptance certified.",
+            "blocker": "external_capability",
+            "questions": []
+          },
+          "remaining_wall_seconds": 25163,
+          "process_observations": {},
+          "pending_logs": []
+        }
+      ],
+      "active_child_details": [
+        {
+          "task_id": "g1_f02_identity",
+          "run_id": "run-89eb7c0d7799412f82af857439c3d219",
+          "controller_status": "PLANNING",
+          "candidate": "sha256:5ad1fd30a0c8f4be3cbd92e7c6c7f7394b79dbf24019795c192ce8e80395be25",
+          "elapsed_controller_seconds": 42.808,
+          "limit_seconds": 1440,
+          "remaining_controller_seconds": 1397.192,
+          "iteration": 1,
+          "limits": {
+            "max_iterations": 12,
+            "max_wall_seconds": 1440,
+            "max_stalled_iterations": 3,
+            "max_repeat_failure": 2,
+            "max_tokens": null,
+            "max_cost_microunits": null,
+            "cost_currency": "USD"
+          },
+          "outstanding_action_ids": [],
+          "pending_edit": false,
+          "pending_process": false,
+          "execution_attempt_counts": {
+            "RUNNING": 0,
+            "RESULT": 0,
+            "COMPLETE": 0,
+            "RETRY_ALLOWED": 0
+          }
+        }
+      ],
+      "known_project_controller_seconds": 939.737,
+      "rework_rounds": 1,
+      "frozen_rework_policy": {
+        "max_rounds": 2
+      },
+      "project_original_controller_cap": 10197,
+      "project_effective_controller_cap": 2592000,
+      "project_remaining_controller_seconds": 2591060,
+      "project_budget_amendments": [
+        {
+          "amendment_id": "actual-user-controller-allowance-20261006",
+          "expected_controller_budget_seconds": 10197,
+          "controller_budget_seconds": 2592000
+        }
+      ]
+    },
+    {
+      "project": "macare",
+      "authenticated_current_checkpoints": true,
+      "root_team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+      "current_team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+      "team_status": "ACTIVE",
+      "team_revision": 721,
+      "team_updated_at": "2026-10-06T07:59:07.346+00:00",
+      "task_counts": {
+        "COMPLETE": 5,
+        "RUNNING": 1,
+        "PENDING": 3
+      },
+      "tasks": [
+        {
+          "task_id": "r1-foundation",
+          "status": "COMPLETE",
+          "child_run_id": "run-b1e558b2e51f40378f317944a80e0509"
+        },
+        {
+          "task_id": "r1-services",
+          "status": "COMPLETE",
+          "child_run_id": "run-dba5e0d2d2cc4f7aba48fb0b9cc99177"
+        },
+        {
+          "task_id": "r1-storage-actions",
+          "status": "COMPLETE",
+          "child_run_id": "run-61ae328c90a04ee4901f020c1a50b13a"
+        },
+        {
+          "task_id": "r1-native-ui",
+          "status": "COMPLETE",
+          "child_run_id": "run-80ffc608014241b0be8e6af880196aeb"
+        },
+        {
+          "task_id": "r1-integrated-validation",
+          "status": "COMPLETE",
+          "child_run_id": "run-693a80a56c8b4e9f9c567e435b374881"
+        },
+        {
+          "task_id": "r1-performance",
+          "status": "RUNNING",
+          "child_run_id": "run-9ca7ce0f9ee44a42a0b2883a93848d11"
+        },
+        {
+          "task_id": "r1-security",
+          "status": "PENDING",
+          "child_run_id": null
+        },
+        {
+          "task_id": "r1-review",
+          "status": "PENDING",
+          "child_run_id": null
+        },
+        {
+          "task_id": "r1-acceptance",
+          "status": "PENDING",
+          "child_run_id": null
+        }
+      ],
+      "stop_signals": {
+        "team-22d34201e8ef4358aecde6aaa1719884": ""
+      },
+      "worker_counts": {
+        "COLLECTED": 108
+      },
+      "recent_workers": [
+        {
+          "id": "worker-7d67dffd680742a1ace715ccf3ca4cda",
+          "task_id": "r1-performance",
+          "role": "architect",
+          "assignment_id": "r1-outbound-codec-scope-audit-v6b",
+          "status": "COLLECTED",
+          "agent_id": "/root/r1_native_conditions",
+          "updated_at": null
+        },
+        {
+          "id": "worker-3db8d3baa20240a3aee46c2a0c3e1e9d",
+          "task_id": "r1-performance",
+          "role": "architect",
+          "assignment_id": "supervisor-original-recovery-architect-1",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_recovery_architect",
+          "updated_at": null
+        },
+        {
+          "id": "worker-588497703dd340ca9aa64a97a31525e0",
+          "task_id": "r1-performance",
+          "role": "tester",
+          "assignment_id": "supervisor-original-scan-interface-1",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_scan_interface",
+          "updated_at": null
+        },
+        {
+          "id": "worker-bcdefce6b944429b92efbd45b355aafc",
+          "task_id": "r1-performance",
+          "role": "backend",
+          "assignment_id": "supervisor-original-scan-producer-1",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_scan_backend",
+          "updated_at": null
+        },
+        {
+          "id": "worker-a824287557584ae081baf0071b1152b7",
+          "task_id": "r1-performance",
+          "role": "tester",
+          "assignment_id": "supervisor-original-scan-driver-1",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_scan_driver",
+          "updated_at": null
+        },
+        {
+          "id": "worker-8bfca632891146feaa4adc18e3675d06",
+          "task_id": "r1-performance",
+          "role": "architect",
+          "assignment_id": "supervisor-scan-integration-audit-2",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_scan_integration_audit",
+          "updated_at": null
+        },
+        {
+          "id": "worker-f90ff52da299410cad6ffb5798e35661",
+          "task_id": "r1-performance",
+          "role": "tester",
+          "assignment_id": "supervisor-scan-compiled-binding-3",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_scan_compiled_binding",
+          "updated_at": null
+        },
+        {
+          "id": "worker-82a50bf9d5254a199711ecb9d7e91093",
+          "task_id": "r1-performance",
+          "role": "backend",
+          "assignment_id": "supervisor-scan-environment-producer-3",
+          "status": "COLLECTED",
+          "agent_id": "/root/supervisor_scan_environment",
+          "updated_at": null
+        }
+      ],
+      "blocking_unanswered_questions": 0,
+      "registered_milestones": 0,
+      "registered_successors": 0,
+      "supervisors": [
+        {
+          "id": "supervisor-dce5ed3b8981401bb0a59387444b104d",
+          "status": "BLOCKED",
+          "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+          "updated_at": "2026-10-06T07:59:53.655+00:00",
+          "reason": "Actual verification runtime denies bounded /bin/ps process-group census; actual owned group64549 cleanup TERM/KILL returned EPERM. /private/tmp/macare-r1-scan-preparation/run-20261006T075531-aca296ff/run.json retains exit0, reaped direct child, failed original cleanup guard and unknown group quiescence. Existing actual read-only observation and owned-group cleanup environment is needed; no new product permissions requested. Recovery procedure is docs/r1/supervisor-runtime-recovery.md in workbench-146233e5edce4d02875e14881426a8fe.",
+          "turns": 3,
+          "stagnant_turns": 0,
+          "deadline_epoch": 1791298315,
+          "last_report": {
+            "status": "blocked",
+            "summary": "扫描生产器、环境导入和编译来源绑定已修复；构建、220 个 XCTest、4 个 Swift Testing及63个模型检查通过。全部工作者已停止并收集，后台操作已结束。实际环境命令退出0，但沙箱拒绝进程组复核，组64549清理返回EPERM，组状态仍未确认；原守卫因此阻止继续负载。Loop 已记录 permission 阻塞。恢复程序保存在原工作副本 docs/r1/supervisor-runtime-recovery.md。团队、预算和守卫未改变，验收仍待完成。",
+            "blocker": "permission",
+            "questions": [
+              "请恢复原验证环境的只读进程组复核与自有组清理能力，并依据 /private/tmp/macare-r1-scan-preparation/run-20261006T075531-aca296ff/run.json 核对组64549；不要仅凭历史组号终止进程。"
+            ]
+          },
+          "remaining_wall_seconds": 22722,
+          "process_observations": {},
+          "pending_logs": []
+        }
+      ],
+      "active_child_details": [
+        {
+          "task_id": "r1-performance",
+          "run_id": "run-9ca7ce0f9ee44a42a0b2883a93848d11",
+          "controller_status": "BLOCKED",
+          "candidate": "sha256:d4e6c650526e6ecb15078c986460c4adb91e0bbf878496f49fbd0a56c96105db",
+          "elapsed_controller_seconds": 15304.814,
+          "limit_seconds": 28800,
+          "remaining_controller_seconds": 13495.186,
+          "iteration": 2,
+          "limits": {
+            "max_iterations": 20,
+            "max_wall_seconds": 28800,
+            "max_stalled_iterations": 3,
+            "max_repeat_failure": 2,
+            "max_tokens": null,
+            "max_cost_microunits": null,
+            "cost_currency": "USD"
+          },
+          "outstanding_action_ids": [],
+          "pending_edit": false,
+          "pending_process": false,
+          "execution_attempt_counts": {
+            "RUNNING": 0,
+            "RESULT": 0,
+            "COMPLETE": 0,
+            "RETRY_ALLOWED": 0
+          }
+        }
+      ],
+      "known_project_controller_seconds": 15496.838,
+      "rework_rounds": 0,
+      "frozen_rework_policy": null,
+      "project_original_controller_cap": null,
+      "project_effective_controller_cap": null,
+      "project_remaining_controller_seconds": null,
+      "project_budget_amendments": []
+    }
+  ],
+  "scope": "Read-only SQLite transactions including WAL, authenticated current projections and bounded local log metadata/process identity observations. No model dispatch, task mutation, acceptance judgment or writer takeover."
+}

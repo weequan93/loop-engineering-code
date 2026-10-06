@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-10-06T08:54:58.769756+00:00",
+  "supervisor_id": "supervisor-dce5ed3b8981401bb0a59387444b104d",
+  "project": "macare",
+  "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+  "expected_candidate": "sha256:d4e6c650526e6ecb15078c986460c4adb91e0bbf878496f49fbd0a56c96105db",
+  "revision_before": 25,
+  "revision_after": 26,
+  "approval_mode": "auto-review",
+  "runtime_capability": {
+    "approval_mode": "auto-review",
+    "sandbox": "workspace-write",
+    "route_available": true,
+    "execution_capability_verified": false,
+    "basis": "Bounded local CLI help; actual approvals, process cleanup and checks remain pending"
+  },
+  "original_session_lifetime_usage_tasks_failures_retained": true,
+  "signed_supervisor_audit": "pass",
+  "live_model_calls": 0,
+  "signals_sent": 0,
+  "historical_group_census": "docs/monitoring/recovery-deployment-boundary.json",
+  "scope": "Official operator lifecycle policy update only; actual verification preflight and per-operation approvals remain required."
+}

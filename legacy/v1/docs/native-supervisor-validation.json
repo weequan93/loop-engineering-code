@@ -1,0 +1,514 @@
+{
+  "schema_version": "1.0",
+  "framework_version": "1.0.0",
+  "recorded_at": "2026-10-06T06:49:09.616942+00:00",
+  "result": "pass",
+  "source_manifest": "docs/native-supervisor-source-manifest.json",
+  "source_manifest_digest": "sha256:e5f051b67b020502036fd35f219e09476c9415e569b46752146c2681dff8bef4",
+  "source_files": 249,
+  "full_offline_validation": {
+    "schema_version": "1.0",
+    "started_at": "2026-10-06T06:28:06.451954+00:00",
+    "finished_at": "2026-10-06T06:48:19.280042+00:00",
+    "result": "pass",
+    "checks": [
+      {
+        "name": "unittest",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-v"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1210.3148285840289,
+        "log": "/private/tmp/loop-supervisor-final-unittest.log",
+        "log_sha256": "sha256:34d61708ab08342fa9a2d6ed776892aced7532686af4ea06bfb08de6793c01e4",
+        "tests": 782
+      },
+      {
+        "name": "contracts",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/validate_contracts.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.28567579202353954,
+        "log": "/private/tmp/loop-supervisor-final-contracts.log",
+        "log_sha256": "sha256:7eb9bae2632f7499ae2bff5b4ac4e10d0b11fa62c2c35301352b60e65e942507"
+      },
+      {
+        "name": "readiness",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/check_readiness.py",
+          "--for-live-evaluation"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.044427665998227894,
+        "log": "/private/tmp/loop-supervisor-final-readiness.log",
+        "log_sha256": "sha256:0f41c56ab66e1c69b96de90350f1b6fc9d954d1617b994ee56522b060ec39385"
+      },
+      {
+        "name": "demo_local",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_local.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.6447670409688726,
+        "log": "/private/tmp/loop-supervisor-final-demo_local.log",
+        "log_sha256": "sha256:6ec923e242df18553b0319afd47c609e6bacb1f80e831f9399bf8b0975433cac"
+      },
+      {
+        "name": "demo_native",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_native.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.1398625840083696,
+        "log": "/private/tmp/loop-supervisor-final-demo_native.log",
+        "log_sha256": "sha256:ff7c1728ae9f8a57158212172cbc6116ee4552cecd6ad0a3d0f462a5e433a173"
+      },
+      {
+        "name": "version",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/loop.py",
+          "--version"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.04883649997645989,
+        "log": "/private/tmp/loop-supervisor-final-version.log",
+        "log_sha256": "sha256:2af00eadb7fa219e3f3d9407ad354a82bc6ff39181946a302984ce03395b367c"
+      },
+      {
+        "name": "skill",
+        "argv": [
+          "python3",
+          "/Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/super/Documents/ai/loop-engineering-code/templates/native-host/loop-engineering"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.23236220900435,
+        "log": "/private/tmp/loop-supervisor-final-skill.log",
+        "log_sha256": "sha256:db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0"
+      },
+      {
+        "name": "diff_unstaged",
+        "argv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.033639625005889684,
+        "log": "/private/tmp/loop-supervisor-final-diff_unstaged.log",
+        "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "diff_staged",
+        "argv": [
+          "git",
+          "diff",
+          "--cached",
+          "--check"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.027587958960793912,
+        "log": "/private/tmp/loop-supervisor-final-diff_staged.log",
+        "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "elapsed_seconds": 1212.8365270839422,
+    "source_manifest": "/private/tmp/loop-supervisor-final-source-manifest.json",
+    "source_manifest_digest": "sha256:e5f051b67b020502036fd35f219e09476c9415e569b46752146c2681dff8bef4",
+    "source_files": 249,
+    "source_changed_during_validation": [],
+    "source_manifest_scope": {
+      "directories": [
+        "loop_engineering",
+        "reference",
+        "tests",
+        "scripts",
+        "schemas",
+        "templates",
+        "examples",
+        ".github"
+      ],
+      "files": [
+        "AGENTS.md",
+        "LOOP.md",
+        "README.md",
+        "docs/adapters.md",
+        "docs/adoption.md",
+        "docs/architecture.md",
+        "docs/contracts.md",
+        "docs/desktop-mcp.md",
+        "docs/development-agents.zh-CN.md",
+        "docs/evaluation.md",
+        "docs/execution-tools.zh-CN.md",
+        "docs/how-to-use.md",
+        "docs/implementation-status.json",
+        "docs/implementation-status.md",
+        "docs/local-controller.md",
+        "docs/native-engine.md",
+        "docs/native-host.zh-CN.md",
+        "docs/offline-corpus.json",
+        "docs/reinitialize.zh-CN.md",
+        "docs/requirements-setup.zh-CN.md",
+        "docs/scenarios.md",
+        "docs/team-execution.md",
+        "docs/team-memory.zh-CN.md",
+        "docs/verification.md",
+        "requirements-dev.txt",
+        "docs/native-review.zh-CN.md",
+        "docs/native-continuation.md",
+        "docs/native-rework-verification.md",
+        "docs/native-autonomy.md",
+        "docs/native-supervisor.zh-CN.md",
+        "docs/native-project-supervision.zh-CN.md"
+      ],
+      "encoding": "SHA256 of UTF-8 JSON mapping relative paths to hex SHA256 byte digests; ensure_ascii=False, sort_keys=True, separators=(comma,colon). Directory entries use .py/.json/.md/.yml/.yaml/.cjs; generated validation reports and __pycache__ excluded.",
+      "file_count": 249
+    },
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "live_agent_calls": 0,
+    "real_project_runs": 0,
+    "scope": "Full offline suite and repository checks; deterministic fake host transports and temporary local fixtures only. No live Codex/Claude project dispatch."
+  },
+  "targeted_offline_validation": {
+    "result": "pass",
+    "new_tests": 32,
+    "command": ".venv/bin/python -m unittest tests.test_native_supervisor -v",
+    "elapsed_seconds": 49.249,
+    "log": "/private/tmp/loop-supervisor-targeted-stable.log",
+    "log_sha256": "sha256:cb4a177db890a00b68b02e92628e1c067c3278a06811219a10b9565f574b7e4f",
+    "basis": "Stable final implementation; same new 32 cases are included in the full passing suite."
+  },
+  "coverage": [
+    "Four real local fake-host subprocess turns resume one dedicated session, execute original command checks and reach actual accepted handoff.",
+    "A detached supervisor process continues after its launcher returns; no real Codex or model is used.",
+    "Actual unanswered questions and required human evidence wait without model dispatch; an actual recorded answer resumes the route.",
+    "Registered project succession and original root pause/cancel authority retain accepted predecessors, scopes and cumulative accounting.",
+    "Signed dispatch reservation precedes host execution; crash, timeout, malformed report, changed session and unresolved background effects retain explicit recovery.",
+    "Physical project lock and retained active ledger reject duplicate dispatch; original host-idle assertion remains explicit.",
+    "Owned POSIX host process cancellation, live-process reconciliation refusal and lost-dispatch charging preserve original lifetime and turn count.",
+    "Heartbeat-only activity cannot avoid stagnation bounds; real candidate and workbench changes count as progress.",
+    "Lifetime expiry or pause during context/command preparation prevents process dispatch and retains aborted reservation diagnostics.",
+    "Dedicated Codex driver injects current MCP backend and grants only turn-output/draft extra write directories; project skills and frozen candidate remain unchanged.",
+    "Partial token event coverage remains unknown; signed projection/event-chain and corrupted acceptance artifacts fail closed.",
+    "Read-only progress inspection cannot launch a process, renew deadline or attest unobserved liveness."
+  ],
+  "interrupted_validation_attempts": [
+    {
+      "result": "interrupted_not_accepted",
+      "report": "/private/tmp/loop-supervisor-interrupted-result.json",
+      "report_sha256": "sha256:79c591dea9f0241451f103ee6d52c72119dd1f7384e862edc8395dffa11e13e8",
+      "source_manifest_digest": "sha256:6434559713c71ccf2a014ef0beb7bdc111c43bab02a7f03b8b6e9e9935777dba",
+      "source_changed_during_validation": [
+        "loop_engineering/native_supervisor.py",
+        "tests/test_native_supervisor.py"
+      ],
+      "reason": "Maintainer interrupted owned offline unittest after an additional deterministic fault fixture exposed dispatch after lifetime expired during context preparation. Fixed and covered before a fresh full validation.",
+      "checks": [
+        {
+          "name": "unittest",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          "exit_code": -2,
+          "elapsed_seconds": 583.1020013750531,
+          "log": "/private/tmp/loop-supervisor-interrupted-unittest.log",
+          "log_sha256": "sha256:caeaa008fe4b9308dfe8b951db1f1584a43ccdda99d49e5fec74ab418d5c8209",
+          "tests": null
+        },
+        {
+          "name": "contracts",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/validate_contracts.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.19285191595554352,
+          "log": "/private/tmp/loop-supervisor-interrupted-contracts.log",
+          "log_sha256": "sha256:7eb9bae2632f7499ae2bff5b4ac4e10d0b11fa62c2c35301352b60e65e942507"
+        },
+        {
+          "name": "readiness",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/check_readiness.py",
+            "--for-live-evaluation"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.039147584000602365,
+          "log": "/private/tmp/loop-supervisor-interrupted-readiness.log",
+          "log_sha256": "sha256:0f41c56ab66e1c69b96de90350f1b6fc9d954d1617b994ee56522b060ec39385"
+        },
+        {
+          "name": "demo_local",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/demo_local.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.5181893749977462,
+          "log": "/private/tmp/loop-supervisor-interrupted-demo_local.log",
+          "log_sha256": "sha256:f18dfc8ab4cd7ffe2e8e1f343a6da069d21e24ce560c5b2fa59d7fc2f599b96b"
+        },
+        {
+          "name": "demo_native",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/demo_native.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 1.028933167050127,
+          "log": "/private/tmp/loop-supervisor-interrupted-demo_native.log",
+          "log_sha256": "sha256:4aafd357a5bd4be0c728446f5c50f5e4bc3a868edf8efdf821cde13ec807ab49"
+        },
+        {
+          "name": "demo_team_corpus",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/demo_team_corpus.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 105.8517530419631,
+          "log": "/private/tmp/loop-supervisor-interrupted-demo_team_corpus.log",
+          "log_sha256": "sha256:3d29d2f81f03aa07cc4a1192b5f6b207742601b542ebddffd292035f5822b03d"
+        },
+        {
+          "name": "skill",
+          "argv": [
+            "python3",
+            "/Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+            "/Users/super/Documents/ai/loop-engineering-code/templates/native-host/loop-engineering"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.1392828329699114,
+          "log": "/private/tmp/loop-supervisor-interrupted-skill.log",
+          "log_sha256": "sha256:db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0"
+        },
+        {
+          "name": "diff_unstaged",
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.010342208028305322,
+          "log": "/private/tmp/loop-supervisor-interrupted-diff_unstaged.log",
+          "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "diff_staged",
+          "argv": [
+            "git",
+            "diff",
+            "--cached",
+            "--check"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.009566124994307756,
+          "log": "/private/tmp/loop-supervisor-interrupted-diff_staged.log",
+          "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "result": "interrupted_not_accepted",
+      "report": "/private/tmp/loop-supervisor-permission-recheck-result.json",
+      "report_sha256": "sha256:ae7062d92f84f5ba81cf81ed6c30ae9143547b2259bc62d66a91ee73fdb68a4f",
+      "source_manifest_digest": "sha256:0bcaf3579d296dcbad99c12e708d76370388aba9647c181785fea275499c321b",
+      "source_changed_during_validation": [
+        "docs/native-supervisor.zh-CN.md",
+        "loop_engineering/native_supervisor.py",
+        "tests/test_native_supervisor.py"
+      ],
+      "reason": "Maintainer interrupted owned offline unittest to narrow Codex additional writable directories to drafts and turn outputs. Complete private state is no longer an additional writable root. Stable 32-case supervisor coverage passed before final full validation.",
+      "checks": [
+        {
+          "name": "unittest",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          "exit_code": -2,
+          "elapsed_seconds": 880.5826237919973,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-unittest.log",
+          "log_sha256": "sha256:30fb0d01d677503cdb14bba126c8528d58da19f15e27e197f3d7a7a787a49b77",
+          "tests": null
+        },
+        {
+          "name": "contracts",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/validate_contracts.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.2079027920262888,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-contracts.log",
+          "log_sha256": "sha256:7eb9bae2632f7499ae2bff5b4ac4e10d0b11fa62c2c35301352b60e65e942507"
+        },
+        {
+          "name": "readiness",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/check_readiness.py",
+            "--for-live-evaluation"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.045873249997384846,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-readiness.log",
+          "log_sha256": "sha256:0f41c56ab66e1c69b96de90350f1b6fc9d954d1617b994ee56522b060ec39385"
+        },
+        {
+          "name": "demo_local",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/demo_local.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.6431440830347128,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-demo_local.log",
+          "log_sha256": "sha256:2da184c6619d8fef678c46e895ca8beaa2ad2ae5e1ed8021a807f91110fa947b"
+        },
+        {
+          "name": "demo_native",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/demo_native.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 1.1221899579977617,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-demo_native.log",
+          "log_sha256": "sha256:a01913072aab5a495349e61677db64da25ada5d4a19faf22d2dccbc3a2be2120"
+        },
+        {
+          "name": "demo_team_corpus",
+          "argv": [
+            "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+            "scripts/demo_team_corpus.py"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 108.80944762501167,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-demo_team_corpus.log",
+          "log_sha256": "sha256:7211f48d6dc2447a00df38a300823cc92af39860b3d88aeeb37b6b03bbf04ef8"
+        },
+        {
+          "name": "skill",
+          "argv": [
+            "python3",
+            "/Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+            "/Users/super/Documents/ai/loop-engineering-code/templates/native-host/loop-engineering"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.1397458339924924,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-skill.log",
+          "log_sha256": "sha256:db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0"
+        },
+        {
+          "name": "diff_unstaged",
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.015763667004648596,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-diff_unstaged.log",
+          "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "diff_staged",
+          "argv": [
+            "git",
+            "diff",
+            "--cached",
+            "--check"
+          ],
+          "exit_code": 0,
+          "elapsed_seconds": 0.009267250017728657,
+          "log": "/private/tmp/loop-supervisor-permission-recheck-diff_staged.log",
+          "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "live_model_calls": 0,
+  "live_agent_calls": 0,
+  "real_project_runs": 0,
+  "real_project_state_mutated": false,
+  "readiness": {
+    "target": "1.0",
+    "implementation_complete": true,
+    "live_evaluation_prerequisite": "met",
+    "automatic_live_dispatch": false,
+    "complete_items": 19,
+    "required_items": 19,
+    "remaining": [],
+    "additional_prerequisites": [
+      "Current full offline validation passes",
+      "Explicit operator dispatch"
+    ],
+    "assurance": "Reviewed inventory and existing file references; no runtime attestation or test execution"
+  },
+  "limitations": [
+    "Actual Codex login, CLI/MCP conformance, native delegation and semantic adherence were not live-evaluated.",
+    "Persistent driver supports POSIX Codex CLI; Claude Code, Claude Desktop and pure App conversations retain supervised native fallback.",
+    "The supervisor drives its own dedicated session, not the original App/CLI chat, and has no machine-start service.",
+    "Original host writers must actually be stopped before handover; idle confirmation is an operator assertion.",
+    "Required human judgments, external evaluators, permissions, paid resources and enlarged budgets require actual authority/evidence.",
+    "Model-declared blockers are declarations, not independently verified evidence of engineering exhaustion.",
+    "Owned process-group cancellation does not certify containment of detached external effects or other hosts.",
+    "Known CLI event tokens do not attest total sub-agent/reviewer/product usage; total cost remains unknown.",
+    "Passing deterministic offline tests does not certify production deployment or uninterrupted live project completion."
+  ],
+  "handoff_recovery_validation": {
+    "report": "docs/native-handoff-rework-validation.json",
+    "result": "pass",
+    "new_tests": 20,
+    "full_offline_tests": 802,
+    "source_manifest_digest": "sha256:f79858944678f0721e8c2c1bc8fffedf15379463ae3b964a5e6975f98b89862d",
+    "live_model_calls": 0,
+    "real_project_execution_runs": 0,
+    "official_real_project_recovery_applications": 1,
+    "actual_project_control_projections_mutated": true
+  },
+  "monitoring_validation": {
+    "report": "docs/native-monitoring-validation.json",
+    "result": "offline_functionality_pass_with_staged_whitespace",
+    "full_offline_tests": 810,
+    "new_tests": 8,
+    "source_manifest_digest": "sha256:a62ca01a6dcd70d98753d188f2df9330940b78770468a154f8069779ed97c485",
+    "live_model_calls_in_validation": 0
+  },
+  "recovery_validation": {
+    "report": "docs/native-cli-route-validation.json",
+    "result": "offline_functionality_pass_with_existing_staged_whitespace",
+    "full_offline_tests": 839,
+    "new_tests": 29,
+    "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+    "live_model_calls_in_validation": 0
+  }
+}

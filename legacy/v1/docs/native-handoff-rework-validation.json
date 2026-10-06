@@ -1,0 +1,452 @@
+{
+  "schema_version": "1.0",
+  "framework_version": "1.0.0",
+  "recorded_at": "2026-10-06T07:30:48.615289+00:00",
+  "result": "pass",
+  "source_manifest": "docs/native-handoff-rework-source-manifest.json",
+  "source_manifest_digest": "sha256:f79858944678f0721e8c2c1bc8fffedf15379463ae3b964a5e6975f98b89862d",
+  "source_files": 252,
+  "full_offline_validation": {
+    "schema_version": "1.0",
+    "started_at": "2026-10-06T07:18:30.953795+00:00",
+    "finished_at": "2026-10-06T07:25:30.812690+00:00",
+    "result": "pass",
+    "tests": 802,
+    "default_discovery": ".venv/bin/python -m unittest discover -s tests -v",
+    "execution": "Four independent module partitions; serial within each group; deterministic providers only.",
+    "default_test_ids_covered_exactly_once": true,
+    "groups": [
+      {
+        "group": 1,
+        "modules": [
+          "test_team_automation",
+          "test_scenarios",
+          "test_host_install",
+          "test_team_memory",
+          "test_desktop_bridge",
+          "test_native_readiness",
+          "test_readiness",
+          "test_setup",
+          "test_output_schema",
+          "test_verification_dependencies"
+        ],
+        "tests": 155,
+        "result": "pass",
+        "elapsed_seconds": 296.5228138330276,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-handoff-full-group-1.log",
+        "log_sha256": "sha256:a080a59ab30ba9a4cd861c6d9597ef0f7ebb24277b49a4505bdd21cad6fad023",
+        "result_path": "/private/tmp/loop-handoff-full-group-1.json",
+        "result_sha256": "sha256:6d627ea4e91fab6653a6f7ae24e1d84beb9cbe9713db319854e5f571a0e05d20"
+      },
+      {
+        "group": 2,
+        "modules": [
+          "test_native_review",
+          "test_native_supervisor",
+          "test_native_workers",
+          "test_team",
+          "test_native_project_budget",
+          "test_native_plan_repair",
+          "test_file_operations",
+          "test_native_operations",
+          "test_processes",
+          "test_native_parallel"
+        ],
+        "tests": 202,
+        "result": "pass",
+        "elapsed_seconds": 417.41321304201847,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-handoff-full-group-2.log",
+        "log_sha256": "sha256:e9f57b5ee03ca66c466129c21bddc37f73471973af1e345c9c0ac885f4be4b7b",
+        "result_path": "/private/tmp/loop-handoff-full-group-2.json",
+        "result_sha256": "sha256:072c10b0fe79729cf425b276f875b654792bdb36357a7b306d8c770e4b438509"
+      },
+      {
+        "group": 3,
+        "modules": [
+          "test_native_handoff_rework",
+          "test_native_rework",
+          "test_core",
+          "test_native_host",
+          "test_native_preflight",
+          "test_native_workbench",
+          "test_external_execution",
+          "test_provisioning",
+          "test_execution_tools",
+          "test_native_review_material",
+          "test_native_turn_boundary"
+        ],
+        "tests": 201,
+        "result": "pass",
+        "elapsed_seconds": 290.37060825002845,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-handoff-full-group-3.log",
+        "log_sha256": "sha256:24b08c987fbf5cccae9a2dde36bbe96d0fc26d5a7a5f9a887680e97c32be36a3",
+        "result_path": "/private/tmp/loop-handoff-full-group-3.json",
+        "result_sha256": "sha256:5f7ff312313f30284360ebcd2ed82fc6858f01c57ed4e5ab6ba98a1238879afa"
+      },
+      {
+        "group": 4,
+        "modules": [
+          "test_team_corpus",
+          "test_engine",
+          "test_native",
+          "test_spec_setup",
+          "test_native_project",
+          "test_native_flow",
+          "test_agent_roles",
+          "test_native_continuation",
+          "test_native_verification",
+          "test_http_worker",
+          "test_team_executors",
+          "test_native_session"
+        ],
+        "tests": 244,
+        "result": "pass",
+        "elapsed_seconds": 373.0981878750026,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-handoff-full-group-4.log",
+        "log_sha256": "sha256:c0131679ba710f349468d7b5774f686f12feef5440e27ff2d3f7bb0bcbd34833",
+        "result_path": "/private/tmp/loop-handoff-full-group-4.json",
+        "result_sha256": "sha256:41ccd364311bba51814d6706be29f009ac5d97335f9f976c57d33fb30658aeb6"
+      }
+    ],
+    "checks": [
+      {
+        "name": "contracts",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/validate_contracts.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.20164766599191353,
+        "log": "/private/tmp/loop-handoff-full-contracts.log",
+        "log_sha256": "sha256:7eb9bae2632f7499ae2bff5b4ac4e10d0b11fa62c2c35301352b60e65e942507"
+      },
+      {
+        "name": "readiness",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/check_readiness.py",
+          "--for-live-evaluation"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.0405085000093095,
+        "log": "/private/tmp/loop-handoff-full-readiness.log",
+        "log_sha256": "sha256:0f41c56ab66e1c69b96de90350f1b6fc9d954d1617b994ee56522b060ec39385"
+      },
+      {
+        "name": "demo_local",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_local.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.6204562499769963,
+        "log": "/private/tmp/loop-handoff-full-demo_local.log",
+        "log_sha256": "sha256:7fa88b2287696add05d7439177295333bf1a14b9d1a9f86400512183b835b555"
+      },
+      {
+        "name": "demo_native",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_native.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.1045672500040382,
+        "log": "/private/tmp/loop-handoff-full-demo_native.log",
+        "log_sha256": "sha256:33f45753fac80a2cd6e4e8bf6fe12ef2d7262a52d4cb0daa48b62599773d7f64"
+      },
+      {
+        "name": "version",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/loop.py",
+          "--version"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.04917679203208536,
+        "log": "/private/tmp/loop-handoff-full-version.log",
+        "log_sha256": "sha256:2af00eadb7fa219e3f3d9407ad354a82bc6ff39181946a302984ce03395b367c"
+      },
+      {
+        "name": "skill",
+        "argv": [
+          "python3",
+          "/Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/super/Documents/ai/loop-engineering-code/templates/native-host/loop-engineering"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.21996391605352983,
+        "log": "/private/tmp/loop-handoff-full-skill.log",
+        "log_sha256": "sha256:db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0"
+      },
+      {
+        "name": "diff_unstaged",
+        "argv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.028017875039950013,
+        "log": "/private/tmp/loop-handoff-full-diff_unstaged.log",
+        "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "diff_staged",
+        "argv": [
+          "git",
+          "diff",
+          "--cached",
+          "--check"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.014310124970506877,
+        "log": "/private/tmp/loop-handoff-full-diff_staged.log",
+        "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "source_manifest": "/private/tmp/loop-handoff-full-source-manifest.json",
+    "source_manifest_digest": "sha256:f79858944678f0721e8c2c1bc8fffedf15379463ae3b964a5e6975f98b89862d",
+    "source_files": 252,
+    "source_manifest_scope": {
+      "directories": [
+        "loop_engineering",
+        "reference",
+        "tests",
+        "scripts",
+        "schemas",
+        "templates",
+        "examples",
+        ".github"
+      ],
+      "files": [
+        "AGENTS.md",
+        "LOOP.md",
+        "README.md",
+        "docs/adapters.md",
+        "docs/adoption.md",
+        "docs/architecture.md",
+        "docs/contracts.md",
+        "docs/desktop-mcp.md",
+        "docs/development-agents.zh-CN.md",
+        "docs/evaluation.md",
+        "docs/execution-tools.zh-CN.md",
+        "docs/how-to-use.md",
+        "docs/implementation-status.json",
+        "docs/implementation-status.md",
+        "docs/local-controller.md",
+        "docs/native-engine.md",
+        "docs/native-host.zh-CN.md",
+        "docs/offline-corpus.json",
+        "docs/reinitialize.zh-CN.md",
+        "docs/requirements-setup.zh-CN.md",
+        "docs/scenarios.md",
+        "docs/team-execution.md",
+        "docs/team-memory.zh-CN.md",
+        "docs/verification.md",
+        "requirements-dev.txt",
+        "docs/native-review.zh-CN.md",
+        "docs/native-continuation.md",
+        "docs/native-rework-verification.md",
+        "docs/native-autonomy.md",
+        "docs/native-supervisor.zh-CN.md",
+        "docs/native-project-supervision.zh-CN.md"
+      ],
+      "encoding": "SHA256 of UTF-8 JSON mapping relative paths to hex SHA256 byte digests; ensure_ascii=False, sort_keys=True, separators=(comma,colon). Directory entries use .py/.json/.md/.yml/.yaml/.cjs; generated validation reports and __pycache__ excluded.",
+      "file_count": 252
+    },
+    "source_changed_during_validation": [],
+    "elapsed_seconds": 419.8619995829649,
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "live_agent_calls": 0,
+    "real_project_runs": 0
+  },
+  "targeted_offline_validation": {
+    "result": "pass",
+    "tests": 83,
+    "new_tests": 20,
+    "new_handoff_cases": 19,
+    "new_supervisor_case": 1,
+    "command": ".venv/bin/python -m unittest tests.test_native_handoff_rework tests.test_native_rework tests.test_native_supervisor tests.test_host_install -v",
+    "elapsed_seconds": 187.386,
+    "log": "/private/tmp/loop-handoff-rework-targeted-stable.log",
+    "log_sha256": "sha256:ef7539f94e0cdf56614f8200ae17bb6a75efb34b3d4d5b9dc96b70a696309563",
+    "scope": "Final integrated implementation passed; definitions/inventory finalized afterward. These same cases are in the current full passing suite."
+  },
+  "initial_attempts": [
+    {
+      "log": "/private/tmp/loop-handoff-rework-targeted-initial.log",
+      "log_sha256": "sha256:33d48a852d734b28c2b8ee6429e087c60a8929f48ed187d060797893695d77f7",
+      "result": "fail",
+      "tests": 27,
+      "reason": "New producer fixture had not saved its opt-in plan; API/child-type assumptions were corrected without weakening policy or original checks."
+    },
+    {
+      "log": "/private/tmp/loop-handoff-rework-targeted-second.log",
+      "log_sha256": "sha256:306bdca15669b4901914a5f5461230986de0d1096bacead422c1dcf07e3dff4c",
+      "result": "fail",
+      "tests": 16,
+      "reason": "Corrected original artifact URI inspection. Fixed a real memory-kind collision and excluded receipt-derived findings from independent-review memory before stable targeted/full validation."
+    }
+  ],
+  "coverage": [
+    "Actual local checks pass, the real permitted recipient rejects their handoff, and the original child is reopened without replacing the team or contract.",
+    "Actual changed repair files rerun original command checks and fresh receipt acceptance; an unchanged or failing repair cannot be handed off.",
+    "A rejected read-only assessment reopens its explicit completed implementing ancestor and invalidates descendants; fresh original independent verdicts remain mandatory.",
+    "Rework quota is shared with original preparation and independent-review repairs; original elapsed time, counters, child IDs, reviews and failed receipts remain retained.",
+    "An actual separate fake-host CLI supervisor follows the rejected handoff route across five turns and reaches controller-verified completion of the original fixture team.",
+    "Dry-run/MCP admission launches no model/check and leaves team and run projections unchanged.",
+    "Exact handoff identity, authorized recipient, frozen inputs, candidate/environment/artifact integrity and existing source-edit authority gate reopening.",
+    "Occupied writers, unresolved child effects, all child locks, exhausted allowances and actual stop gates block reopening.",
+    "Crash after durable child reopening resumes the original journal once; old and new handoff identities remain idempotent without replenished quota.",
+    "Pause/cancel preserves original journals; project stop remains a gate during preparation and pending replay.",
+    "Full receipt findings and hashes remain available to repair roles, source type remains host-declared and independent-review memory excludes receipt opinions."
+  ],
+  "readiness": {
+    "target": "1.0",
+    "implementation_complete": true,
+    "live_evaluation_prerequisite": "met",
+    "automatic_live_dispatch": false,
+    "complete_items": 19,
+    "required_items": 19,
+    "remaining": [],
+    "additional_prerequisites": [
+      "Current full offline validation passes",
+      "Explicit operator dispatch"
+    ],
+    "assurance": "Reviewed inventory and existing file references; no runtime attestation or test execution"
+  },
+  "native_tool_count": 41,
+  "actual_project_preflight": {
+    "project": "/Users/super/Documents/ai/agent-fabric",
+    "report": "/private/tmp/agent-fabric-handoff-rework-preflight.json",
+    "report_sha256": "sha256:a40296f948812e3c06d38b05a48b923fabc8a1af6ee2f2694435122f2539fbb3",
+    "record": {
+      "recorded_at": "2026-10-06T07:19:21.716277+00:00",
+      "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+      "task_id": "g1_f02_identity",
+      "handoff_id": "handoff-958e06711a3d4b65bfed15e61cdce7d1",
+      "team_revision": 60,
+      "child_run_id": "run-89eb7c0d7799412f82af857439c3d219",
+      "elapsed_ms": 42017,
+      "iteration": 1,
+      "current_team_status": "BLOCKED",
+      "result": {
+        "task_id": "g1_f02_identity",
+        "handoff_id": "handoff-958e06711a3d4b65bfed15e61cdce7d1",
+        "eligible": true,
+        "remaining_rounds": 2,
+        "problems": [],
+        "repair_task": "g1_f02_identity",
+        "repair_owner": "backend",
+        "affected_tasks": [
+          "g1_f02_final",
+          "g1_f02_identity"
+        ],
+        "candidate": "sha256:5ad1fd30a0c8f4be3cbd92e7c6c7f7394b79dbf24019795c192ce8e80395be25",
+        "findings_count": 1,
+        "receipt_digest": "sha256:71799fe66c5c46c2cf711c7b521fd2a98d160f9a8928276f7c9b468037ded6da",
+        "assurance": "Authenticated controller receipt history, not independent evaluation evidence. Original checks and new acceptance remain required."
+      },
+      "live_model_calls": 0,
+      "model_dispatches": 0,
+      "project_writers_observed": "not_attested_by_this_probe",
+      "team_and_run_projections_unchanged": true,
+      "before_projection_digests": {
+        "teams": "78e6272dcae08b9dd393571b431d2bd92bcd5a0351798f60ee24384424d1aa59",
+        "runs": "ecdd4a59fbd6e775e463123c7151f499ea3feead25e9a53b682cf5c039363f87"
+      },
+      "after_projection_digests": {
+        "teams": "78e6272dcae08b9dd393571b431d2bd92bcd5a0351798f60ee24384424d1aa59",
+        "runs": "ecdd4a59fbd6e775e463123c7151f499ea3feead25e9a53b682cf5c039363f87"
+      }
+    },
+    "scope": "The eligibility probe was dry-run only and left team/run projections unchanged; Store bootstrap/snapshot cache housekeeping may occur. The subsequent official recovery is recorded separately below."
+  },
+  "actual_project_recovery": {
+    "project": "/Users/super/Documents/ai/agent-fabric",
+    "report": "/private/tmp/agent-fabric-handoff-rework-applied.json",
+    "report_sha256": "sha256:32c207b89a7b9880f67307b1168ae9b124ffea5b0989bb338129eb73ad92e193",
+    "record": {
+      "recorded_at": "2026-10-06T07:28:05.565336+00:00",
+      "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+      "task_id": "g1_f02_identity",
+      "original_handoff_id": "handoff-958e06711a3d4b65bfed15e61cdce7d1",
+      "rework_id": "rework-131456c38fbf428481549674e03c1d29",
+      "before_status": "BLOCKED",
+      "after_status": "ACTIVE",
+      "before_revision": 60,
+      "after_revision": 62,
+      "child_run_id": "run-89eb7c0d7799412f82af857439c3d219",
+      "child_status": "PLANNING",
+      "elapsed_ms": 42017,
+      "counters": {
+        "iteration": 1,
+        "usage": {
+          "wall_seconds": 43,
+          "tokens": null,
+          "cost_microunits": 0,
+          "cost_currency": "USD"
+        },
+        "stalled_iterations": 0,
+        "repeated_failure_count": 0
+      },
+      "ready_tasks": [
+        "g1_f02_identity"
+      ],
+      "next_action": {
+        "kind": "prepare_task",
+        "summary": "派发下一个依赖已满足的正式任务，在独立副本中产生实际代码。",
+        "tool": "loop_workbench_prepare",
+        "arguments": {
+          "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+          "task_id": "g1_f02_identity"
+        },
+        "continue_work": true,
+        "continuation_instruction": "Continue scoped engineering, including missing measurement producers and result import paths, while executable work remains. A missing evaluator blocks its check, not independent authorized work. Never substitute automated results for required human judgments. Passing regression tests or collecting all workers does not resolve an open product defect or missing measurement interface. Repair within the frozen scope and guards; if that is impossible, prepare the concrete recovery proposal and identify the actual missing authorization. Inspect loop_next before ending the turn and follow an executable next action."
+      },
+      "rework_rounds": 1,
+      "candidate_unchanged": true,
+      "candidate": "sha256:5ad1fd30a0c8f4be3cbd92e7c6c7f7394b79dbf24019795c192ce8e80395be25",
+      "frozen_plan_tasks_and_inputs_preserved": true,
+      "child_contract_ids_and_usage_preserved": true,
+      "rejected_receipts_retained": true,
+      "team_audit": "pass",
+      "live_model_calls": 0,
+      "model_dispatches": 0,
+      "task_checks_dispatched": 0,
+      "source_defect_fixed_or_accepted": false,
+      "project_writers_observed": "Not attested; no new model or source writer was launched."
+    },
+    "scope": "One official same-team rejected-handoff recovery application. Original child, frozen inputs, candidate, usage and rejected receipts retained; original task reopened for repair. No model, source writer or task check launched; product defect remains uncorrected and unaccepted."
+  },
+  "live_model_calls": 0,
+  "live_agent_calls": 0,
+  "real_project_execution_runs": 0,
+  "official_real_project_recovery_applications": 1,
+  "actual_project_control_projections_mutated": true,
+  "limitations": [
+    "Actual Codex CLI login/MCP/delegation and semantic repair quality remain separately live-evaluated.",
+    "The actual agent-fabric recovery reopens the original rejected task; its source-payer product defect still requires implementation and fresh original checks and acceptance.",
+    "Original external writers are not attested idle by the dry-run; supervisor startup still requires an actual idle handover.",
+    "Missing opt-in policy, exhausted limits, external evaluator/human evidence or missing permissions remain real gates.",
+    "Native total model cost and external identities remain unknown/host-declared; no OS containment or production readiness is certified."
+  ]
+}

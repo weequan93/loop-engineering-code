@@ -1,0 +1,116 @@
+{
+  "recorded_at": "2026-10-06T08:52:53.367690+00:00",
+  "validated_source_manifest": "/private/tmp/loop-runtime-full-source-manifest.json",
+  "validation_report": "/private/tmp/loop-runtime-full-result.json",
+  "source_manifest_digest": "sha256:3a19c8b6e19b8551e26f6b2fcdc0518092e5be8de47d7ebbbcf6289d49615ea2",
+  "source_files": 257,
+  "files": [
+    {
+      "path": "docs/implementation-status.json",
+      "before": "cdd9816e7355d69de4040feb10bd6f1df4e8f601fff2a5f31b92f9b18d02e7fe",
+      "after": "396257c975f2f1ad19a85f3e806e41384c91515b192f27d61b6eef3ef9a546bf"
+    },
+    {
+      "path": "docs/implementation-status.md",
+      "before": "415964ada033fe7908a3e420dae24f21b02fa45c7016fafe800f2234eadfe73a",
+      "after": "2938738bc132dc7efa83b02f0585da740533bafc209e6e57b059f8f00ebb4b1f"
+    },
+    {
+      "path": "docs/native-instruction-recovery.md",
+      "before": null,
+      "after": "bb8595f2db4de117f89f6d6d0478b79d8452fe0812e5b30851520928df432fe1"
+    },
+    {
+      "path": "docs/native-supervisor.zh-CN.md",
+      "before": "63051d6ea4d8681651fe10e96c3fd57bdeac5623e0811400490723c106fd00c7",
+      "after": "3626d752d338f34ce40fb4415473291ef5aac5c765e28d78a173901e3e56915b"
+    },
+    {
+      "path": "docs/offline-validation.json",
+      "before": "76fdfd2bee13970d27edbbd036c3cfff7a932a8f3f4867c5c8e9f2c822474918",
+      "after": "55259bff427d151b55a460705cea6a1d5be353a3f533f7e905c33589d1b8981f"
+    },
+    {
+      "path": "loop_engineering/cli.py",
+      "before": "4bf57c812d462e9ac60490c9b4622d56cbaa883130d76a667e8954bb13cd1d59",
+      "after": "2d7c1d2db1fe4750f3c71a1e5cf329766f8e7dc08329eac66e124a52795d590d"
+    },
+    {
+      "path": "loop_engineering/native_flow.py",
+      "before": "fc184cd518122e2d88db8abceb3cdc5754c3fc4766fbe014248b6b7d4ee5420c",
+      "after": "238a5eec6d2add2e64c96af64cd38f0bf7e5075c99079a6592826efa944a96ed"
+    },
+    {
+      "path": "loop_engineering/native_host.py",
+      "before": "ecac90d7bee6701cbdb3c182a8978a3823e20b0fb1f24f3381bf7f9b188062e8",
+      "after": "ca9f37466150ce3eb5c28685469a82f5bf1d4a7e88e7bfa354103aa0c5ab66a0"
+    },
+    {
+      "path": "loop_engineering/native_instruction_recovery.py",
+      "before": null,
+      "after": "7196f8219e8d39625dd3455074d2f1143b70fea5771315726b66c3047b3d7f49"
+    },
+    {
+      "path": "loop_engineering/native_mcp.py",
+      "before": "beb45f87b860ca0b56c09d4a50fc2ed1344d7006c9992803b08531458fa672cc",
+      "after": "2eda9fa426c128a6fa2f8c72b28cdd15fae1a15715b26f2cef37767282dc66d3"
+    },
+    {
+      "path": "loop_engineering/native_parallel.py",
+      "before": "27cb079df9ae3ae1fbb23f1ecb9bd84f217dfc911852aa937183afc37164fb77",
+      "after": "5bf3eb5af1336b28e53ccf1b51c42b70b08923941ca4eff944470bba8cfa4549"
+    },
+    {
+      "path": "loop_engineering/native_session.py",
+      "before": "8f6077bb483bce5e29a3cacd2eef3820944b44611d6d2fb73dc8e62e294664ff",
+      "after": "f67549e96bab9964446895568724da9ab99f34631d07c4bd15383c550ef0964b"
+    },
+    {
+      "path": "loop_engineering/native_supervisor.py",
+      "before": "557ddaaac329f6abd82c06194852695140c2bcb366d542faebb2e0ae38d8dd9e",
+      "after": "b2e1a95ca577c339b87e0ea184be19511400d9fe09f4007e5eee7ec8465cdcc8"
+    },
+    {
+      "path": "loop_engineering/native_supervisor_runtime.py",
+      "before": null,
+      "after": "b17befdd76416fb23fe7cb733c5e6d4363a0c0980369c6b35e3df24778226b34"
+    },
+    {
+      "path": "loop_engineering/native_workbench.py",
+      "before": "c37954383dbade2ecd1ecfdba5a1c55f697b55ec8ae8978fd0a5deee8ec2393b",
+      "after": "7563d11030fa26273d305ef9d58181c3af83ad8c9a8865649d188f737b07b172"
+    },
+    {
+      "path": "loop_engineering/team_engine.py",
+      "before": "32c24ab6313b860ee0da0b4ae6c2443b2f22dd8f0d9ea65ecd4384cf2ba27bc9",
+      "after": "629cabe36d9d6fc643e6ac0a68421faf8bd4ae3796b0bc966737678bc60da35d"
+    },
+    {
+      "path": "tests/fixtures/supervisor_codex.py",
+      "before": "a92ba98de425f03970cf10342d516f2b372bd66e32d34a455ab3e91ec563a03f",
+      "after": "205c799887e845ec58257583208e73ad48dd1783c0b563e1d0f088df28974719"
+    },
+    {
+      "path": "tests/test_native_host.py",
+      "before": "ffe47417e7bbfe3049b67847ec77ebb299389a52033f0eaaca185653ead82768",
+      "after": "76dba246b187646a52fd4fa36b51fe6f6b21317c3ebc3ee06514190971ad321d"
+    },
+    {
+      "path": "tests/test_native_instruction_recovery.py",
+      "before": null,
+      "after": "9ee63d087821409c8c95b35990c1ab8fc2668ac0a68d9ed027a772f17764774b"
+    },
+    {
+      "path": "tests/test_native_supervisor.py",
+      "before": "2497b2771f07297aff36050bce6aa239ed5598891753d8ba2fb1b00ee08a9ad0",
+      "after": "0a8018c408496b4d8ce6c6124599d89147f7c3b6f3a63ac0ba34acdeb986e924"
+    },
+    {
+      "path": "tests/test_native_supervisor_runtime.py",
+      "before": null,
+      "after": "dc34f6fa8bf2ed40f27a649da424e3652783f291af43fc21530fe489dfdf6c97"
+    }
+  ],
+  "staged_index_retained": true,
+  "scope": "Only validated isolated changes applied after original main-file hash CAS; no project or private ledger mutation."
+}

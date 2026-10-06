@@ -1,0 +1,110 @@
+{
+  "recorded_at": "2026-10-06T08:58:34.941718+00:00",
+  "projects": [
+    {
+      "project": "agent-fabric",
+      "supervisor_id": "supervisor-3c9afb5b3b134d1c9916c139fd40cd73",
+      "turn": 2,
+      "session_id": "01a11020-f9e3-7190-9827-02b937b517f6",
+      "bytes": 911670,
+      "host_errors": 0,
+      "completed_turns": 0,
+      "recent_actions": [
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "failed",
+          "exit_code": 2
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "failed",
+          "exit_code": 1
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "failed",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "project": "macare",
+      "supervisor_id": "supervisor-dce5ed3b8981401bb0a59387444b104d",
+      "turn": 4,
+      "session_id": null,
+      "bytes": 0,
+      "host_errors": 0,
+      "completed_turns": 0,
+      "recent_actions": []
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "recorded_at": "2026-10-06T08:54:22.205001+00:00",
+  "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+  "task_id": "g1_f02_identity",
+  "old_workbench": "workbench-36da02e98da14c85b5af59379572a33c",
+  "replacement_workbench": "workbench-e1ce298995b948fc94926656baef191e",
+  "original_request": "request-4c80a16b189846c4a3f097de601a7e50",
+  "replacement_request": "request-1973b662a28a49c7855432a3c4ba2411",
+  "instruction_changes": [
+    {
+      "path": ".agents/skills/loop-engineering/SKILL.md",
+      "old": "sha256:02f57cded079c782fc966dca8d6e8557f5865191bf8e5ea68c487ef808828366",
+      "new": "sha256:b479b7f7e9546bdb79fe9fffcb4b31758578a721259dddcf0267d1192f63ae85"
+    }
+  ],
+  "retained_worker_candidates": {
+    "worker-a25f1505372a468e8f452197275865a7": "sha256:bb86059ca0c51be3d7337d5509f5678679be9972770e5659a5a1acdbf4626e9e",
+    "worker-9731c1d43e574872818a6318a05314b1": "sha256:67b023f6fc6ce905e26150c40192432dc2d1d53f63447676fabb5fab3a55d661"
+  },
+  "original_contracts_and_wait_retained": true,
+  "original_workers_retained": true,
+  "before_child_elapsed_ms": 42808,
+  "after_child_elapsed_ms": 43864,
+  "candidate_after": "sha256:dc5849cb1935c8d8f1c2a3eba46333c088ee297d8000c773b0dcbb08ef32a188",
+  "signed_team_audit": "pass",
+  "live_model_calls": 0,
+  "scope": "Official journaled instruction reconciliation only; no shared product edit, new allowance or acceptance."
+}

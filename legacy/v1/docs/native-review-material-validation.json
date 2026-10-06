@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-05T16:42:23.694229+00:00",
+  "result": "pass",
+  "framework_version": "1.0.0",
+  "native_protocol_version": "2.0",
+  "source_manifest_digest": "sha256:17044ffc01f2fdfe539ef7dcb9f0037e789fcca0668d1bbafeef4629e7ac77ca",
+  "source_files": 233,
+  "full_offline_validation": {
+    "started_at": "2026-10-05T16:24:16.219716+00:00",
+    "finished_at": "2026-10-05T16:41:42.346267+00:00",
+    "exit_code": 0,
+    "tests": 694,
+    "elapsed_seconds": 1046.133204459038,
+    "command": ".venv/bin/python -m unittest discover -s tests -v",
+    "log": "/private/tmp/loop-review-material-full-offline.log",
+    "sha256": "2e82e5d957fd20381efbc6db0b3d70fcf0c134e977b2babb5eee9ffd2a89c5ce",
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "source_manifest_digest": "sha256:17044ffc01f2fdfe539ef7dcb9f0037e789fcca0668d1bbafeef4629e7ac77ca",
+    "source_files": 233,
+    "source_manifest": "/private/tmp/loop-review-material-source-manifest.json",
+    "source_changed_during_validation": [],
+    "live_model_calls": 0
+  },
+  "new_tests_since_684_test_report": 10,
+  "live_model_calls": 0,
+  "readiness": {
+    "target": "1.0",
+    "implementation_complete": true,
+    "live_evaluation_prerequisite": "met",
+    "automatic_live_dispatch": false,
+    "complete_items": 18,
+    "required_items": 18,
+    "remaining": [],
+    "additional_prerequisites": [
+      "Current full offline validation passes",
+      "Explicit operator dispatch"
+    ],
+    "assurance": "Reviewed inventory and existing file references; no runtime attestation or test execution"
+  },
+  "demos": {
+    "local": {
+      "status": "SUCCEEDED",
+      "report": "/private/tmp/loop-review-material-demo-local.json",
+      "sha256": "sha256:1fd8d782294bdc3cb66aaae5d9055fd8d44481c925991f556820dfcd8ad1dcf5"
+    },
+    "native": {
+      "status": "SUCCEEDED",
+      "report": "/private/tmp/loop-review-material-demo-native.json",
+      "sha256": "sha256:e821a8a08ca64eb0554e18f68676f3966630bcac643e8898b1072b6e204d46ef"
+    }
+  },
+  "contracts": {
+    "schema_files": 20,
+    "saved_examples_templates": 27,
+    "evidence_fixtures": 2,
+    "result": "pass"
+  },
+  "additional_checks": {
+    "python_ast_files": 111,
+    "documentation_links": 18,
+    "diff_whitespace": "pass"
+  },
+  "initial_targeted_attempt": {
+    "log": "/private/tmp/loop-review-material-targeted.log",
+    "tests": 41,
+    "result": "failed",
+    "reason": "Two existing preparation fixtures did not forward the new material keyword. Fixed their adapters while retaining original timeout/concurrency assertions."
+  },
+  "boundary_followup": {
+    "log": "/private/tmp/loop-review-material-boundaries.log",
+    "tests": 9,
+    "result": "pass"
+  },
+  "coverage": [
+    "Complete long/binary current command logs and original evidence bindings are accessible in a separate inspected copy.",
+    "Authenticated verified dependency evidence and prior judgments retain their candidates/environments; no historical promotion.",
+    "Actual deterministic review subprocess reads complete artifacts and manifest, then host retains the inspected bytes in signed/imported evidence.",
+    "Missing/corrupt/redirected/authority-material artifacts and fixed record/file/total/manifest limits refuse preparation; no truncation or model spend.",
+    "Copied evidence mutation prevents signing; main candidate is unchanged and unresolved effects retain recovery gates.",
+    "Context byte limits, child budgets, stop/cancel, crash/replay, retry counts and final acceptance remain enforced."
+  ],
+  "limitations": [
+    "No live model/provider/project-database or UI/device evaluation was performed.",
+    "The existing agent-fabric review findings were inspected read-only; its batch, source, state, attempts, answers, budgets and original supplementary observation were not modified.",
+    "Recorded artifacts only are copied; arbitrary external links and unregistered capability observations are not automatically followed or attested.",
+    "Readonly copies and signatures are host declarations, not OS containment or independent runtime attestation.",
+    "Installed MCP hosts must reconnect to load changed code. Cached inconclusive judgments remain until an actual bounded authorized retry; exhausted attempts or budgets still require an explicit recovery decision."
+  ]
+}

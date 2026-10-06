@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-06T02:36:59.935377+00:00",
+  "result": "pass",
+  "scope": "Consolidated targeted offline coverage; not a current full-suite or live-host evaluation.",
+  "new_tests": 21,
+  "distinct_cases_covered": 222,
+  "source_manifest_digest": "sha256:a49c23c06429efddebe9c6000597074a4d1b8ddcbd5e30fe7481bc4dc3be41e8",
+  "source_files": 239,
+  "broad_regression": {
+    "started_at": "2026-10-06T02:23:20.303274+00:00",
+    "finished_at": "2026-10-06T02:30:32.273904+00:00",
+    "exit_code": 1,
+    "tests": 222,
+    "elapsed_seconds": 431.9727166669909,
+    "modules": [
+      "tests.test_native_project",
+      "tests.test_native_session",
+      "tests.test_native_operations",
+      "tests.test_native_readiness",
+      "tests.test_native_rework",
+      "tests.test_native_continuation",
+      "tests.test_native_flow",
+      "tests.test_native_preflight",
+      "tests.test_native_parallel",
+      "tests.test_native_host",
+      "tests.test_host_install",
+      "tests.test_native_workbench",
+      "tests.test_native_workers"
+    ],
+    "log": "/private/tmp/loop-project-final-regression.log",
+    "log_sha256": "sha256:a60872367db707f9db599444acacff6bb22a9561628d87fc477f14a5986a00fa",
+    "source_manifest": "/private/tmp/loop-project-source-manifest.json",
+    "source_manifest_digest": "sha256:b2bf6cb1ef10309eb163fd14406461b2c382c2fb50e2b595391a415303a32108",
+    "source_files": 239,
+    "source_changed_during_validation": [],
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "scope": "targeted offline regression; not a new full-suite report"
+  },
+  "broad_regression_result": {
+    "passed": 221,
+    "failures": 1,
+    "reason": "Existing tools/list fixture still expected 36 tools; three implemented project tools make the actual registry 39. Updated the explicit inventory and checked all new tool names without weakening the schema or admission gates."
+  },
+  "followup_regression": {
+    "started_at": "2026-10-06T02:32:10.701506+00:00",
+    "finished_at": "2026-10-06T02:34:22.251234+00:00",
+    "exit_code": 0,
+    "tests": 53,
+    "elapsed_seconds": 131.55025654204655,
+    "modules": [
+      "tests.test_native_project",
+      "tests.test_native_host"
+    ],
+    "log": "/private/tmp/loop-project-followup-regression.log",
+    "log_sha256": "sha256:a7f45bfe5a76dd2db9d9616f8fd6139e601da77f7558766930ae363baa726d0e",
+    "source_manifest": "/private/tmp/loop-project-followup-source-manifest.json",
+    "source_manifest_digest": "sha256:a49c23c06429efddebe9c6000597074a4d1b8ddcbd5e30fe7481bc4dc3be41e8",
+    "source_files": 239,
+    "source_changed_during_validation": [],
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "scope": "targeted offline regression; not a new full-suite report"
+  },
+  "changes_between_runs": [
+    "docs/native-project-supervision.zh-CN.md",
+    "tests/test_native_host.py"
+  ],
+  "implementation_unchanged_between_runs": true,
+  "coverage": [
+    "Accepted batch remains COMPLETE with original contracts, artifacts, receipts and usage.",
+    "A bounded, host-authorized queue creates empty successor SPEC stages, not replayed execution plans.",
+    "Two successors pass actual local checks and handoffs; history routes to the latest batch.",
+    "Lost replies, reconnects and concurrent advances preserve one authenticated successor.",
+    "Whole-queue pause/resume/cancel preserves accepted predecessors; cancellation is terminal.",
+    "Real questions retain waiting; failed/stale predecessors, unresolved effects and spend-policy gaps refuse succession.",
+    "Cumulative controller milliseconds remain; preflight and plan submission reserve child/integration limits.",
+    "Never-admitted reservations stay recoverable; lost admitted child accounting cannot become zero.",
+    "No new permissions, paid calls, waived evidence or host cost/accounting claims.",
+    "Published instruction upgrades preserve customized files and frozen controls; project dashboard distinguishes batch and declared queue scope."
+  ],
+  "limitations": [
+    "Native host adherence and unattended completion have not been live-evaluated.",
+    "MCP does not wake an ended coordinator conversation.",
+    "Queue authorization/coverage are host declarations; exhaustion certifies only accepted contracts, not unlisted product scope.",
+    "Controller allowance covers the registered root/successors; earlier project ledgers remain separate and native host tokens/cost are unknown.",
+    "Frozen queue scope/budget extension is refused; a concrete reviewed recovery/extension is still required.",
+    "Full offline validation of current sources is required before future live framework evaluation."
+  ],
+  "live_model_calls": 0,
+  "real_project_runs": 0,
+  "real_project_state_mutated": false,
+  "full_suite_rerun": false,
+  "prior_full_suite": {
+    "report": "docs/native-review-material-validation.json",
+    "tests": 694,
+    "scope": "Historical preceding source revision."
+  },
+  "readiness": {
+    "required_items": 18,
+    "complete_items": 18,
+    "result": "pass",
+    "scope": "Inventory only; no automatic live dispatch or containment certification."
+  },
+  "skill_validation": "pass",
+  "project_budget_amendment_targeted_validation": {
+    "report": "docs/native-project-budget-validation.json",
+    "new_tests": 17,
+    "distinct_offline_cases": 146,
+    "result": "pass",
+    "source_manifest_digest": "sha256:9d5f6de0a06e9b6d801f2578b81214a2f73721f5386a4361e351aeb133c23183",
+    "scope": "145 sandbox cases passed; the sole blocked loopback-port fixture passed with local port access. Same source manifest, no code changes. Not a new full-suite or live-host evaluation.",
+    "real_project_runs": 0,
+    "real_project_state_mutated": false
+  }
+}

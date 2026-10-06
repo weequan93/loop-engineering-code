@@ -1,0 +1,11 @@
+{
+  "observed_at": "2026-10-06T08:05:43.420090+00:00",
+  "recorded_process_group": 64549,
+  "ps_exit_code": 0,
+  "current_matching_processes": [],
+  "run_evidence": "/private/tmp/macare-r1-scan-preparation/run-20261006T075531-aca296ff/run.json",
+  "run_evidence_sha256": "da1af55a229298c2543fe43595304250f236492b7e3d6e26a0e4ab8c3bb20f22",
+  "processes_signalled": 0,
+  "source_or_task_changes": 0,
+  "scope": "Current read-only group census. Does not clear the original cleanup failure or certify performance acceptance. No signal sent using historical group identity."
+}

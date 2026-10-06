@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-10-06T09:06:45.096846+00:00",
+  "supervisor_id": "supervisor-dce5ed3b8981401bb0a59387444b104d",
+  "turn": 4,
+  "original_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "original_stderr_sha256": "39857e2b3be84cb4da60e2478a8ac416ed0c9c55261697e20dff6f3b37547c7c",
+  "observed_original_group_members": [],
+  "signals_sent": 0,
+  "candidate": "sha256:d4e6c650526e6ecb15078c986460c4adb91e0bbf878496f49fbd0a56c96105db",
+  "status_after": "READY",
+  "turns_retained": 4,
+  "deadline_retained": 1791298315,
+  "dispatch_ms_before": 2520472,
+  "dispatch_ms_after": 16920472,
+  "original_reserved_ms_charged": 14400000,
+  "scope": "Official original effect reconciliation; failure and conservative accounting retained; no model started."
+}

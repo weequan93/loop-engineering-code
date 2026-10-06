@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-10-06T08:26:07.154823+00:00",
+  "issue": "supervisor-verification-runtime-capability",
+  "confirmed_cli_version": "0.160.1",
+  "observed_cli_capability": "codex exec --help exposes --approve-for-me for automatic review with workspace-write; this was read-only help, not a model dispatch.",
+  "existing_driver": "--ask-for-approval never --sandbox workspace-write",
+  "official_sources": [
+    "https://learn.chatgpt.com/docs/sandboxing/auto-review",
+    "https://learn.chatgpt.com/docs/agent-configuration/subagents"
+  ],
+  "finding": "Official automatic approval review requires an eligible on-request policy. It preserves the sandbox and evaluates each boundary crossing; never produces no approval request to review. The current driver prevents that route.",
+  "implementation_status": "implemented_and_offline_validated_actual_preflight_pending",
+  "next_work": "Implement an explicit authenticated same-supervisor policy update for supported automatic approval review, preserving workspace sandbox, account/organization policy, session, lifetime and original ledger. Retain legacy never behavior unless actually authorized. Add early offline capability negotiation and command/denial/fallback fixtures. Do not write custom reviewer policies, allow arbitrary commands, or disable original cleanup. Only after full offline validation and current effect reconciliation may the original supervisor resume.",
+  "runtime_scope": "Original read-only process census and owned-instance cleanup of authorized verification only. Historical group IDs alone never authorize signals; original failed result remains failed.",
+  "probes": {
+    "live_model_calls": 0,
+    "project_dispatches": 0,
+    "processes_signalled": 0
+  },
+  "validation": "docs/native-cli-route-validation.json",
+  "actual_update": "docs/monitoring/supervisor-runtime-actual.json",
+  "actual_cli_compatibility": "--approve-for-me itself selects workspace-write and conflicts with an explicit --sandbox option. Real turn-4 parser failure preserved and reconciled; corrected local help and deterministic same-session fixtures pass."
+}

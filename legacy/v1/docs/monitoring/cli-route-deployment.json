@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-10-06T09:09:32.443689+00:00",
+  "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+  "paths": [
+    {
+      "path": "loop_engineering/native_supervisor.py",
+      "before": "b2e1a95ca577c339b87e0ea184be19511400d9fe09f4007e5eee7ec8465cdcc8",
+      "after": "d1437677ffbdfc0fd5cb318d63ce86dce4a6e945080c3af6480983ab183151b8"
+    },
+    {
+      "path": "tests/fixtures/supervisor_codex.py",
+      "before": "205c799887e845ec58257583208e73ad48dd1783c0b563e1d0f088df28974719",
+      "after": "2079aaaca96a7dc09f92dfb9b212063d4892b4882a35cb29b8db04c56e1e1b79"
+    },
+    {
+      "path": "tests/test_native_supervisor_runtime.py",
+      "before": "dc34f6fa8bf2ed40f27a649da424e3652783f291af43fc21530fe489dfdf6c97",
+      "after": "78ec9f211b09a6adf9391519a8c840961dccacfcaaa9702da8a74ce47cd25972"
+    }
+  ],
+  "staged_index_retained": true,
+  "deployment_boundary": "Both original CLI hosts collected; no active MCP/model writer. No project or private ledger edited by deployment."
+}

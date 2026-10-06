@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-10-06T08:57:45.325948+00:00",
+  "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+  "task_id": "r1-performance",
+  "child_run_id": "run-9ca7ce0f9ee44a42a0b2883a93848d11",
+  "controller_before": "BLOCKED",
+  "controller_after": "PLANNING",
+  "elapsed_before_ms": 15304814,
+  "elapsed_after_ms": 15305197,
+  "original_contracts_workbenches_workers_retained": true,
+  "next_action": {
+    "kind": "prepare_task",
+    "summary": "将绑定的任务上下文交给实际工作者，提交提案并检查结果。",
+    "tool": "loop_workbench_prepare",
+    "arguments": {
+      "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+      "task_id": "r1-performance"
+    },
+    "continue_work": true,
+    "continuation_instruction": "Continue scoped engineering, including missing measurement producers and result import paths, while executable work remains. A missing evaluator blocks its check, not independent authorized work. Never substitute automated results for required human judgments. Passing regression tests or collecting all workers does not resolve an open product defect or missing measurement interface. Repair within the frozen scope and guards; if that is impossible, prepare the concrete recovery proposal and identify the actual missing authorization. Inspect loop_next before ending the turn and follow an executable next action."
+  },
+  "scope": "Official loop_team_control resume after runtime-route update and original effect census; original failed check remains failed, no new limits or acceptance."
+}

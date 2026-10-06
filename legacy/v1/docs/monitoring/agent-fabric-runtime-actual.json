@@ -1,0 +1,19 @@
+{
+  "recorded_at": "2026-10-06T09:10:10.757452+00:00",
+  "supervisor_id": "supervisor-3c9afb5b3b134d1c9916c139fd40cd73",
+  "project": "agent-fabric",
+  "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+  "expected_candidate": "sha256:dc5849cb1935c8d8f1c2a3eba46333c088ee297d8000c773b0dcbb08ef32a188",
+  "approval_mode": "auto-review",
+  "runtime_capability": {
+    "approval_mode": "auto-review",
+    "sandbox": "workspace-write",
+    "route_available": true,
+    "execution_capability_verified": false,
+    "basis": "Bounded local CLI help; actual approvals, process cleanup and checks remain pending"
+  },
+  "original_session_lifetime_usage_tasks_failures_retained": true,
+  "signed_supervisor_audit": "pass",
+  "live_model_calls": 0,
+  "scope": "Official operator runtime route update at collected maintenance boundary; per-operation approval and actual original preflight remain required."
+}

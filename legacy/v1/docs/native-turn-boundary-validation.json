@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-06T05:30:38.578452+00:00",
+  "result": "pass",
+  "scope": "Read-only host turn routing/visibility correction and project diagnosis; targeted offline regression, not host runtime control.",
+  "new_tests": 6,
+  "targeted_regression": {
+    "started_at": "2026-10-06T05:26:16.198241+00:00",
+    "finished_at": "2026-10-06T05:29:25.260065+00:00",
+    "exit_code": 0,
+    "tests": 106,
+    "elapsed_seconds": 189.06274129101075,
+    "modules": [
+      "tests.test_native_turn_boundary",
+      "tests.test_native_continuation",
+      "tests.test_native_flow",
+      "tests.test_native_host",
+      "tests.test_host_install",
+      "tests.test_native_project"
+    ],
+    "log": "/private/tmp/loop-turn-boundary-regression.log",
+    "log_sha256": "sha256:4ed0a35ab95a20be384974dc98b9a75ab5d89c127e6e5471336cb0e0cd5b283d",
+    "source_manifest": "/private/tmp/loop-turn-boundary-source-manifest.json",
+    "source_manifest_digest": "sha256:b6630e8f46f231c1e99587a40a48ea64cf2992b80b82e93d4bd5a03331124708",
+    "source_files": 243,
+    "source_changed_during_validation": [],
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "scope": "targeted offline regression; not a new full-suite report"
+  },
+  "source_manifest_digest": "sha256:b6630e8f46f231c1e99587a40a48ea64cf2992b80b82e93d4bd5a03331124708",
+  "source_files": 243,
+  "coverage": [
+    "Actual passing command checks still require handoff and remaining tasks; final accepted batch is a distinct gate.",
+    "All collected advisory specialists leave the current workbench executable without new evidence or controller state mutations.",
+    "Expired writer requires takeover; progress cannot renew its deadline or reset child budget.",
+    "Actual unanswered questions and missing human evaluations remain gates, never acceptance; answers restore executable work.",
+    "Accepted batch with authorized successors still requires advancement; whole-project pause retains the accepted predecessor.",
+    "Existing routing, specialist continuation, MCP tool schema, exact published instruction upgrades and original project queue gates remain covered."
+  ],
+  "actual_project_review": {
+    "project": "/Users/super/Documents/ai/macare",
+    "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+    "observed_base_revision": 667,
+    "source_kind": "Read-only base SQLite projection using immutable=1; WAL changes, if any, are not followed. Diagnostic source, not authenticated admission/evidence verification.",
+    "status": "ACTIVE",
+    "task_status": "RUNNING",
+    "child_status": "PLANNING",
+    "recorded_child_elapsed_ms": 15303867,
+    "child_limit_seconds": 28800,
+    "remaining_controller_seconds_floor": 13496,
+    "current_workbench_preserved": true,
+    "registered_current_specialists": "All collected in observed revision; host-process liveness is not attested.",
+    "documented_frame_nodes": 370982,
+    "documented_guard_nodes": 250000,
+    "finding": "Known frame rejection and unfinished measurement/result-import work need bounded engineering or a concrete recovery proposal; a passing regression suite does not establish the original 1000-process or whole-product budgets.",
+    "human_requirement": "Actual human keyboard/VoiceOver judgment remains external; machine interaction/AX cannot substitute.",
+    "sources": [
+      {
+        "path": "/Users/super/Documents/ai/macare/.loop/tasks/r1-performance.json",
+        "sha256": "sha256:b227f947c7f25514009b2cc88c5f7e0a2dc6af1efe8b067f29ca4dd5721ade2c"
+      },
+      {
+        "path": "/private/var/folders/zc/8zfqkrh55wz4825ghhhp5lr80000gn/T/loop-native-workbench-tc783kak/project/docs/r1/performance-producer-gap-audit.md",
+        "sha256": "sha256:c4d1137503840b4ce99bec5e36ee36f5d65395405ba6e491d0df730215b5d876"
+      },
+      {
+        "path": "/private/var/folders/zc/8zfqkrh55wz4825ghhhp5lr80000gn/T/loop-native-workbench-tc783kak/project/docs/r1/wire-preflight-repair.md",
+        "sha256": "sha256:b6e5b18085808298c0a06ab7ef0b6182956986d5eefa84b1c9ace4f027e1d1e2"
+      }
+    ],
+    "actual_project_tests_rerun": false,
+    "project_files_or_state_modified": false
+  },
+  "limitations": [
+    "The signal is read-only advice derived from next_action; it cannot force native host continuation, supervise an ended model or wake an ended chat.",
+    "Controller routing does not semantically classify every external requirement embedded in a command check. The host must identify concrete external blockers and remaining engineering.",
+    "A stop gate does not prove engineering exhaustion, product acceptance or independent human evidence.",
+    "No real project, native agent or provider was dispatched or modified. Native conversation/delegation cost and liveness remain unverified.",
+    "Current full offline validation and guarded readiness are required before future live framework evaluation."
+  ],
+  "live_model_calls": 0,
+  "real_project_runs": 0,
+  "real_project_state_mutated": false,
+  "full_suite_rerun": false,
+  "readiness": {
+    "result": "pass",
+    "required_items": 18,
+    "complete_items": 18,
+    "scope": "Inventory only; no dispatch or runtime containment certification."
+  },
+  "skill_validation": "pass",
+  "contract_validation": "20 schemas, 27 saved examples/templates and generated fixtures pass."
+}

@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-06T01:58:56.242262+00:00",
+  "result": "pass",
+  "framework_version": "1.0.0",
+  "source_manifest_digest": "sha256:aca922f02834796ec82f0e3e6b19857009c734607f09ad5feb05775438d3e42a",
+  "source_files": 235,
+  "targeted_offline_validation": {
+    "started_at": "2026-10-06T01:53:39.788872+00:00",
+    "finished_at": "2026-10-06T01:58:19.242578+00:00",
+    "exit_code": 0,
+    "tests": 163,
+    "elapsed_seconds": 279.45494641701225,
+    "modules": [
+      "tests.test_native_continuation",
+      "tests.test_native_flow",
+      "tests.test_native_preflight",
+      "tests.test_native_parallel",
+      "tests.test_native_host",
+      "tests.test_host_install",
+      "tests.test_native_workbench",
+      "tests.test_native_workers"
+    ],
+    "log": "/private/tmp/loop-continuation-final-regression.log",
+    "log_sha256": "sha256:2cca7564b53f685880725616076b4bcef0dba64d2d437d8d91f2cd4d36505766",
+    "source_manifest": "/private/tmp/loop-continuation-source-manifest.json",
+    "source_manifest_digest": "sha256:aca922f02834796ec82f0e3e6b19857009c734607f09ad5feb05775438d3e42a",
+    "source_files": 235,
+    "source_changed_during_validation": [],
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "scope": "targeted offline regression; not a new full-suite report"
+  },
+  "new_tests": 12,
+  "readiness": {
+    "target": "1.0",
+    "implementation_complete": true,
+    "live_evaluation_prerequisite": "met",
+    "automatic_live_dispatch": false,
+    "complete_items": 18,
+    "required_items": 18,
+    "remaining": [],
+    "additional_prerequisites": [
+      "Current full offline validation passes",
+      "Explicit operator dispatch"
+    ],
+    "assurance": "Reviewed inventory and existing file references; no runtime attestation or test execution"
+  },
+  "skill_validation": {
+    "result": "pass",
+    "command": "/opt/anaconda3/bin/python /Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py templates/native-host/loop-engineering"
+  },
+  "full_suite_rerun": false,
+  "prior_full_suite": {
+    "report": "docs/native-review-material-validation.json",
+    "tests": 694,
+    "scope": "Historical preceding source revision; not full-suite validation of this correction"
+  },
+  "initial_regression_attempt": {
+    "log": "/private/tmp/loop-continuation-regression.log",
+    "tests": 164,
+    "result": "failed",
+    "reason": "New integration fixture initially violated existing phase/final-dependency rules; corrected its plan without weakening admission. Removed a nonexistent context-test module; existing host and worker context boundary cases are included in the final regression.",
+    "log_sha256": "sha256:10d347afaab814cb4a824f946c6e6aff92d860d39802f7662d5865c9321fb9df"
+  },
+  "coverage": [
+    "Human/signed-import, missing-authority, inconclusive and failed-review gates retain pending evidence while frozen parallel plans select independent ready work.",
+    "No eligible task or serial policy returns the original blocker; dependencies and slot eligibility are never invented.",
+    "Pause/cancel, terminal limits, input conflicts, corrupted artifacts and unresolved effects/recovery retain priority.",
+    "A real local human-check fixture remains unpassed while a disjoint producer draft/context is prepared without model dispatch or usage/evidence reset.",
+    "Existing scoped workers, source refresh, context limits, independent evidence and original checks retain their regression coverage.",
+    "The prior exact published skill can upgrade while customized skills, host settings and frozen controls are preserved."
+  ],
+  "live_model_calls": 0,
+  "real_project_runs": 0,
+  "project_state_mutated": false,
+  "limitations": [
+    "Host-model adherence and actual uninterrupted completion have not been live-evaluated.",
+    "Native MCP cannot wake an ended host conversation.",
+    "Required human judgments and external evaluators remain actual acceptance dependencies.",
+    "A current full offline suite is still required before a future live framework evaluation."
+  ],
+  "host_turn_boundary_targeted_validation": {
+    "report": "docs/native-turn-boundary-validation.json",
+    "new_tests": 6,
+    "offline_cases": 106,
+    "result": "pass",
+    "source_manifest_digest": "sha256:b6630e8f46f231c1e99587a40a48ea64cf2992b80b82e93d4bd5a03331124708",
+    "real_project_state_mutated": false,
+    "scope": "Read-only continuation signal; no host wakeup, model dispatch, evidence waiver or budget/scope change. Targeted regression, not a new full suite."
+  },
+  "persistent_host_supervision_validation": {
+    "report": "docs/native-supervisor-validation.json",
+    "result": "pass",
+    "new_tests": 32,
+    "full_offline_tests": 782,
+    "source_manifest_digest": "sha256:e5f051b67b020502036fd35f219e09476c9415e569b46752146c2681dff8bef4",
+    "live_model_calls": 0,
+    "real_project_runs": 0,
+    "real_project_state_mutated": false,
+    "scope": "Full stable-source offline validation; actual POSIX Codex driver conformance remains separate live evaluation."
+  },
+  "validation_record_scope": "Original targeted continuation record above remains historical. The appended persistent supervisor pointer contains the newer full-suite validation and actual separate-process implementation.",
+  "handoff_recovery_validation": {
+    "report": "docs/native-handoff-rework-validation.json",
+    "result": "pass",
+    "new_tests": 20,
+    "full_offline_tests": 802,
+    "source_manifest_digest": "sha256:f79858944678f0721e8c2c1bc8fffedf15379463ae3b964a5e6975f98b89862d",
+    "live_model_calls": 0,
+    "real_project_execution_runs": 0,
+    "official_real_project_recovery_applications": 1,
+    "actual_project_control_projections_mutated": true
+  },
+  "monitoring_validation": {
+    "report": "docs/native-monitoring-validation.json",
+    "result": "offline_functionality_pass_with_staged_whitespace",
+    "full_offline_tests": 810,
+    "new_tests": 8,
+    "source_manifest_digest": "sha256:a62ca01a6dcd70d98753d188f2df9330940b78770468a154f8069779ed97c485",
+    "live_model_calls_in_validation": 0
+  },
+  "recovery_validation": {
+    "report": "docs/native-cli-route-validation.json",
+    "result": "offline_functionality_pass_with_existing_staged_whitespace",
+    "full_offline_tests": 839,
+    "new_tests": 29,
+    "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+    "live_model_calls_in_validation": 0
+  }
+}

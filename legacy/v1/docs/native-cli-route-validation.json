@@ -1,0 +1,368 @@
+{
+  "schema_version": "1.0",
+  "recorded_at": "2026-10-06T09:09:32.523583+00:00",
+  "framework_version": "1.0.0",
+  "result": "offline_functionality_pass_with_existing_staged_whitespace",
+  "source_manifest": "docs/native-cli-route-source-manifest.json",
+  "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+  "source_files": 257,
+  "full_offline_validation": {
+    "schema_version": "1.0",
+    "started_at": "2026-10-06T09:02:11.319800+00:00",
+    "finished_at": "2026-10-06T09:09:21.355631+00:00",
+    "result": "fail",
+    "tests": 839,
+    "default_discovery": ".venv/bin/python -m unittest discover -s tests -v",
+    "execution": "Four independent module partitions; serial within each group; deterministic providers only.",
+    "default_test_ids_covered_exactly_once": true,
+    "groups": [
+      {
+        "group": 1,
+        "modules": [
+          "test_team_automation",
+          "test_scenarios",
+          "test_host_install",
+          "test_native_project_budget",
+          "test_native_plan_repair",
+          "test_native_readiness",
+          "test_native_supervisor_runtime",
+          "test_readiness",
+          "test_native_parallel",
+          "test_verification_dependencies"
+        ],
+        "tests": 162,
+        "result": "pass",
+        "elapsed_seconds": 281.6908561660093,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-cli-route-full-group-1.log",
+        "log_sha256": "sha256:c952ab55b08558a3df7759ba8cb459933dda0bdb821741cffe067ed831b083b5",
+        "result_path": "/private/tmp/loop-cli-route-full-group-1.json",
+        "result_sha256": "sha256:175948d5f9bc8f95de4817758bfe1eca63b6f81030db10792cfbf3491680fa21"
+      },
+      {
+        "group": 2,
+        "modules": [
+          "test_native_review",
+          "test_native_supervisor",
+          "test_native_workers",
+          "test_team",
+          "test_native_instruction_recovery",
+          "test_native_workbench",
+          "test_external_execution",
+          "test_provisioning",
+          "test_execution_tools",
+          "test_http_worker",
+          "test_output_schema"
+        ],
+        "tests": 216,
+        "result": "pass",
+        "elapsed_seconds": 427.7697219999973,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-cli-route-full-group-2.log",
+        "log_sha256": "sha256:9f46f7fcf7ac016f0cf72529171e78722e3b70db98ae833036d3d6f99dfdd092",
+        "result_path": "/private/tmp/loop-cli-route-full-group-2.json",
+        "result_sha256": "sha256:c1141e738a26c17dc944ae8418e25dd294c62f12f1c1186acd47350ed19742a7"
+      },
+      {
+        "group": 3,
+        "modules": [
+          "test_native_handoff_rework",
+          "test_native_rework",
+          "test_core",
+          "test_native_host",
+          "test_native_preflight",
+          "test_native_flow",
+          "test_agent_roles",
+          "test_file_operations",
+          "test_native_verification",
+          "test_native_review_material",
+          "test_setup",
+          "test_team_executors"
+        ],
+        "tests": 210,
+        "result": "pass",
+        "elapsed_seconds": 334.9157950420049,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-cli-route-full-group-3.log",
+        "log_sha256": "sha256:f701dfd8eb85dd0302665a84f3d90cf92c802c510b43ed4aa6333349a39c14da",
+        "result_path": "/private/tmp/loop-cli-route-full-group-3.json",
+        "result_sha256": "sha256:29ea53fb77741849548586dca621ef88fcf0f37ed96fb5ecb645f239b829e5e2"
+      },
+      {
+        "group": 4,
+        "modules": [
+          "test_team_corpus",
+          "test_engine",
+          "test_native",
+          "test_spec_setup",
+          "test_native_project",
+          "test_team_memory",
+          "test_desktop_bridge",
+          "test_native_continuation",
+          "test_native_operations",
+          "test_processes",
+          "test_native_turn_boundary",
+          "test_native_session"
+        ],
+        "tests": 251,
+        "result": "pass",
+        "elapsed_seconds": 393.6490851250128,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-cli-route-full-group-4.log",
+        "log_sha256": "sha256:1ad6c0651b3b29c93af918d7e6b084ccfd203ace8613ed3d1c27652fb11c9d84",
+        "result_path": "/private/tmp/loop-cli-route-full-group-4.json",
+        "result_sha256": "sha256:c1ef1adb05443905155e64581d486c83a6aad3321ec20320ee0f8479683ba475"
+      }
+    ],
+    "checks": [
+      {
+        "name": "contracts",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/validate_contracts.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.19521762494696304,
+        "log": "/private/tmp/loop-cli-route-full-contracts.log",
+        "log_sha256": "sha256:7eb9bae2632f7499ae2bff5b4ac4e10d0b11fa62c2c35301352b60e65e942507"
+      },
+      {
+        "name": "readiness",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/check_readiness.py",
+          "--for-live-evaluation"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.03972279099980369,
+        "log": "/private/tmp/loop-cli-route-full-readiness.log",
+        "log_sha256": "sha256:0f41c56ab66e1c69b96de90350f1b6fc9d954d1617b994ee56522b060ec39385"
+      },
+      {
+        "name": "demo_local",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_local.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.5954808329697698,
+        "log": "/private/tmp/loop-cli-route-full-demo_local.log",
+        "log_sha256": "sha256:cbf35debc84fe5064920b60806ad2a1ed3ad738b0004f2e472afdf6b7fa379f2"
+      },
+      {
+        "name": "demo_native",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_native.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.1690277500310913,
+        "log": "/private/tmp/loop-cli-route-full-demo_native.log",
+        "log_sha256": "sha256:bff8a1396002b7c74067e92817ed201dde26ad28612f5428c48e149f7c95c8bc"
+      },
+      {
+        "name": "version",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/loop.py",
+          "--version"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.049144791963044554,
+        "log": "/private/tmp/loop-cli-route-full-version.log",
+        "log_sha256": "sha256:2af00eadb7fa219e3f3d9407ad354a82bc6ff39181946a302984ce03395b367c"
+      },
+      {
+        "name": "skill",
+        "argv": [
+          "/opt/anaconda3/bin/python3",
+          "/Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/private/tmp/loop-cli-route-repair-4kr7jwvp/templates/native-host/loop-engineering"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.042589916032738984,
+        "log": "/private/tmp/loop-cli-route-full-skill.log",
+        "log_sha256": "sha256:db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0"
+      },
+      {
+        "name": "diff_unstaged",
+        "argv": [
+          "git",
+          "-C",
+          "/Users/super/Documents/ai/loop-engineering-code",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.011757166997995228,
+        "log": "/private/tmp/loop-cli-route-full-diff_unstaged.log",
+        "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "diff_staged",
+        "argv": [
+          "git",
+          "-C",
+          "/Users/super/Documents/ai/loop-engineering-code",
+          "diff",
+          "--cached",
+          "--check"
+        ],
+        "exit_code": 2,
+        "elapsed_seconds": 0.012035958003252745,
+        "log": "/private/tmp/loop-cli-route-full-diff_staged.log",
+        "log_sha256": "sha256:279384156f1fc93261f9e6d32a03736d21a0ce605746337d47e15e0e9ca66163"
+      }
+    ],
+    "source_manifest": "/private/tmp/loop-cli-route-full-source-manifest.json",
+    "source_manifest_digest": "sha256:7240981d92cad51c8315abb6eb6b59d3f437f898efeaed9647b5303507000fdb",
+    "source_files": 257,
+    "source_manifest_scope": {
+      "directories": [
+        "loop_engineering",
+        "reference",
+        "tests",
+        "scripts",
+        "schemas",
+        "templates",
+        "examples",
+        ".github"
+      ],
+      "files": [
+        "AGENTS.md",
+        "LOOP.md",
+        "README.md",
+        "docs/adapters.md",
+        "docs/adoption.md",
+        "docs/architecture.md",
+        "docs/contracts.md",
+        "docs/desktop-mcp.md",
+        "docs/development-agents.zh-CN.md",
+        "docs/evaluation.md",
+        "docs/execution-tools.zh-CN.md",
+        "docs/how-to-use.md",
+        "docs/implementation-status.json",
+        "docs/implementation-status.md",
+        "docs/local-controller.md",
+        "docs/native-engine.md",
+        "docs/native-host.zh-CN.md",
+        "docs/offline-corpus.json",
+        "docs/reinitialize.zh-CN.md",
+        "docs/requirements-setup.zh-CN.md",
+        "docs/scenarios.md",
+        "docs/team-execution.md",
+        "docs/team-memory.zh-CN.md",
+        "docs/verification.md",
+        "requirements-dev.txt",
+        "docs/native-review.zh-CN.md",
+        "docs/native-continuation.md",
+        "docs/native-rework-verification.md",
+        "docs/native-autonomy.md",
+        "docs/native-supervisor.zh-CN.md",
+        "docs/native-project-supervision.zh-CN.md",
+        "docs/native-instruction-recovery.md"
+      ],
+      "encoding": "SHA256 of UTF-8 JSON mapping relative paths to hex SHA256 byte digests; ensure_ascii=False, sort_keys=True, separators=(comma,colon). Directory entries use .py/.json/.md/.yml/.yaml/.cjs; generated validation reports and __pycache__ excluded.",
+      "file_count": 257
+    },
+    "source_changed_during_validation": [],
+    "elapsed_seconds": 430.03844441694673,
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "live_agent_calls": 0,
+    "real_project_runs": 0,
+    "validation_root": "/private/tmp/loop-cli-route-repair-4kr7jwvp"
+  },
+  "new_tests": 29,
+  "coverage": [
+    "Official automatic review flag itself chooses workspace-write; explicit sandbox flag is mutually exclusive. A model-free CLI fixture rejects this exact conflict before session/effects; corrected same-session fixture checks pass.",
+    "Exact published instruction reconciliation for original serial requests and stopped drafts.",
+    "Original worker identities, file ownership, bytes, wait deadline, child budget, rework limits and failure history retained.",
+    "Reservation, request/context preparation and lost-final-response crash replay retain original replacement identities.",
+    "Customized/unrelated inputs, redirected copies, writer activity, unknown effects, time exhaustion and pauses refuse.",
+    "Explicit operator-only signed approval-route CAS retains original session, candidate, lifetime, usage and failed check.",
+    "Official auto-review uses workspace-write and global resume-compatible flag; no custom reviewer policy or bypass.",
+    "Unsupported CLI route refuses before model reservation; help success is not an execution attestation.",
+    "Candidate change during preflight, stale revision, active effects, stopped-user decisions and review denials retain guards.",
+    "Real local fake-host subprocesses reach original command checks and accepted final candidates. No live provider calls."
+  ],
+  "prior_attempts": [
+    {
+      "result": "offline_pass_with_real_cli_compatibility_gap",
+      "report": "docs/native-recovery-validation.json",
+      "report_sha256": "sha256:1b1907004fca3c71207f3558a4e3e54aae9c2233d940a42b0cb138a82d342d2f",
+      "scope": "838-case source retained; actual native CLI rejected combined --sandbox and --approve-for-me before starting a session. Original failure and conservative dispatch accounting remain in docs/monitoring/macare-cli-failure-reconciliation.json."
+    },
+    {
+      "result": "interrupted",
+      "prefix": "/private/tmp/loop-serial-full-",
+      "scope": "Root turn interrupted; 157-test group completed, other partitions have no completed result. No full pass claimed."
+    },
+    {
+      "result": "offline_functionality_pass_with_validator_dependency_and_existing_staged_whitespace",
+      "report": "/private/tmp/loop-serial-resumed-full-result.json",
+      "report_sha256": "sha256:67f227035a2b2d63383f2c1ce44e6323bc146eb93bff183d3abc989aa90f7270",
+      "scope": "828 serial-recovery cases passed exactly once with stable source; skill validator used an interpreter lacking PyYAML. Current complete run uses the existing dependency-equipped Anaconda interpreter."
+    },
+    {
+      "result": "targeted_fixture_failure",
+      "log": "/private/tmp/loop-runtime-targeted.log",
+      "log_sha256": "sha256:bd9f06d9a63aac05f384350a481e91ee3abfc20367b5bc6f6e06a7bcc791dfd8",
+      "scope": "Three fake-host fixtures did not implement newly required help preflight. Updated only deterministic fixtures and reran their actual original checks."
+    }
+  ],
+  "targeted_validation": [
+    {
+      "tests": 49,
+      "log": "/private/tmp/loop-cli-route-targeted.log",
+      "log_sha256": "sha256:a7fc47a89eb80bbe930d5dc5836508e836c94073a8a21e3a83cd0d86e01c4683",
+      "result": "pass"
+    },
+    {
+      "tests": 1,
+      "log": "/private/tmp/loop-runtime-candidate-gate.log",
+      "log_sha256": "sha256:c86109e38f44597a286ef6feeea0bc905df7845bb05bfc11544e85acc7e1f57a",
+      "result": "pass"
+    }
+  ],
+  "staged_whitespace_check": {
+    "result": "fail",
+    "check": {
+      "name": "diff_staged",
+      "argv": [
+        "git",
+        "-C",
+        "/Users/super/Documents/ai/loop-engineering-code",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exit_code": 2,
+      "elapsed_seconds": 0.012035958003252745,
+      "log": "/private/tmp/loop-cli-route-full-diff_staged.log",
+      "log_sha256": "sha256:279384156f1fc93261f9e6d32a03736d21a0ce605746337d47e15e0e9ca66163"
+    },
+    "scope": "Existing staged native_supervisor_store.py has a trailing blank line. Index was preserved; this is not an all-check pass."
+  },
+  "live_model_calls_in_validation": 0,
+  "live_agent_calls_in_validation": 0,
+  "limitations": [
+    "Official approval availability, per-command permission and actual product checks need separate runtime verification.",
+    "No full autonomous product-completion or real human/independent acceptance claim follows from offline tests.",
+    "Native Goals are available on the observed CLI but are not integrated as this framework default entry.",
+    "Frozen scope, lifetime, controller budget, real human evidence and evaluator authority remain original gates."
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "recorded_at": "2026-10-06T09:13:07.542973+00:00",
+  "projects": [
+    {
+      "project": "agent-fabric",
+      "supervisor_id": "supervisor-3c9afb5b3b134d1c9916c139fd40cd73",
+      "turn": 3,
+      "session_id": "01a11020-f9e3-7190-9827-02b937b517f6",
+      "bytes": 144738,
+      "host_errors": 0,
+      "completed_turns": 0,
+      "recent_actions": [
+        {
+          "event": "item.started",
+          "kind": "mcp_tool_call",
+          "tool": "loop_next",
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "mcp_tool_call",
+          "tool": "loop_next",
+          "status": "completed",
+          "exit_code": null
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.started",
+          "kind": "mcp_tool_call",
+          "tool": "loop_workbench_status",
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "mcp_tool_call",
+          "tool": "loop_workbench_status",
+          "status": "completed",
+          "exit_code": null
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.started",
+          "kind": "mcp_tool_call",
+          "tool": "loop_heartbeat",
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "mcp_tool_call",
+          "tool": "loop_heartbeat",
+          "status": "completed",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        }
+      ]
+    },
+    {
+      "project": "macare",
+      "supervisor_id": "supervisor-dce5ed3b8981401bb0a59387444b104d",
+      "turn": 5,
+      "session_id": "01a10ffb-bf04-7da1-abfb-51d713e50bbd",
+      "bytes": 924422,
+      "host_errors": 0,
+      "completed_turns": 0,
+      "recent_actions": [
+        {
+          "event": "item.started",
+          "kind": "mcp_tool_call",
+          "tool": "loop_workbench_prepare",
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "mcp_tool_call",
+          "tool": "loop_workbench_prepare",
+          "status": "completed",
+          "exit_code": null
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "failed",
+          "exit_code": 2
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "failed",
+          "exit_code": 1
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        },
+        {
+          "event": "item.started",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "in_progress",
+          "exit_code": null
+        },
+        {
+          "event": "item.completed",
+          "kind": "command_execution",
+          "tool": null,
+          "status": "completed",
+          "exit_code": 0
+        }
+      ]
+    }
+  ]
+}

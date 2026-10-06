@@ -1,0 +1,363 @@
+{
+  "schema_version": "1.0",
+  "framework_version": "1.0.0",
+  "recorded_at": "2026-10-06T08:03:45.555189+00:00",
+  "result": "offline_functionality_pass_with_staged_whitespace",
+  "source_manifest": "docs/native-monitoring-source-manifest.json",
+  "source_manifest_digest": "sha256:a62ca01a6dcd70d98753d188f2df9330940b78770468a154f8069779ed97c485",
+  "source_files": 252,
+  "full_offline_validation": {
+    "schema_version": "1.0",
+    "started_at": "2026-10-06T07:53:59.169115+00:00",
+    "finished_at": "2026-10-06T08:02:37.187332+00:00",
+    "result": "fail",
+    "tests": 810,
+    "default_discovery": ".venv/bin/python -m unittest discover -s tests -v",
+    "execution": "Four independent module partitions; serial within each group; deterministic providers only.",
+    "default_test_ids_covered_exactly_once": true,
+    "groups": [
+      {
+        "group": 1,
+        "modules": [
+          "test_team_automation",
+          "test_scenarios",
+          "test_host_install",
+          "test_team_memory",
+          "test_desktop_bridge",
+          "test_native_readiness",
+          "test_processes",
+          "test_http_worker",
+          "test_native_parallel"
+        ],
+        "tests": 153,
+        "result": "pass",
+        "elapsed_seconds": 391.8432444999926,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-monitor-stable-full-group-1.log",
+        "log_sha256": "sha256:08e815c1fc511ca53318adf28ed6d0b1ac4a6e0fc55cb835b5539516b41369f1",
+        "result_path": "/private/tmp/loop-monitor-stable-full-group-1.json",
+        "result_sha256": "sha256:c1b9025d8a904401c115ca01d9606b69c47056389ad704dee1094d2f9c5bbc33"
+      },
+      {
+        "group": 2,
+        "modules": [
+          "test_native_review",
+          "test_native_supervisor",
+          "test_native_workers",
+          "test_team",
+          "test_native_project_budget",
+          "test_native_plan_repair",
+          "test_file_operations",
+          "test_native_operations",
+          "test_execution_tools",
+          "test_native_turn_boundary"
+        ],
+        "tests": 208,
+        "result": "pass",
+        "elapsed_seconds": 513.6483584999805,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-monitor-stable-full-group-2.log",
+        "log_sha256": "sha256:1f2623b635474880142bbd11677b7c68f2c3cef96ed2cabbc6d17e3449102e43",
+        "result_path": "/private/tmp/loop-monitor-stable-full-group-2.json",
+        "result_sha256": "sha256:506a0e15bb928665a585a593220d7b9fa952e94f65c47d5eb25961bd300adb94"
+      },
+      {
+        "group": 3,
+        "modules": [
+          "test_native_handoff_rework",
+          "test_native_rework",
+          "test_core",
+          "test_native_host",
+          "test_native_preflight",
+          "test_native_workbench",
+          "test_external_execution",
+          "test_provisioning",
+          "test_readiness",
+          "test_native_review_material",
+          "test_team_executors",
+          "test_native_session"
+        ],
+        "tests": 204,
+        "result": "pass",
+        "elapsed_seconds": 384.306660540984,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-monitor-stable-full-group-3.log",
+        "log_sha256": "sha256:0331ff65572eec53cb8f9113ae89852753250ac03eb9e8bb77f6b22690b16943",
+        "result_path": "/private/tmp/loop-monitor-stable-full-group-3.json",
+        "result_sha256": "sha256:a96b8762fc979023022eb7329215f76ceb02de3bfd080d7dfc498f3ba11856c6"
+      },
+      {
+        "group": 4,
+        "modules": [
+          "test_team_corpus",
+          "test_engine",
+          "test_native",
+          "test_spec_setup",
+          "test_native_project",
+          "test_native_flow",
+          "test_agent_roles",
+          "test_native_continuation",
+          "test_native_verification",
+          "test_setup",
+          "test_output_schema",
+          "test_verification_dependencies"
+        ],
+        "tests": 245,
+        "result": "pass",
+        "elapsed_seconds": 440.0363212089869,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "exit_code": 0,
+        "log": "/private/tmp/loop-monitor-stable-full-group-4.log",
+        "log_sha256": "sha256:2f243f64b6160abc1267282912936cde91d18ae39ccb62df0b4deb3ae79f8bda",
+        "result_path": "/private/tmp/loop-monitor-stable-full-group-4.json",
+        "result_sha256": "sha256:baf55ac738d96bf83d47d975bc9cb45c31fd37c285dd1469a60272c08fedd4a2"
+      }
+    ],
+    "checks": [
+      {
+        "name": "contracts",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/validate_contracts.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.3149054999812506,
+        "log": "/private/tmp/loop-monitor-stable-full-contracts.log",
+        "log_sha256": "sha256:7eb9bae2632f7499ae2bff5b4ac4e10d0b11fa62c2c35301352b60e65e942507"
+      },
+      {
+        "name": "readiness",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/check_readiness.py",
+          "--for-live-evaluation"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.04103420802857727,
+        "log": "/private/tmp/loop-monitor-stable-full-readiness.log",
+        "log_sha256": "sha256:0f41c56ab66e1c69b96de90350f1b6fc9d954d1617b994ee56522b060ec39385"
+      },
+      {
+        "name": "demo_local",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_local.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.65015137498267,
+        "log": "/private/tmp/loop-monitor-stable-full-demo_local.log",
+        "log_sha256": "sha256:7ec41833b6eebd4e74a1d2e57621ae78327e472a9de417ed0b3f9e5d27d4c3f7"
+      },
+      {
+        "name": "demo_native",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/demo_native.py"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.2215752499760129,
+        "log": "/private/tmp/loop-monitor-stable-full-demo_native.log",
+        "log_sha256": "sha256:5b6213eff46705489a67f3338d35ee9832d1e12e7b4211e374ef48d923af05f7"
+      },
+      {
+        "name": "version",
+        "argv": [
+          "/Users/super/Documents/ai/loop-engineering-code/.venv/bin/python",
+          "scripts/loop.py",
+          "--version"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.05326212500222027,
+        "log": "/private/tmp/loop-monitor-stable-full-version.log",
+        "log_sha256": "sha256:2af00eadb7fa219e3f3d9407ad354a82bc6ff39181946a302984ce03395b367c"
+      },
+      {
+        "name": "skill",
+        "argv": [
+          "python3",
+          "/Users/super/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+          "/Users/super/Documents/ai/loop-engineering-code/templates/native-host/loop-engineering"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.3960590829956345,
+        "log": "/private/tmp/loop-monitor-stable-full-skill.log",
+        "log_sha256": "sha256:db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0"
+      },
+      {
+        "name": "diff_unstaged",
+        "argv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.010908166994340718,
+        "log": "/private/tmp/loop-monitor-stable-full-diff_unstaged.log",
+        "log_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "diff_staged",
+        "argv": [
+          "git",
+          "diff",
+          "--cached",
+          "--check"
+        ],
+        "exit_code": 2,
+        "elapsed_seconds": 0.01219804200809449,
+        "log": "/private/tmp/loop-monitor-stable-full-diff_staged.log",
+        "log_sha256": "sha256:279384156f1fc93261f9e6d32a03736d21a0ce605746337d47e15e0e9ca66163"
+      }
+    ],
+    "source_manifest": "/private/tmp/loop-monitor-stable-full-source-manifest.json",
+    "source_manifest_digest": "sha256:a62ca01a6dcd70d98753d188f2df9330940b78770468a154f8069779ed97c485",
+    "source_files": 252,
+    "source_manifest_scope": {
+      "directories": [
+        "loop_engineering",
+        "reference",
+        "tests",
+        "scripts",
+        "schemas",
+        "templates",
+        "examples",
+        ".github"
+      ],
+      "files": [
+        "AGENTS.md",
+        "LOOP.md",
+        "README.md",
+        "docs/adapters.md",
+        "docs/adoption.md",
+        "docs/architecture.md",
+        "docs/contracts.md",
+        "docs/desktop-mcp.md",
+        "docs/development-agents.zh-CN.md",
+        "docs/evaluation.md",
+        "docs/execution-tools.zh-CN.md",
+        "docs/how-to-use.md",
+        "docs/implementation-status.json",
+        "docs/implementation-status.md",
+        "docs/local-controller.md",
+        "docs/native-engine.md",
+        "docs/native-host.zh-CN.md",
+        "docs/offline-corpus.json",
+        "docs/reinitialize.zh-CN.md",
+        "docs/requirements-setup.zh-CN.md",
+        "docs/scenarios.md",
+        "docs/team-execution.md",
+        "docs/team-memory.zh-CN.md",
+        "docs/verification.md",
+        "requirements-dev.txt",
+        "docs/native-review.zh-CN.md",
+        "docs/native-continuation.md",
+        "docs/native-rework-verification.md",
+        "docs/native-autonomy.md",
+        "docs/native-supervisor.zh-CN.md",
+        "docs/native-project-supervision.zh-CN.md"
+      ],
+      "encoding": "SHA256 of UTF-8 JSON mapping relative paths to hex SHA256 byte digests; ensure_ascii=False, sort_keys=True, separators=(comma,colon). Directory entries use .py/.json/.md/.yml/.yaml/.cjs; generated validation reports and __pycache__ excluded.",
+      "file_count": 252
+    },
+    "source_changed_during_validation": [],
+    "elapsed_seconds": 518.0221249579918,
+    "python": "3.13.5",
+    "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+    "live_model_calls": 0,
+    "live_agent_calls": 0,
+    "real_project_runs": 0
+  },
+  "targeted_offline_validation": [
+    {
+      "tests": 48,
+      "result": "pass",
+      "elapsed_seconds": 81.919,
+      "log": "/private/tmp/loop-monitor-targeted-first.log",
+      "log_sha256": "sha256:38de8b5226f03cbadabf02cf0fc13cabf6a1339a2cec86b0cda3ff14a8a9a357"
+    },
+    {
+      "tests": 1,
+      "result": "pass",
+      "elapsed_seconds": 0.349,
+      "log": "/private/tmp/loop-monitor-locale-supervisor.log",
+      "log_sha256": "sha256:97a4e6ecd2d57c9fd8270c367f9e241977f1b0f27186e6e8bfa971d94ca3ce0c"
+    },
+    {
+      "tests": 3,
+      "result": "pass",
+      "elapsed_seconds": 3.671,
+      "log": "/private/tmp/loop-monitor-environment-cases.log",
+      "log_sha256": "sha256:04ed1d49302ba12c6ccfb163a5f51f61ab260054aaf325ce20f26d3dc622ff6f"
+    }
+  ],
+  "new_tests": 8,
+  "initial_attempts": [
+    {
+      "result": "fail",
+      "report": "/private/tmp/loop-monitor-full-result.json",
+      "report_sha256": "sha256:ffda862eb5500c662c36631d91d3f4538bc757301dfcb89f7b646ffd60e59188",
+      "scope": "810 cases covered once without source changes: process observer and localhost bind were denied by sandbox; a two-second pre-admission clock fixture reached budget refusal before its intended cancellation. Fixed the cancellation fixture to expire only after actual admission; current full suite reruns with approved local observation/loopback permissions."
+    }
+  ],
+  "coverage": [
+    "Fixed ps locale; failed or denied observations remain unknown.",
+    "Previously stored English month/day layouts match the same birth time and process group; changed or malformed identities refuse matching.",
+    "Status and launch recognize the actual legacy owner without launching a duplicate supervisor.",
+    "Stale framework route journals RECONNECT_REQUIRED without model dispatch or changing original team/limits.",
+    "A fresh service continues the original supervisor ID/session and reaches actual fixture check/handoff completion.",
+    "A real local process replaces itself with the fresh CLI, then completes original command checks using a deterministic fake host.",
+    "Replacement occurs only after supervisor run locks and services are closed; pending hosts/processes refuse replacement.",
+    "Reconnect count is cumulative and bounded to three; pause and original expiry retain priority."
+  ],
+  "live_model_calls_in_validation": 0,
+  "live_agent_calls_in_validation": 0,
+  "working_tree_checks": "pass",
+  "staged_whitespace_check": {
+    "result": "fail",
+    "check": {
+      "name": "diff_staged",
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exit_code": 2,
+      "elapsed_seconds": 0.01219804200809449,
+      "log": "/private/tmp/loop-monitor-stable-full-diff_staged.log",
+      "log_sha256": "sha256:279384156f1fc93261f9e6d32a03736d21a0ce605746337d47e15e0e9ca66163"
+    },
+    "scope": "External index contents changed during this validation while all 252 working-tree source hashes stayed unchanged. The staged native_supervisor_store.py has a trailing blank line. Existing index retained; no staging/reset performed. This is not a passing all-check report."
+  },
+  "actual_monitoring": {
+    "automation_id": "loop",
+    "kind": "heartbeat",
+    "interval_minutes": 15,
+    "status": "ACTIVE",
+    "initial_observation": "docs/monitoring/2026-10-06-initial.json",
+    "initial_observation_sha256": "sha256:c38fdc196c53f1e067afd5bd0655b79871cc2363bf65fab8d0de2f38c0660752",
+    "scope": "Authenticated read-only current SQLite projections including WAL, bounded local log metadata and process identity observations. Does not certify acceptance or all external writer liveness.",
+    "open_issues": "docs/monitoring/open-framework-issues.json",
+    "latest_observation": "docs/monitoring/2026-10-06-current.json",
+    "latest_observation_sha256": "sha256:5dba55d03e31a3b5c625581bd96ab15642353407727000466f0b3d1b0ea22f9c",
+    "additional_process_group_observation": "docs/monitoring/macare-process-group-observation.json"
+  },
+  "limitations": [
+    "Actual model semantic repair/delegation quality is not certified by offline fixtures.",
+    "Local scheduled monitoring requires this computer awake and the desktop app running.",
+    "Existing already-blocked old supervisors require same-ledger resume after actual dispatch collection; new code does not wake a stopped old process.",
+    "Framework changes are applied at collected host checkpoints; pending effects, actual permissions, budgets and human evidence remain original gates.",
+    "No paid product API/resource, scope, frozen contract or acceptance standard is granted by monitoring."
+  ]
+}

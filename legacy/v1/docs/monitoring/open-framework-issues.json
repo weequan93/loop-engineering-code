@@ -1,0 +1,46 @@
+{
+  "issues": [
+    {
+      "id": "serial-request-published-instruction-refresh",
+      "status": "recovered_with_original_drafts_collected",
+      "project": "agent-fabric",
+      "team_id": "team-aa741c058dac4bbb8e530e859445a639",
+      "task_id": "g1_f02_identity",
+      "evidence": "/Users/super/Documents/ai/loop-states/agent-fabric/runs/supervisor-3c9afb5b3b134d1c9916c139fd40cd73/turn-1/recovery-proposal/RECOVERY.md",
+      "evidence_sha256": "ab8515de20139260f6e02d129435af76cbab4f07df524777e81396113c991578",
+      "summary": "A published project skill was upgraded after the original host request was created. Only that instruction file differs from the original child candidate. Current serial request and stopped worker collection reject stale candidate binding; the existing refresh route requires native_parallel, absent from the frozen plan. Reconnection alone cannot recover the old request.",
+      "required_recovery": "Journal an official bounded serial request reconciliation limited to exact known published instruction changes. Retain original team/child/contracts, wait deadline, all budgets/attempts, original stopped worker outputs and provenance; rerun original checks and independent reviews. Refuse unrelated source changes, active writers, unknown effects and missing edit/recipient authority.",
+      "current_action": "Original supervisor resumed; both previously stopped drafts are officially COLLECTED. Observe original checks, review and handoff; do not repeat instruction reconciliation or reset original limits.",
+      "acceptance": "No product defect fixed or accepted by this diagnosis.",
+      "implementation": "loop_engineering/native_instruction_recovery.py",
+      "validation": "docs/native-cli-route-validation.json",
+      "actual_recovery": "docs/monitoring/instruction-recovery-actual.json"
+    },
+    {
+      "id": "supervisor-verification-runtime-capability",
+      "status": "official_route_implemented_actual_preflight_running",
+      "project": "macare",
+      "team_id": "team-22d34201e8ef4358aecde6aaa1719884",
+      "task_id": "r1-performance",
+      "evidence": "/private/tmp/macare-r1-scan-preparation/run-20261006T075531-aca296ff/run.json",
+      "evidence_sha256": "da1af55a229298c2543fe43595304250f236492b7e3d6e26a0e4ab8c3bb20f22",
+      "summary": "The existing supervisor CLI uses approval=never/workspace-write. Its actual verification executor was denied /bin/ps and TERM/KILL on its own recorded group after successful direct-child exit. Original require_cleanup correctly rejects the result. No escalation route was available to that host.",
+      "current_observation": "docs/monitoring/macare-process-group-observation.json",
+      "required_recovery": "Provide early capability admission and an explicitly scoped authorized runtime/effect reconciliation route for existing verification operations, without full-access/bypass flags or weakened cleanup. Current read-only group census found no group members, but does not change the failed original check. Preserve all original budgets, guards and evidence. Separate actual human/specification decisions from this framework/runtime engineering gap.",
+      "current_action": "Both original supervisors now use official auto-review. Corrected mutually-exclusive CLI flags and preserved failed parser dispatch with original conservative charge. Verify actual bounded process/Docker/cleanup preflight; help/started sessions do not certify runtime capability or original product checks. Do not repeat empty resumes on an unchanged real denial.",
+      "projects": [
+        "macare",
+        "agent-fabric"
+      ],
+      "implementation": "loop_engineering/native_supervisor_runtime.py",
+      "validation": "docs/native-cli-route-validation.json",
+      "actual_recovery": [
+        "docs/monitoring/supervisor-runtime-actual.json",
+        "docs/monitoring/agent-fabric-runtime-actual.json",
+        "docs/monitoring/macare-controller-recovery-actual.json",
+        "docs/monitoring/macare-cli-failure-reconciliation.json"
+      ]
+    }
+  ],
+  "updated_at": "2026-10-06T09:11:11.043360+00:00"
+}

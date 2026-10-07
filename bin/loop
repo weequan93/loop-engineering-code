@@ -1,0 +1,9 @@
+#!/bin/sh
+# Loop Engineering CLI from a source checkout.
+# Uses the checkout's .venv when present so generated host configs stay stable; LOOP_PYTHON overrides.
+here=$(cd "$(dirname "$0")/.." && pwd)
+python=${LOOP_PYTHON:-}
+if [ -z "$python" ]; then
+  if [ -x "$here/.venv/bin/python" ]; then python="$here/.venv/bin/python"; else python=python3; fi
+fi
+PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}" exec "$python" -m loop_engineering "$@"

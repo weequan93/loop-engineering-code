@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loop-engineering"
+version = "2.0.0"
+description = "Autonomous goal loops for coding agents (Claude Code, Codex, any CLI) with controller-verified completion and visible status"
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = []
+
+[project.scripts]
+loop = "loop_engineering.cli:main"
+
+[tool.setuptools]
+packages = ["loop_engineering"]
+
+[tool.setuptools.package-data]
+loop_engineering = ["playbooks/*.md", "templates/*.md", "roles/*.md"]

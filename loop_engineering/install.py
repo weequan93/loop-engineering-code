@@ -49,6 +49,11 @@ def install(project: Project, hosts: list[str], statusline: bool = False) -> dic
         changed.append(_write(project.root / ".agents/skills/loop/SKILL.md", skill))
     if "generic" in hosts:
         changed.append(_agents_md(project))
+    try:
+        from .telegram_bot import register
+        register(project.root)
+    except OSError:
+        pass
     return {"project": str(project.root), "hosts": hosts, "changed": [c for c in changed if c],
             "next": "Reload MCP servers in your tool (restart the session or run /mcp), then ask it to use the "
                     "loop skill. Status: .loop/STATUS.md · `.loop/bin/loop status --watch` · "

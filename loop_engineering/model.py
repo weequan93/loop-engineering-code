@@ -37,8 +37,8 @@ DEFAULT_APPROVALS = [
 ]
 
 DEFAULT_POLICY = {
-    "max_iterations": 40,          # agent turns for this goal
-    "max_hours": 12.0,             # wall clock from first run
+    "max_iterations": 40,          # agent turns for this goal (null: no turn limit)
+    "max_hours": 12.0,             # wall clock from first run (null: no time limit)
     "turn_timeout_minutes": 60,
     "stagnation_limit": 3,         # consecutive turns without observable progress
     "max_task_attempts": 4,        # rejected "task done" claims before the task blocks
@@ -147,12 +147,16 @@ def policy(values) -> dict:
         raise LoopError(f"Unknown policy fields {sorted(unknown)}")
     result = deepcopy(DEFAULT_POLICY)
     result.update(values)
-    for key in ("max_iterations", "turn_timeout_minutes", "stagnation_limit", "max_task_attempts",
+    if result["max_iterations"] is not None and (type(result["max_iterations"]) is not int
+                                                 or result["max_iterations"] < 1):
+        raise LoopError("policy.max_iterations must be a positive integer or null")
+    for key in ("turn_timeout_minutes", "stagnation_limit", "max_task_attempts",
                 "max_repair_rounds", "check_timeout_seconds"):
         if type(result[key]) is not int or result[key] < 1:
             raise LoopError(f"policy.{key} must be a positive integer")
-    if not isinstance(result["max_hours"], (int, float)) or result["max_hours"] <= 0:
-        raise LoopError("policy.max_hours must be positive")
+    if result["max_hours"] is not None and (not isinstance(result["max_hours"], (int, float))
+                                            or result["max_hours"] <= 0):
+        raise LoopError("policy.max_hours must be positive or null")
     if result["max_cost_usd"] is not None and (not isinstance(result["max_cost_usd"], (int, float))
                                                or result["max_cost_usd"] <= 0):
         raise LoopError("policy.max_cost_usd must be positive or null")

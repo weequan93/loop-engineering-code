@@ -278,6 +278,27 @@ class DashboardTests(ProjectCase):
                 server.shutdown()
             blocker.close()
 
+    def test_progress_inside_an_unfinished_task_is_visible(self):
+        from loop_engineering import status
+        from loop_engineering.api import Service
+        from loop_engineering.util import now
+        store = self.goal()
+        Service(self.project, actor="chat").plan([{"id": "fix", "title": "Fix it", "checks": [
+            {"id": "a", "run": "true"}, {"id": "b", "run": "true"}]}])
+
+        def busy(goal, state):
+            engine.start_task(goal, state, "fix")
+            state["checks"]["fix.a"] = {"status": "pass"}
+            state["turns"].append({"n": 7, "action": "work", "task": "fix", "outcome": "ok", "seconds": 60,
+                                   "progress": True, "summary": "repaired the lock race"})
+            state["jobs"]["job-x"] = {"id": "job-x", "status": "running", "checks": ["fix.b"],
+                                      "started_at": now(), "purpose": {"type": "task", "task": "fix"}}
+        store.mutate("test.busy", busy)
+        line = status.line(store)
+        self.assertIn("tasks 0/1", line)
+        self.assertIn("now fix 1/2 (1 turns) · checking 0m", line)
+        self.assertIn("repaired the lock race", status.markdown(store))
+
 
 class TranscriptTests(ProjectCase):
     def write(self, name, events):
@@ -391,3 +412,182 @@ class SubagentTests(ProjectCase):
         self.assertEqual(groups[0]["entries"][0]["body"], "sub working")
         main = transcript.parse(path)
         self.assertFalse(any("sub working" in r["body"] for r in main))
+
+
+class TwoWayTests(ProjectCase):
+    def setUp(self):
+        super().setUp()
+        from unittest import mock
+        from loop_engineering import telegram_bot
+        self.store = self.goal()
+        self.store.mutate("a", lambda g, s: engine.approve(g, s, "me"))
+        self.started = []
+        patcher = mock.patch.object(telegram_bot, "_ensure_runner",
+                                    lambda root, goal: self.started.append(goal) or "runner started")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        from loop_engineering.api import Service
+        self.service = Service(self.project, actor="agent", interactive=False)
+        self.settings = {"chat_id": "42", "bot_token": "t"}
+        self.sent = []
+
+    def api(self, method, params):
+        self.sent.append((method, dict(params)))
+        return {"ok": True, "result": {"message_id": 777}}
+
+    def test_question_buttons_and_replies_answer_from_telegram(self):
+        from unittest import mock
+        from loop_engineering import notify, telegram_bot
+        q = self.service.ask("Which DB?", ["postgres", "sqlite"], blocking=True)["question"]
+        payload = {**[i for i in notify.attention(self.store.goal(), self.store.state()) if i.get("id") == q["id"]][0],
+                   "goal": self.store.id, "project": str(self.root)}
+        with mock.patch.object(notify, "telegram_api", lambda token, method, params, timeout=10.0: self.api(method, params)):
+            notify.send({"desktop": False, "telegram": self.settings}, payload)
+        markup = json.loads(self.sent[0][1]["reply_markup"])
+        self.assertEqual([r[0]["text"] for r in markup["inline_keyboard"]], ["1️⃣ postgres", "2️⃣ sqlite"])
+        self.assertIn("2️⃣ sqlite", self.sent[0][1]["text"])
+        data = markup["inline_keyboard"][1][0]["callback_data"]           # second option: sqlite
+        telegram_bot.handle({"callback_query": {"id": "c1", "data": data,
+                                                "message": {"chat": {"id": 42}, "message_id": 777}}},
+                            self.settings, self.api)
+        state = self.store.state()
+        self.assertEqual(next(x for x in state["questions"] if x["id"] == q["id"])["answer"], "sqlite")
+        self.assertEqual(state["status"], "ready")
+        self.assertEqual(self.started, [self.store.id])
+        # A free-text reply to a later question answers it too.
+        q2 = self.service.ask("Name the release?", None, blocking=True)["question"]
+        key = telegram_bot.remember({"project": str(self.root), "goal": self.store.id, "action": "answer",
+                                     "question": q2["id"], "options": []})
+        telegram_bot.sent(key, 900)
+        telegram_bot.handle({"message": {"chat": {"id": 42}, "message_id": 901, "text": "R2 Phoenix",
+                                         "reply_to_message": {"message_id": 900}}}, self.settings, self.api)
+        self.assertEqual(next(x for x in self.store.state()["questions"] if x["id"] == q2["id"])["answer"],
+                         "R2 Phoenix")
+
+    def test_foreign_chat_is_ignored_and_unblock_button_works(self):
+        from loop_engineering import telegram_bot
+        self.service.block("decision", "Pick a vendor")
+        key = telegram_bot.remember({"project": str(self.root), "goal": self.store.id, "action": "unblock"})
+        telegram_bot.handle({"callback_query": {"id": "x", "data": f"u:{key}",
+                                                "message": {"chat": {"id": 666}, "message_id": 1}}},
+                            self.settings, self.api)
+        self.assertIsNotNone(self.store.state()["blocker"])        # stranger: nothing happens
+        self.assertEqual(self.sent, [])
+        telegram_bot.handle({"callback_query": {"id": "y", "data": f"u:{key}",
+                                                "message": {"chat": {"id": 42}, "message_id": 1}}},
+                            self.settings, self.api)
+        self.assertIsNone(self.store.state()["blocker"])
+        self.assertEqual(self.started, [self.store.id])
+        telegram_bot.register(self.root)
+        telegram_bot.handle({"message": {"chat": {"id": 42}, "message_id": 5, "text": "/status"}},
+                            self.settings, self.api)
+        self.assertIn("Fix add", self.sent[-1][1]["text"])
+
+    def test_dashboard_actions_need_the_page_token(self):
+        import threading, time, urllib.request, urllib.error
+        from unittest import mock
+        from loop_engineering import dashboard
+        q = self.service.ask("Ship?", ["approve", "deny"], blocking=True, kind="approval")["question"]
+        servers = []
+        original = dashboard.ThreadingHTTPServer
+
+        class Capture(original):
+            def __init__(self, *a, **k):
+                super().__init__(*a, **k)
+                servers.append(self)
+        with mock.patch.object(dashboard, "ThreadingHTTPServer", Capture), \
+                mock.patch("loop_engineering.runner.start_background", lambda *a, **k: {"started": True}):
+            threading.Thread(target=dashboard.serve, args=(self.project, 0), daemon=True).start()
+            deadline = time.time() + 10
+            while not servers and time.time() < deadline:
+                time.sleep(0.05)
+            port = servers[0].server_address[1]
+            page = urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=5).read().decode()
+            token = page.split("const TOKEN='")[1].split("'")[0]
+
+            def post(body, tok):
+                request = urllib.request.Request(f"http://127.0.0.1:{port}/api/answer", data=json.dumps(body).encode(),
+                                                 headers={"Content-Type": "application/json", "X-Loop-Token": tok})
+                return json.loads(urllib.request.urlopen(request, timeout=5).read())
+            with self.assertRaises(urllib.error.HTTPError):
+                post({"question_id": q["id"], "answer": "approve"}, "wrong")
+            result = post({"goal": self.store.id, "question_id": q["id"], "answer": "approve"}, token)
+            self.assertIn("answered", result["message"])
+            servers[0].shutdown()
+        answered = next(x for x in self.store.state()["questions"] if x["id"] == q["id"])
+        self.assertTrue(answered["approved"])
+
+    def test_non_blocking_approval_lets_other_work_continue(self):
+        self.service.plan([{"id": "t", "title": "T"}])
+        self.service.ask("Use the real SSH probe?", None, blocking=False, kind="approval")
+        state = self.store.state()
+        self.assertNotEqual(state["status"], "waiting")
+        self.assertEqual(engine.next_action(self.store.goal(), state)["kind"], "work")
+
+
+class TelegramMenuTests(ProjectCase):
+    def test_menu_is_replaced_with_loop_commands(self):
+        from loop_engineering import telegram_bot
+        calls = []
+        telegram_bot.set_commands(lambda method, params: calls.append((method, params)) or {"ok": True})
+        deletes = [c for c in calls if c[0] == "deleteMyCommands"]
+        self.assertEqual(len(deletes), len(telegram_bot.SCOPES) * len(telegram_bot.LANGUAGES))
+        commands = json.loads(next(c for c in calls if c[0] == "setMyCommands")[1]["commands"])
+        self.assertEqual([c["command"] for c in commands], ["questions", "status", "pause", "resume", "help"])
+
+    def test_questions_command_resends_open_questions_with_buttons(self):
+        from unittest import mock
+        from loop_engineering import notify, telegram_bot
+        store = self.goal()
+        store.mutate("a", lambda g, s: engine.approve(g, s, "me"))
+        from loop_engineering.api import Service
+        Service(self.project, actor="agent", interactive=False).ask("Pick?", ["a", "b"], blocking=False)
+        telegram_bot.register(self.root)
+        sent = []
+        with mock.patch.object(notify, "telegram_api",
+                               lambda token, method, params, timeout=10.0: sent.append(params) or {"ok": True,
+                                                                                                  "result": {"message_id": 3}}):
+            telegram_bot.handle({"message": {"chat": {"id": 42}, "message_id": 1, "text": "/questions"}},
+                                {"chat_id": "42", "bot_token": "t"}, lambda m, p: sent.append(p))
+        self.assertTrue(any("reply_markup" in p and "Pick?" in p.get("text", "") for p in sent))
+
+
+class ApproveByButtonTests(ProjectCase):
+    def test_contract_change_is_summarised_and_approvable_from_telegram(self):
+        from unittest import mock
+        from loop_engineering import notify, telegram_bot
+        store = self.goal()
+        store.mutate("a", lambda g, s: engine.approve(g, s, "me"))
+        raw = json.loads(store.goal_path.read_text())
+        raw["reviews"] = [{"id": "security-review", "by": "agent", "role": "security", "instructions": "check auth"}]
+        raw["policy"]["max_iterations"] = 99
+        store.goal_path.write_text(json.dumps(raw))
+        items = [i for i in notify.attention(store.goal(), store.state()) if i["type"] == "approve"]
+        self.assertEqual(len(items), 1)
+        self.assertIn("reviews: +security-review", items[0]["message"])
+        self.assertIn("max_iterations 10→99", items[0]["message"])
+        started = []
+        with mock.patch.object(telegram_bot, "_ensure_runner", lambda r, g: started.append(g) or "runner started"):
+            key = telegram_bot.remember({"project": str(self.root), "goal": store.id, "action": "approve"})
+            telegram_bot.handle({"callback_query": {"id": "c", "data": f"v:{key}",
+                                                    "message": {"chat": {"id": 42}, "message_id": 9}}},
+                                {"chat_id": "42", "bot_token": "t"}, lambda m, p: {"ok": True})
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "plan")
+        self.assertEqual(started, [store.id])
+
+    def test_new_draft_goal_asks_for_approval(self):
+        from loop_engineering import notify
+        store = self.goal()
+        items = [i for i in notify.attention(store.goal(), store.state()) if i["type"] == "approve"]
+        self.assertEqual(len(items), 1)
+        self.assertTrue(items[0]["title"].startswith("New goal to approve"))
+        self.assertIn("Acceptance: tests", items[0]["message"])
+
+    def test_migration_keeps_review_gates_of_every_task(self):
+        export = MigrationTests.export(self)
+        export["task_contracts"]["build"]["checks"].append(
+            {"id": "security-review", "type": "review", "procedure": "Review auth"})
+        goal, tasks, _ = build_goal(self.project, export, [])
+        ids = [r["id"] for r in goal["reviews"]]
+        self.assertIn("security-review", ids)
+        self.assertEqual(next(r for r in goal["reviews"] if r["id"] == "security-review")["role"], "security")

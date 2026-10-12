@@ -38,14 +38,30 @@ def attention(goal: dict, state: dict) -> list[dict]:
         if q["answer"] is None:
             label = "Approval needed" if q["kind"] == "approval" else "Question"
             items.append({"key": f"q:{q['id']}", "title": f"{label} · {goal['title']}",
-                          "message": q["text"][:300], "command": f"loop answer {q['id']} \"...\"", "id": q["id"]})
+                          "message": q["text"][:1500], "command": f"loop answer {q['id']} \"...\"", "id": q["id"],
+                          "type": "question", "options": q.get("options") or []})
+    from .engine import contract_changes
+    from .model import contract_digest
+    if not state.get("approved_digest"):
+        acceptance = ", ".join(c["id"] for c in goal["acceptance"]) or "none"
+        reviews = ", ".join(r["id"] for r in goal["reviews"]) or "none"
+        items.append({"key": f"v:{contract_digest(goal)}", "title": f"New goal to approve · {goal['title']}",
+                      "message": f"{goal['objective'][:700]}\n\nAcceptance: {acceptance}\nReviews: {reviews}\n"
+                                 f"Budget: {goal['policy']['max_iterations'] or 'unlimited'} turns, "
+                                 f"{goal['policy']['max_hours'] or 'unlimited'}h",
+                      "command": f"loop approve --goal {goal['id']}", "type": "approve"})
+    elif state["approved_digest"] != contract_digest(goal):
+        changes = contract_changes(goal, state)
+        items.append({"key": f"v:{contract_digest(goal)}", "title": f"Approve contract change · {goal['title']}",
+                      "message": "goal.json changed after approval:\n- " + "\n- ".join(changes),
+                      "command": "loop approve", "type": "approve"})
     status = state["status"]
     if status in ATTENTION_STATUSES:
         reason = state["status_reason"]
         command = {"blocked": "loop unblock --note \"...\"", "limit": "loop resume",
                    "done": "loop status", "failed": "loop status"}[status]
         items.append({"key": f"s:{status}:{reason[:200]}", "title": f"{ATTENTION_STATUSES[status]} · {goal['title']}",
-                      "message": reason[:300], "command": command})
+                      "message": reason[:1200], "command": command, "type": status})
     return items
 
 
@@ -129,8 +145,28 @@ def send(settings: dict, payload: dict) -> bool:
         ok = desktop(payload["title"], f"{payload['message']}\n{payload['command']}", project) or ok
     telegram = settings.get("telegram")
     if isinstance(telegram, dict) and telegram.get("chat_id"):
-        text = (f"🔔 {payload['title']}\n{payload['message']}\n\n▶ {payload['command']}\n📁 {payload['project']}")
-        ok = telegram_send(telegram, text) or ok
+        markup, key = None, None
+        if payload.get("type") in {"question", "blocked", "limit", "approve"} and payload.get("goal"):
+            from .telegram_bot import markup_for
+            try:
+                markup, key = markup_for(payload)
+            except Exception:
+                markup, key = None, None
+        options = ""
+        if payload.get("type") == "question":
+            from .telegram_bot import option_lines
+            listed = option_lines(payload.get("options") or [])
+            options = f"\n\n选项：\n{listed}" if listed else ""
+        hint = {"question": "👇 点下方按钮选择，或长按这条消息 → 回复，写你的回答",
+                "blocked": "👇 处理后点「继续」，或回复这条消息写明处理说明",
+                "limit": "👇 点按钮追加预算继续",
+                "approve": "👇 看过改动后点「批准变更」"}.get(payload.get("type"), f"▶ {payload['command']}")
+        text = f"🔔 {payload['title']}\n{payload['message']}{options}\n\n{hint}\n📁 {payload['project']}"
+        message_id = telegram_send_message(telegram, text, markup)
+        if message_id and key:
+            from .telegram_bot import sent
+            sent(key, message_id)
+        ok = bool(message_id) or ok
     command = settings.get("command")
     if isinstance(command, list) and command and all(isinstance(c, str) for c in command):
         try:
@@ -154,15 +190,22 @@ def telegram_api(token: str, method: str, params: dict, timeout: float = 10.0) -
 
 
 def telegram_send(settings: dict, text: str) -> bool:
+    return bool(telegram_send_message(settings, text))
+
+
+def telegram_send_message(settings: dict, text: str, markup: dict | None = None) -> int | None:
+    """Send a message (optionally with inline buttons); returns its message_id."""
     token = telegram_token(settings)
     if not token:
-        return False
+        return None
+    params = {"chat_id": str(settings["chat_id"]), "text": text[:4000], "disable_web_page_preview": "true"}
+    if markup:
+        params["reply_markup"] = json.dumps(markup, ensure_ascii=False)
     try:
-        result = telegram_api(token, "sendMessage", {"chat_id": str(settings["chat_id"]), "text": text[:4000],
-                                                     "disable_web_page_preview": "true"})
-        return bool(result.get("ok"))
+        result = telegram_api(token, "sendMessage", params)
+        return (result.get("result") or {}).get("message_id") or (1 if result.get("ok") else None)
     except (OSError, ValueError):
-        return False  # e.g. no network inside a sandbox; the runner retries on its next change
+        return None  # e.g. no network inside a sandbox; the runner retries on its next change
 
 
 def user_config_path() -> Path:

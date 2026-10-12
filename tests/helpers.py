@@ -37,6 +37,7 @@ class ProjectCase(unittest.TestCase):
         os.environ["FAKE_STATE"] = str(self.fake_state)
         os.environ.pop("LOOP_AUTONOMOUS", None)
         os.environ["LOOP_NOTIFY"] = "0"  # no desktop popups from tests
+        os.environ["LOOP_LOGIN_PATH"] = "0"  # tests keep their own PATH
         # Never read the developer's real ~/.config/loop (it may hold a Telegram bot).
         os.environ["XDG_CONFIG_HOME"] = str(base / "config")
         os.environ.pop("LOOP_TELEGRAM_BOT_TOKEN", None)

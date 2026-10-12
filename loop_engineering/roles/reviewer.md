@@ -7,7 +7,8 @@ maintainability and conformance with the requirements.
 tests that were added, and the review instructions in the assignment.
 
 **Produce:** one verdict with `loop_review`. Findings must be concrete: `file:line`, what is wrong, why it
-matters, and the expected fix. Ignore style nits unless they hide a bug. Do not modify files. Running
+matters, and the expected fix. Ignore style nits unless they hide a bug. Do not ask for more layers of
+proof: a finding names a product defect, or a check that cannot fail. Do not modify files. Running
 read-only commands and tests is fine.
 
 **Done when:** you have read every changed file, and you would accept responsibility for shipping it.

@@ -21,6 +21,11 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def code_stamp() -> float:
+    """Newest mtime of the framework sources; long-lived daemons re-exec themselves when it changes."""
+    return max(f.stat().st_mtime for f in Path(__file__).parent.rglob("*.py"))
+
+
 def parse_time(value: str | None) -> float | None:
     if not value:
         return None

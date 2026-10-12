@@ -58,9 +58,50 @@ def pipeline_view(goal: dict, state: dict, act: dict) -> list[dict] | None:
         if name in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]}:
             return (state["reviews"].get(name) or {}).get("verdict", "pending")
         return ""
-    reached = names.index(current) if current in names else -1
-    return [{"stage": name, "state": "done" if current == "done" or i < reached else
-             "current" if i == reached else "pending", "detail": detail(name)} for i, name in enumerate(names)]
+    def complete(name: str) -> bool:
+        if current == "done":
+            return True
+        if name in engine.STAGE_BY_ID:
+            return engine.stage_complete(goal, state, engine.STAGE_BY_ID[name])
+        if name == "develop":
+            return bool(state["tasks"]) and all(t["status"] in {"done", "dropped"} for t in state["tasks"])
+        if name == "test":
+            return bool((state.get("verification") or {}).get("passed"))
+        if name == "reviews":
+            return all((state["reviews"].get(g["id"]) or {}).get("verdict") == "pass" for g in gates
+                       if g["by"] == "agent" and g["id"] not in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]})
+        if name in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]}:
+            return (state["reviews"].get(name) or {}).get("verdict") == "pass"
+        return False
+    done = [complete(name) for name in names]
+    first_open = next((i for i, d in enumerate(done) if not d), None)
+    return [{"stage": name, "state": "done" if done[i] else "current" if i == first_open else "pending",
+             "detail": detail(name)} for i, name in enumerate(names)]
+
+
+def working_on(state: dict) -> dict:
+    """Progress inside unfinished tasks, which the done/total count hides: checks passing, turns spent,
+    the latest turn's summary, and the check job the controller is running."""
+    running = next((j for j in state.get("jobs", {}).values() if j.get("status") == "running"), None)
+    job = None
+    if running:
+        job = {"id": running["id"], "task": (running.get("purpose") or {}).get("task"),
+               "type": (running.get("purpose") or {}).get("type"), "checks": len(running.get("checks", [])),
+               "minutes": round((age_seconds(running.get("started_at")) or 0) / 60)}
+    recent = [t for t in state["turns"] if t.get("task")]
+    tasks = []
+    for task in state["tasks"]:
+        if task["status"] not in {"active", "blocked"}:
+            continue
+        results = [state["checks"].get(f"{task['id']}.{c['id']}", {}).get("status") for c in task["checks"]]
+        mine = [t for t in recent if t["task"] == task["id"]]
+        tasks.append({"id": task["id"], "title": task.get("title", ""), "status": task["status"],
+                      "checks_passed": sum(r == "pass" for r in results), "checks": len(results),
+                      "turns": len(mine), "last": (mine[-1].get("summary") or "")[:300] if mine else "",
+                      "last_turn": mine[-1]["n"] if mine else None})
+    focus = (job or {}).get("task") or next((t["task"] for t in reversed(recent)), None)
+    tasks.sort(key=lambda t: (t["id"] != focus, -(t["last_turn"] or 0)))
+    return {"tasks": tasks, "job": job, "focus": focus}
 
 
 def summary(store, goal=None, state=None) -> dict:
@@ -79,15 +120,22 @@ def summary(store, goal=None, state=None) -> dict:
         "status": state["status"], "reason": state["status_reason"],
         "next": act,
         "tasks": {"total": len(tasks), **counts},
+        "working_on": working_on(state),
         "acceptance": acceptance,
         "open_questions": [{"id": q["id"], "kind": q["kind"], "text": q["text"], "options": q["options"],
                             "blocking": q["blocking"]} for q in state["questions"] if q["answer"] is None],
         "blocker": state["blocker"],
         "iteration": state["iteration"], "max_iterations": p["max_iterations"],
+        "budget_used": state["iteration"] - state.get("iteration_base", 0),
         "usage": state["usage"], "runner": runner_view(store),
         "incident": next((i["id"] for i in state["incidents"] if i["status"] == "open"), None),
         "next_cycle_at": state.get("next_cycle_at"), "updated_at": state["updated_at"],
     }
+
+
+def turns(iteration: int, used: int, limit) -> str:
+    """'241' when unlimited, else the turn number plus this budget window's use: '241 (81/120)'."""
+    return str(iteration) if limit is None else f"{iteration} ({used}/{limit})"
 
 
 def line(store) -> str:
@@ -103,7 +151,19 @@ def line(store) -> str:
                                                             {"not running", "exited"} else " · runner ?")
     flag = " · ❓" + str(len(s["open_questions"])) if s["open_questions"] else ""
     return (f"loop[{s['kind']}] {s['title'][:40]} · {s['status']} · tasks {t['done']}/{t['total']}"
-            f" · checks {passed}/{len(checks)} · turn {s['iteration']}/{s['max_iterations']}{cost}{flag}{runner}")
+            f" · checks {passed}/{len(checks)} · turn {turns(s['iteration'], s['budget_used'], s['max_iterations'])}"
+            f"{now_doing(s['working_on'])}{cost}{flag}{runner}")
+
+
+def now_doing(w: dict) -> str:
+    """' · now f05-11-fix 2/3 (6 turns) · checking 20m' — what moves while the task count stands still."""
+    out = ""
+    task = next((t for t in w["tasks"] if t["id"] == w["focus"]), None)
+    if task:
+        out += f" · now {task['id'][:32]} {task['checks_passed']}/{task['checks']} ({task['turns']} turns)"
+    if w["job"]:
+        out += f" · checking {w['job']['minutes']}m"
+    return out
 
 
 def markdown(store) -> str:
@@ -115,10 +175,19 @@ def markdown(store) -> str:
            f"- Next: **{s['next']['kind']}** ({s['next']['actor']}) — {s['next']['summary']}",
            f"- Runner: {s['runner']['state']}" + (f" · pid {s['runner'].get('pid')} · adapter "
                                                    f"{s['runner'].get('adapter')}" if s['runner'].get('pid') else ""),
-           f"- Turns {state['iteration']}/{goal['policy']['max_iterations']} · agent time "
+           f"- Turns {turns(state['iteration'], s['budget_used'], goal['policy']['max_iterations'])} · agent time "
            f"{state['usage']['agent_seconds'] / 60:.1f} min · reported cost ${state['usage']['cost_usd']:.2f}"
            + ("" if state["usage"].get("cost_complete", True) else " (partial: some turns reported no cost)"),
            ""]
+    w = s["working_on"]
+    if w["tasks"] or w["job"]:
+        out += ["## Working on", ""]
+        if w["job"]:
+            out.append(f"- Controller check job `{w['job']['id']}` ({w['job']['checks']} checks"
+                       + (f" for `{w['job']['task']}`" if w["job"]["task"] else "") + f") running {w['job']['minutes']} min")
+        out += [f"- `{t['id']}` {t['title'][:80]} · checks {t['checks_passed']}/{t['checks']} · {t['turns']} recent turns"
+                + (f" · last (turn {t['last_turn']}): {t['last'][:200]}" if t["last"] else "") for t in w["tasks"]]
+        out.append("")
     if s["pipeline"]:
         marks = {"done": "●", "current": "◐", "pending": "○"}
         out += ["## Pipeline", "", " → ".join(f"{marks[p['state']]} {p['stage']}" for p in s["pipeline"]), ""]

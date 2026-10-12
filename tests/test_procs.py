@@ -67,11 +67,36 @@ class ProcessGroupTests(unittest.TestCase):
         result = procs.run("yes", shell=True, cwd=self.dir, logs=self.dir / "o", timeout=30, max_output_bytes=10000)
         self.assertEqual(result.outcome, "output_limit")
 
+    def test_detached_spawn_is_not_our_child(self):
+        # A parent that re-execs loses its reaper threads; a detached child must never become its zombie.
+        out = self.dir / "ppid"
+        pid = procs.spawn_detached([sys.executable, "-c", f"import os, time; time.sleep(0.3); "
+                                    f"open({str(out)!r}, 'w').write(str(os.getppid()))"],
+                                   cwd=self.dir, log=self.dir / "spawn.log")
+        deadline = time.time() + 10
+        while not out.exists() or not out.read_text():
+            self.assertLess(time.time(), deadline)
+            time.sleep(0.05)
+        self.assertNotEqual(int(out.read_text()), os.getpid())
+        with self.assertRaises(ChildProcessError):
+            os.waitpid(pid, os.WNOHANG)
+
     def test_stdin_and_unavailable(self):
         result = procs.run(["cat"], cwd=self.dir, logs=self.dir / "s", timeout=5, stdin_text="hello")
         self.assertEqual(result.stdout.read_text(), "hello")
         result = procs.run(["/nonexistent/binary"], cwd=self.dir, logs=self.dir / "u", timeout=5)
         self.assertEqual(result.outcome, "unavailable")
+
+
+class LoginPathTests(unittest.TestCase):
+    def test_login_shell_path_is_used_for_background_processes(self):
+        from unittest import mock
+        procs._LOGIN_PATH = None
+        fake = mock.Mock(stdout="motd noise\n__LOOP_PATH__/home/u/.local/bin:/usr/bin__END__")
+        with mock.patch.dict(os.environ, {"SHELL": "/bin/sh", "LOOP_LOGIN_PATH": "1"}), \
+                mock.patch.object(procs.subprocess, "run", return_value=fake):
+            self.assertEqual(procs.user_env({"X": "1"}), {"PATH": "/home/u/.local/bin:/usr/bin", "X": "1"})
+        procs._LOGIN_PATH = None
 
 
 if __name__ == "__main__":

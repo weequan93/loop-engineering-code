@@ -193,7 +193,8 @@ def start_job(store, qualified: list[str], actor: str, purpose: dict | None = No
     store.mutate("job.started", reserve, job=job_id, checks=qualified)
     argv = [sys.executable, "-m", "loop_engineering", "_job", "--project", str(store.project.root),
             "--goal", store.id, "--job", job_id]
-    env = {"PYTHONPATH": str(Path(__file__).resolve().parent.parent) + os.pathsep + os.environ.get("PYTHONPATH", "")}
+    env = procs.user_env({"PYTHONPATH": str(Path(__file__).resolve().parent.parent) + os.pathsep +
+                                         os.environ.get("PYTHONPATH", "")})
     pid = procs.spawn_detached(argv, cwd=store.project.root, log=store.runs / "jobs" / f"{job_id}.log", env=env)
     time.sleep(0.05)
 

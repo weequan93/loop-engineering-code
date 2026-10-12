@@ -199,6 +199,10 @@ class Runner:
         while True:
             if self.stop_requested:
                 return self._exit("Runner received a stop signal.")
+            # The fingerprint can take a minute on a big tree: take it first, then read the state, and
+            # recheck before exiting so a human acting meanwhile (unblock, answer) is never lost.
+            stamp = checks_mod.fingerprint(self.project.root)
+            seq = (self.store.last_event() or {}).get("seq")
             goal, state = self.store.goal(), self.store.state()
             if state.get("control") == "pause":
                 self.store.mutate("goal.paused", lambda g, s: s.update(status="paused",
@@ -206,17 +210,20 @@ class Runner:
                 return self._exit("Paused.")
             if state.get("control") == "stop" or state["status"] == "stopped":
                 return self._exit("Stopped.")
-            stamp = checks_mod.fingerprint(self.project.root)
             act = engine.next_action(goal, state, stamp)
             self.log(f"next: {act['kind']} ({act['actor']}) — {act['summary'][:160]}")
             if act["actor"] == "none":
                 if act["kind"] == "idle":
                     self._wait_until(act.get("until"))
                     continue
+                if self._changed_since(seq):
+                    continue
                 return self._exit(act["summary"])
             if act["actor"] == "human":
                 if act["kind"] in {"answer"} and not self._once():
                     self._wait_for_human(state)
+                    continue
+                if self._changed_since(seq):
                     continue
                 return self._exit("Needs a human: " + act["summary"])
             if act["actor"] == "controller":
@@ -233,6 +240,9 @@ class Runner:
             if self.max_turns is not None and self.turns_here >= self.max_turns:
                 return self._exit(f"Stopped after {self.turns_here} turn(s) as requested.")
             self._agent_turn(goal, state, act, stamp)
+
+    def _changed_since(self, seq) -> bool:
+        return (self.store.last_event() or {}).get("seq") != seq
 
     def _once(self) -> bool:
         return self.max_turns is not None
@@ -315,6 +325,9 @@ class Runner:
         write_json(workdir / "command.json", {"argv": [a if a != token else "<review-token>" for a in turn.argv],
                                               "env_keys": sorted(turn.env)})
         seq_before = (self.store.last_event() or {}).get("seq", 0)
+        # Compare with the mark left by the previous turn, so results that background check jobs record
+        # between turns (a task done by the controller) count too; the first turn falls back to its start.
+        mark_before = state.get("progress_mark") or progress_mark(state)
 
         def reserve(goal, state):
             state["iteration"] = n
@@ -378,6 +391,16 @@ class Runner:
                                    "log": str(workdir.relative_to(self.project.root))})
             state["turns"] = state["turns"][-50:]
             state["stagnant_turns"] = 0 if progress else state.get("stagnant_turns", 0) + 1
+            # Drift: busy turns (notes, docs, re-blocking) that never finish a task, pass a check or record a review.
+            state["turns_without_result"] = (0 if progress_mark(state) != mark_before
+                                             else state.get("turns_without_result", 0) + 1)
+            state["progress_mark"] = progress_mark(state)
+            drift_limit = drift_setting(self.project)
+            if state["turns_without_result"] >= drift_limit and not state["blocker"]:
+                engine.block(goal, state, "other", f"{state['turns_without_result']} turns produced no concrete result "
+                             "(no task finished, no check newly passed, no review or stage recorded). Probably off "
+                             "track: re-plan, narrow the next step, or answer the open decision.",
+                             "; ".join(t.get("summary", "")[:200] for t in state["turns"][-3:]), "Recent turns", "runner")
             if gate:
                 recorded = (state.get("review_turn") or {}).get("recorded")
                 state["review_turn"] = None
@@ -409,9 +432,48 @@ class Runner:
         self.store.write_runner(info)
 
 
+def concrete_progress(state: dict) -> tuple:
+    """What counts as a real result: finished tasks, passing checks, recorded reviews/stages, verification."""
+    return (sum(t["status"] in {"done", "dropped"} for t in state["tasks"]),
+            sum(1 for c in state["checks"].values() if c.get("status") == "pass"),
+            tuple(sorted((k, v.get("at")) for k, v in state.get("reviews", {}).items())),  # each verdict counts
+            tuple(sorted((k, (v or {}).get("verdict"), (v or {}).get("done"), (v or {}).get("at"))
+                         for k, v in (state.get("stages") or {}).items())),
+            bool(state.get("requirements_final")), bool(state.get("plan_final")),
+            bool((state.get("verification") or {}).get("passed")), len(state.get("incidents", [])))
+
+
+def progress_mark(state: dict) -> str:
+    import hashlib
+    return hashlib.sha256(repr(concrete_progress(state)).encode()).hexdigest()[:16]
+
+
+def drift_setting(project) -> int:
+    from .planner import settings
+    try:
+        value = int(settings(project).get("drift_limit", 8))
+    except (TypeError, ValueError):
+        value = 8
+    return max(3, value)
+
+
 def _tail(result) -> str:
     from .util import read_tail
     return (read_tail(result.stderr, 3000) or read_tail(result.stdout, 3000) or f"outcome={result.outcome}")
+
+
+def goal_to_run(project: Project, wanted: str | None) -> str | None:
+    """After an answer/approval, run the current goal first; queued goals follow via the queue.
+
+    Approving or answering a later queued goal must not start it ahead of an unfinished current goal.
+    """
+    from .model import TERMINAL
+    current = project.current_id()
+    if not current or current == wanted:
+        return wanted or current
+    if project.goal(current).state()["status"] in TERMINAL:
+        return wanted
+    return current
 
 
 def start_background(project: Project, goal_id: str | None, adapter: str | None) -> dict:
@@ -426,9 +488,15 @@ def start_background(project: Project, goal_id: str | None, adapter: str | None)
     argv = [sys.executable, "-m", "loop_engineering", "run", "--project", str(project.root), "--goal", store.id]
     if adapter:
         argv += ["--adapter", adapter]
-    env = {"PYTHONPATH": str(Path(__file__).resolve().parent.parent) + os.pathsep + os.environ.get("PYTHONPATH", "")}
+    env = procs.user_env({"PYTHONPATH": str(Path(__file__).resolve().parent.parent) + os.pathsep +
+                                         os.environ.get("PYTHONPATH", "")})
     log = store.runs / "runner.log"
     pid = procs.spawn_detached(argv, cwd=project.root, log=log, env=env)
+    try:
+        from .telegram_bot import ensure_running
+        ensure_running(project.root)  # two-way Telegram (answers, approvals, unblock) when configured
+    except Exception:
+        pass
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
         info = store.runner()

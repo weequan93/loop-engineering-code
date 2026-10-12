@@ -295,6 +295,11 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
         return action("unblock", "human", f"Blocked ({b['category']}): {b['reason']}")
     if state["status"] == "limit":
         return action("limit", "human", state["status_reason"])
+    for requested in list(state.get("review_requests", [])):
+        gate = find_gate(goal, requested)
+        if gate and gate["by"] == "agent":
+            return action("review", "agent", f"Early independent review {requested} (requested by a human).",
+                          review=requested, early=True)
     running = [j for j in state.get("jobs", {}).values() if j["status"] == "running"]
     if running:
         # A long controller check is in flight: wait for it instead of spending agent
@@ -322,13 +327,15 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
             if stage_def["type"] in {"requirements", "plan"}:
                 return action(sid, "agent", summary, revise_after=failed, **extra)
             return action("review", "agent", stage_def["summary"], review=sid)
-    active = [t for t in state["tasks"] if t["status"] == "active"]
+    finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
+    # An active task whose dependencies were added later must wait for them (no starvation).
+    active = [t for t in state["tasks"] if t["status"] == "active" and set(t["depends_on"]) <= finished]
     if active:
         return action("work", "agent", f"Continue task {active[0]['id']}: {active[0]['title']}", task=active[0]["id"])
     ready = ready_tasks(state)
     if ready:
         return action("work", "agent", f"Start task {ready[0]['id']}: {ready[0]['title']}", task=ready[0]["id"])
-    pending = [t for t in state["tasks"] if t["status"] in {"pending", "blocked"}]
+    pending = [t for t in state["tasks"] if t["status"] in {"pending", "blocked", "active"}]
     if pending:
         return action("unblock", "human", "Remaining tasks wait on blocked or missing dependencies: " +
                       ", ".join(f"{t['id']}<-{t['depends_on']}" for t in pending))
@@ -407,6 +414,16 @@ def record_review(goal: dict, state: dict, review_id: str, verdict: str, finding
     if verdict not in {"pass", "fail"}:
         raise LoopError("verdict must be pass or fail")
     findings = text(findings, "findings", 20000, required=verdict == "fail")
+    if review_id in state.get("review_requests", []):
+        # Early review: recorded and visible, but final gating re-reviews whatever the final candidate is.
+        state["review_requests"] = [r for r in state["review_requests"] if r != review_id]
+        state["reviews"][review_id] = {"verdict": verdict, "findings": findings, "fingerprint": fingerprint,
+                                       "at": now(), "by": by, "early": True}
+        state["notes"].append({"at": now(), "kind": "handoff", "by": "controller", "text": (
+            f"Early review {review_id}: {verdict}." + (f" Address these findings in the next work turns:\n{findings[:6000]}"
+                                                     if verdict == "fail" else ""))})
+        state["status_reason"] = f"Early review {review_id} recorded: {verdict}."
+        return {"_event": {"review": review_id, "verdict": verdict, "by": by, "early": True}}
     if review_id in GATE_STAGE_IDS and pipeline(goal):
         stage_def = STAGE_BY_ID[review_id]
         ids = [x["id"] for x in pre_stages(goal)]
@@ -447,13 +464,47 @@ def record_review(goal: dict, state: dict, review_id: str, verdict: str, finding
     return {"_event": {"review": review_id, "verdict": verdict, "by": by}}
 
 
+CONTRACT_KEYS = ("objective", "constraints", "acceptance", "reviews", "policy", "schedule", "agent", "pipeline")
+
+
+def contract_changes(goal: dict, state: dict) -> list[str]:
+    """Human-readable differences between goal.json and the last approved contract."""
+    before = state.get("approved_contract")
+    if not state.get("approved_digest"):
+        return ["new goal: " + goal["title"]]
+    if before is None:
+        return ["changed since approval (no earlier copy to compare)"]
+    lines = []
+    for key in CONTRACT_KEYS:
+        old, new = before.get(key), goal.get(key)
+        if old == new:
+            continue
+        if key in {"acceptance", "reviews"}:
+            old_ids = {x["id"] for x in old or []}
+            new_ids = {x["id"] for x in new or []}
+            added, removed = sorted(new_ids - old_ids), sorted(old_ids - new_ids)
+            edited = sorted(i for i in old_ids & new_ids
+                            if next(x for x in old if x["id"] == i) != next(x for x in new if x["id"] == i))
+            parts = ([f"+{', +'.join(added)}"] if added else []) + ([f"-{', -'.join(removed)}"] if removed else []) + \
+                    ([f"changed {', '.join(edited)}"] if edited else [])
+            lines.append(f"{key}: {'; '.join(parts)}")
+        elif key == "policy":
+            diff = [f"{k} {old.get(k)}→{new.get(k)}" for k in sorted(set(old or {}) | set(new or {}))
+                    if (old or {}).get(k) != (new or {}).get(k)]
+            lines.append("policy: " + ", ".join(diff))
+        else:
+            lines.append(f"{key} changed")
+    return lines or ["formatting only"]
+
+
 def approve(goal: dict, state: dict, by: str) -> dict:
     problems = model.approval_problems(goal)
     if problems:
         raise LoopError("Cannot approve yet: " + " ".join(problems))
     state["approved_digest"] = model.contract_digest(goal)
     state["approved_by"], state["approved_at"] = by, now()
-    if state["status"] in {"draft", "ready"} or state["status"] not in model.TERMINAL:
+    state["approved_contract"] = {k: goal.get(k) for k in CONTRACT_KEYS}
+    if state["status"] not in model.TERMINAL | {"limit", "blocked"}:  # those resume only via unblock
         state["status"], state["status_reason"] = "ready", f"Approved by {by}. Start with `loop start`."
     return {"_event": {"by": by, "digest": state["approved_digest"]}}
 
@@ -585,9 +636,24 @@ def start_task(goal: dict, state: dict, task_id: str) -> dict:
     return {"_event": {"task": task_id}}
 
 
+def request_review(goal: dict, state: dict, review_id: str, by: str) -> dict:
+    gate = find_gate(goal, review_id)
+    if not gate or gate["by"] != "agent":
+        raise LoopError(f"{review_id} is not an agent review of this goal: {[g['id'] for g in review_gates(goal)]}")
+    requests = state.setdefault("review_requests", [])
+    if review_id not in requests:
+        requests.append(review_id)
+    _resume_status(state, f"Early review {review_id} requested by {by}.")
+    return {"_event": {"review": review_id, "by": by}}
+
+
 def claim_done(goal: dict, state: dict, task_id: str, summary: str) -> dict:
     """Agent says a task is done. Tasks without checks finish now; others need a check job."""
     task = task_by_id(state, task_id)
+    finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
+    unmet = sorted(set(task["depends_on"]) - finished)
+    if unmet:
+        raise LoopError(f"Task {task_id} still depends on unfinished tasks {unmet}")
     if task["status"] not in {"active", "pending"}:
         raise LoopError(f"Task {task_id} is {task['status']}")
     if task["status"] == "pending" and task not in ready_tasks(state):
@@ -719,8 +785,13 @@ def _finding_status(value: str) -> str:
     return value
 
 
+AMENDABLE_POLICY = ("max_iterations", "max_hours", "turn_timeout_minutes", "max_cost_usd", "max_task_attempts",
+                    "max_repair_rounds", "check_timeout_seconds", "stagnation_limit")
+
+
 def ask(goal: dict, state: dict, question: str, options: list[str] | None, blocking: bool,
-        kind: str = "question", action_text: str | None = None, by: str = "agent") -> dict:
+        kind: str = "question", action_text: str | None = None, by: str = "agent",
+        amend_policy: dict | None = None) -> dict:
     if kind not in {"question", "approval"}:
         raise LoopError("question kind must be question or approval")
     if options is not None and (not isinstance(options, list) or not all(isinstance(o, str) for o in options)):
@@ -729,9 +800,18 @@ def ask(goal: dict, state: dict, question: str, options: list[str] | None, block
         raise LoopError("20 questions are already open; wait for answers")
     entry = {"id": new_id("q"), "kind": kind, "text": text(question, "question", 4000),
              "options": options or (["approve", "deny"] if kind == "approval" else []),
-             "blocking": bool(blocking) or kind == "approval", "asked_at": now(), "by": by,
+             "blocking": bool(blocking), "asked_at": now(), "by": by,
              "action": text(action_text, "action", 4000, required=False) or None,
              "answer": None, "answered_at": None, "answered_by": None}
+    if amend_policy:
+        # A budget/limit change the human can approve with one tap; the controller applies it exactly.
+        if not isinstance(amend_policy, dict) or set(amend_policy) - set(AMENDABLE_POLICY):
+            raise LoopError(f"amend_policy may change only {AMENDABLE_POLICY}")
+        model.policy({**goal["policy"], **amend_policy})  # validate the resulting policy
+        changes = ", ".join(f"{k} {goal['policy'].get(k)}→{v}" for k, v in amend_policy.items())
+        entry.update(kind="approval", blocking=True, options=["approve", "deny"],
+                     amend={"policy": dict(amend_policy)}, action=f"Amend this goal's policy: {changes}")
+        entry["text"] = entry["text"] + f"\n\nProposed change: {changes}"
     state["questions"].append(entry)
     if entry["blocking"]:
         state["status"], state["status_reason"] = "waiting", f"Waiting for an answer to {entry['id']}: {entry['text'][:120]}"
@@ -752,9 +832,29 @@ def answer(goal: dict, state: dict, question_id: str, reply: str, by: str) -> di
         record_review(goal, state, question["review"], "pass" if question["approved"] else "fail",
                       "" if question["approved"] else reply, question.get("fingerprint"), by)
         return {"_event": {"question": question_id, "by": by, "review": question["review"]}}
+    released = _release_decision_blocker(state, question_id, by)
     if not open_questions(state):
         _resume_status(state, f"Answered {question_id}.")
-    return {"_event": {"question": question_id, "by": by}}
+    return {"_event": {"question": question_id, "by": by, "released_blocker": released}}
+
+
+def _release_decision_blocker(state: dict, question_id: str, by: str) -> bool:
+    """A "decision" blocker that waits on a question is resolved by answering that question.
+
+    Only agent-declared decision blockers that name the question (or wait on questions that are
+    now all answered) are released; permission/environment/limit blockers still need `unblock`.
+    """
+    blocker = state.get("blocker")
+    if not blocker or blocker.get("category") != "decision" or blocker.get("by") == "controller":
+        return False
+    text_ = f"{blocker.get('reason', '')} {blocker.get('evidence', '')}"
+    if question_id not in text_ and open_questions(state, blocking_only=False):
+        return False
+    state["blocker"] = None
+    state["notes"].append({"at": now(), "kind": "decision", "by": by,
+                           "text": f"Decision blocker resolved by answering {question_id}."})
+    state["status"], state["status_reason"] = "ready", f"Answered {question_id}; decision blocker resolved."
+    return True
 
 
 def block(goal: dict, state: dict, category: str, reason: str, evidence: str, attempted: str,
@@ -789,6 +889,10 @@ def unblock(goal: dict, state: dict, note_text: str, by: str) -> dict:
         state["started_at"] = now()
     state["repair_rounds"] = 0
     state["stagnant_turns"] = 0
+    state["turns_without_result"] = 0  # a human decision restarts the drift window
+    for record in state.get("stages", {}).values():  # ... and the gate failure counts
+        if isinstance(record, dict) and record.get("rounds"):
+            record["rounds"] = 0
     state["notes"].append({"at": now(), "kind": "decision", "by": by,
                            "text": "Unblocked: " + text(note_text, "note", 4000)})
     state["status"], state["status_reason"] = "ready", f"Unblocked by {by}: {note_text[:160]}"
@@ -820,6 +924,7 @@ def control(goal: dict, state: dict, command: str, by: str, runner_live: bool = 
             state["status"] = "paused"
     elif command == "resume":
         state["control"] = None
+        state["turns_without_result"] = 0
         if state["status"] in {"paused", "stopped", "failed", "limit"} and not state["blocker"]:
             if state["status"] == "limit":
                 state["iteration_base"] = state["iteration"]
@@ -846,13 +951,13 @@ def budget_problem(goal: dict, state: dict) -> str | None:
     p, used = goal["policy"], state["iteration"] - state.get("iteration_base", 0)
     if goal["kind"] == "operate":
         incident = open_incident(state)
-        if incident and incident.get("turns_used", 0) >= p["max_iterations"]:
+        if incident and p["max_iterations"] is not None and incident.get("turns_used", 0) >= p["max_iterations"]:
             return f"Incident {incident['id']} used its {p['max_iterations']} agent turns"
         return None
-    if used >= p["max_iterations"]:
+    if p["max_iterations"] is not None and used >= p["max_iterations"]:
         return f"Used all {p['max_iterations']} agent turns"
     started = parse_time(state.get("started_at"))
-    if started and (datetime.now(timezone.utc).timestamp() - started) / 3600 >= p["max_hours"]:
+    if started and p["max_hours"] is not None and (datetime.now(timezone.utc).timestamp() - started) / 3600 >= p["max_hours"]:
         return f"Reached the {p['max_hours']}h wall-clock limit"
     if p["max_cost_usd"] is not None and state["usage"]["cost_usd"] >= p["max_cost_usd"]:
         return f"Reported cost ${state['usage']['cost_usd']:.2f} reached the ${p['max_cost_usd']:.2f} limit"

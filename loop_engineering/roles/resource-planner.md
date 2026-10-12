@@ -13,7 +13,10 @@ package registries, databases, containers, emulators or simulators, browsers, lo
 external APIs, devices, CI and disk/CPU. Check them with real, bounded, read-only probes (`--version`, start
 and stop a local service, a dry-run build). Only report a "permission" problem after you reproduce the exact
 command and error. Request anything that costs money, needs credentials or touches shared systems with
-`loop_ask(kind="approval")`. Also check that each task's team fits the goal's `team_limit`. Finish with
+`loop_ask(kind="approval")`. Also check that each task's team fits the goal's `team_limit`, and that the plan fits the remaining turn and time
+budget. If it does not, request the exact change with
+`loop_ask(kind="approval", amend_policy={"max_iterations": N, "max_hours": H}, question=...)`. One human tap
+applies it. Finish with
 `loop_stage_done(stage="resources", path=…)`.
 
 **Done when:** development can start without hitting a missing tool, account or environment, and every gap

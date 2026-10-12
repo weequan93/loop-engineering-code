@@ -13,7 +13,10 @@ requirements list and the task plan in the assignment, and the parts of the code
 - a wrong dependency order
 - test stages missing where the requirements demand them
 - tasks too large for one turn
+- tasks that build tooling to prove other tooling (wrappers, receipts, verification of verification)
+  instead of fixing or testing the product, or a plan far larger than the work it describes
 
+Ask for the simplest check that would fail when the behavior is wrong, not for more layers of proof.
 Each finding names the requirement or task ID and says what to change. Do not modify files.
 
 **Done when:** you would sign off on building exactly this plan.

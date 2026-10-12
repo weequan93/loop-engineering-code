@@ -237,13 +237,13 @@ class NotifyTests(ProjectCase):
         service.goal_approve(True)
         q = service.ask("Which database?", ["postgres", "sqlite"])["question"]
         service.note("progress", "still waiting")  # another change must not re-notify
-        rows = [json.loads(line) for line in out.read_text().splitlines()]
+        rows = [r for r in (json.loads(line) for line in out.read_text().splitlines()) if r.get("type") != "approve"]
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["id"], q["id"])
         self.assertIn("loop answer", rows[0]["command"])
         service.answer(q["id"], "sqlite")
         store.mutate("b", lambda g, s: engine.block(g, s, "decision", "Pick a vendor", "", ""))
-        rows = [json.loads(line) for line in out.read_text().splitlines()]
+        rows = [r for r in (json.loads(line) for line in out.read_text().splitlines()) if r.get("type") != "approve"]
         self.assertEqual(len(rows), 2)
         self.assertTrue(rows[1]["title"].startswith("Blocked"))
 
@@ -258,7 +258,7 @@ class NotifyTests(ProjectCase):
             store.mutate("turn.finished", lambda g, s, n=n: s["turns"].append({
                 "n": n, "action": "work", "outcome": "ok", "seconds": 60, "progress": True, "summary": f"did {n}"}))
             store.mutate("note", lambda g, s: engine.note(g, s, "progress", "x"))
-        rows = [json.loads(line) for line in out.read_text().splitlines()]
+        rows = [r for r in (json.loads(line) for line in out.read_text().splitlines()) if r.get("type") != "approve"]
         self.assertEqual([r["title"].split(" ")[1] for r in rows], ["1", "2"])
         self.assertIn("did 2", rows[1]["message"])
 
@@ -291,3 +291,64 @@ class TelegramTests(ProjectCase):
         sent = [c for c in calls if c[1] == "sendMessage"]
         self.assertTrue(any("Ship to staging?" in c[2]["text"] and c[2]["chat_id"] == "777" for c in sent))
         self.assertIn("notify.json", (self.root / ".loop" / ".gitignore").read_text())
+
+
+class DecisionBlockerTests(ProjectCase):
+    def test_answering_the_awaited_question_releases_a_decision_blocker(self):
+        store = self.goal()
+        service = Service(self.project, actor="agent", interactive=False)
+        Service(self.project, actor="chat").goal_approve(True)
+        q = service.ask("Retry Core memory or accept UNVERIFIED?", ["retry", "accept"], blocking=False)["question"]
+        service.block("decision", f"Waiting for the answer to {q['id']}")
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "unblock")
+        Service(self.project, actor="human").answer(q["id"], "accept")
+        state = store.state()
+        self.assertIsNone(state["blocker"])
+        self.assertEqual(state["status"], "ready")
+        # Permission blockers are not released by an unrelated answer.
+        q2 = service.ask("Which time?", None, blocking=False)["question"]
+        service.block("permission", "EPERM on probe", "probe -> EPERM", "libproc census")
+        Service(self.project, actor="human").answer(q2["id"], "tonight")
+        self.assertIsNotNone(store.state()["blocker"])
+
+
+class AmendmentTests(ProjectCase):
+    def test_approving_a_policy_amendment_applies_it_and_keeps_the_goal_approved(self):
+        store = self.goal()
+        Service(self.project, actor="chat").goal_approve(True)
+        agent = Service(self.project, actor="agent", interactive=False)
+        q = agent.ask("The plan needs more turns", amend_policy={"max_iterations": 120, "max_hours": 144})["question"]
+        self.assertEqual(q["kind"], "approval")
+        self.assertIn("max_iterations 10→120", q["text"])
+        agent.block("other", f"Budget too small; waiting for {q['id']}")
+        with self.assertRaises(LoopError):
+            agent.ask("x", amend_policy={"approval_required": []})   # only limits are amendable
+        Service(self.project, actor="human").answer(q["id"], "approve")
+        goal, state = store.goal(), store.state()
+        self.assertEqual((goal["policy"]["max_iterations"], goal["policy"]["max_hours"]), (120, 144))
+        self.assertEqual(state["approved_digest"], model.contract_digest(goal))
+        self.assertIsNone(state["blocker"])
+        self.assertNotEqual(engine.next_action(goal, state)["kind"], "approve_goal")
+
+    def test_null_limits_mean_unlimited_and_unblock_resets_gate_rounds(self):
+        store = self.goal(policy={"max_iterations": None, "max_hours": None})
+        Service(self.project, actor="chat").goal_approve(True)
+
+        def worn(goal, state):
+            state["iteration"], state["started_at"] = 10_000, "2000-01-01T00:00:00+00:00"
+            state.setdefault("stages", {})["plan_review"] = {"verdict": "fail", "rounds": 6}
+            engine.block(goal, state, "scope", "plan_review failed 6 times", "x", "Revisions", "controller")
+        store.mutate("test.worn", worn)
+        self.assertIsNone(engine.budget_problem(store.goal(), store.state()))
+        store.mutate("test.reapproved", lambda g, st: engine.approve(g, st, "me"))
+        self.assertEqual(store.state()["status"], "blocked")  # approval never bypasses unblock
+        Service(self.project, actor="human").unblock("limits removed")
+        self.assertEqual(store.state()["stages"]["plan_review"]["rounds"], 0)
+
+    def test_denied_amendment_changes_nothing(self):
+        store = self.goal()
+        Service(self.project, actor="chat").goal_approve(True)
+        q = Service(self.project, actor="agent", interactive=False).ask(
+            "More turns?", amend_policy={"max_iterations": 99})["question"]
+        Service(self.project, actor="human").answer(q["id"], "deny")
+        self.assertEqual(store.goal()["policy"]["max_iterations"], 10)

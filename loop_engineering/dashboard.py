@@ -8,14 +8,18 @@ token usage), the runner log and each check's output. Nothing here can change st
 from __future__ import annotations
 
 import errno
+import os
+import secrets
+import sys
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import engine, status, transcript
+from . import engine, model, status, transcript
 from .store import Project
-from .util import LoopError, parse_time, read_tail
+from .util import LoopError, code_stamp, parse_time, read_tail
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Loop status</title>
@@ -44,7 +48,7 @@ select,button{font:inherit;padding:4px 10px;border-radius:6px;border:1px solid v
 </style></head><body><main>
 <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:12px"><div><h1 id="title">Loop</h1><div id="reason" class="muted"></div></div>
 <div><select id="goal"></select> <span id="beat" class="muted"></span></div></div>
-<div class="row"><div class="card"><h2>Status</h2><div id="status"></div></div><div class="card"><h2>Next</h2><div id="next"></div></div><div class="card"><h2>Budget</h2><div id="budget"></div></div></div>
+<div class="row"><div class="card"><h2>Status</h2><div id="status"></div><div id="controls" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"></div><div id="toast" class="muted" style="margin-top:6px"></div></div><div class="card"><h2>Next</h2><div id="next"></div></div><div class="card"><h2>Budget</h2><div id="budget"></div></div></div>
 <div class="card" id="pipecard" style="margin-top:12px" hidden><h2>Pipeline</h2><div id="pipeline" class="row" style="gap:6px"></div></div>
 <div class="row" style="margin-top:12px"><div class="card"><h2>Tasks</h2><div id="tasks"></div></div><div class="card"><h2>Goal queue</h2><ul id="queue"></ul></div><div class="card"><h2>Acceptance &amp; reviews</h2><ul id="checks"></ul><h2 style="margin-top:12px">Questions</h2><ul id="questions"></ul></div></div>
 <div class="card" style="margin-top:12px"><div class="tabs"><button data-tab="turns" class="on">Agent turns</button><button data-tab="runner">Runner log</button><button data-tab="checkl">Check logs</button><button data-tab="md">STATUS.md</button><span style="flex:1"></span><button id="latest" title="Jump to the newest entry">↓ 最新 latest</button></div>
@@ -53,24 +57,31 @@ select,button{font:inherit;padding:4px 10px;border-radius:6px;border:1px solid v
 <div id="pane-checkl" hidden class="split"><div class="list" id="checklist"></div><div class="view"><pre id="checkview" class="muted">Select a check.</pre></div></div>
 <div id="pane-md" hidden><pre id="md"></pre></div></div>
 </main><script>
-const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TOKEN='__LOOP_TOKEN__',CODE='__LOOP_CODE__';const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let goal=new URLSearchParams(location.search).get('goal')||'',tab='turns',selTurn=null,selCheck=null,lastTurnKey='',jump=true,lastRunner='',lastTurnCount=0,followLatest=true;
 const nearEnd=el=>el.scrollTop+el.clientHeight>=el.scrollHeight-60;const toEnd=el=>{el.scrollTop=el.scrollHeight};
 const q=()=>goal?'goal='+encodeURIComponent(goal):'';
 async function get(p){const r=await fetch(p);return r.json()}
-async function tick(){try{const d=await get('/api/status?'+q());
+async function tick(){try{const d=await get('/api/status?'+q());if(d.code&&d.code!==CODE){location.reload();return}
 if(d.error){$('title').textContent='Loop';$('reason').textContent=d.error;return}
 const s=d.summary;goal=s.goal;$('title').textContent=s.title;$('reason').textContent=s.reason;
 $('goal').innerHTML=d.goals.map(g=>`<option ${g===s.goal?'selected':''}>${esc(g)}</option>`).join('');
 $('status').innerHTML=`<span class="pill ${esc(s.status)}">${esc(s.status)}</span> <span class="muted">${esc(s.kind)} · runner ${esc(s.runner.state)}</span>`+(s.blocker?`<p class="blocked">Blocked (${esc(s.blocker.category)}): ${esc(s.blocker.reason)}</p>`:'');
 $('next').innerHTML=`<b>${esc(s.next.kind)}</b> <span class="muted">(${esc(s.next.actor)})</span><div>${esc(s.next.summary)}</div>`;
 const t=s.tasks,pct=t.total?Math.round(100*t.done/t.total):0;
-$('budget').innerHTML=`<div>turn ${s.iteration} / ${s.max_iterations}</div><div>agent time ${(s.usage.agent_seconds/60).toFixed(1)} min · tokens in ${(s.usage.input_tokens||0).toLocaleString()} · out ${(s.usage.output_tokens||0).toLocaleString()}</div><div>cost $${(s.usage.cost_usd||0).toFixed(2)}${s.usage.cost_complete?'':' (partial)'}</div><div class="muted">updated ${esc(s.updated_at)}</div>`;
-$('tasks').innerHTML=`<div class="bar"><i style="width:${pct}%"></i></div><div class="muted">${t.done}/${t.total} done · ${t.active} active · ${t.blocked} blocked</div>${t.total&&t.done+t.dropped===t.total&&!['done','failed','stopped'].includes(s.status)?`<div class="running">All tasks finished — now in the ${({verify:'acceptance check',review:'independent review',repair:'repair'})[s.next.kind]||esc(s.next.kind)} phase: ${esc(s.next.summary)}</div>`:''}<ul>`+d.tasks.map(x=>`<li><span class="${esc(x.status)}">${esc(x.status)}</span> <code>${esc(x.id)}</code> ${esc(x.title)} <span class="muted">${esc(x.team||x.role||'')}</span></li>`).join('')+'</ul>';
-$('checks').innerHTML=(Object.entries(s.acceptance).map(([k,v])=>`<li><span class="${esc(v)}">${esc(v)}</span> <code>${esc(k)}</code></li>`).join('')+(d.reviews||[]).map(r=>`<li><span class="${esc(r.verdict)}">${esc(r.verdict)}</span> <code>review.${esc(r.id)}</code> <span class="muted">(${esc(r.by)})</span></li>`).join(''))||'<li class="muted">none</li>';
+$('budget').innerHTML=`<div>turn ${s.iteration}${s.max_iterations==null?'':` (budget ${s.budget_used} / ${s.max_iterations})`}</div><div>agent time ${(s.usage.agent_seconds/60).toFixed(1)} min · tokens in ${(s.usage.input_tokens||0).toLocaleString()} · out ${(s.usage.output_tokens||0).toLocaleString()}</div><div>cost $${(s.usage.cost_usd||0).toFixed(2)}${s.usage.cost_complete?'':' (partial)'}</div><div class="muted">updated ${esc(s.updated_at)}</div>`;
+$('tasks').innerHTML=`<div class="bar"><i style="width:${pct}%"></i></div><div class="muted">${t.done}/${t.total} done · ${t.active} active · ${t.blocked} blocked</div>${t.total&&t.done+t.dropped===t.total&&!['done','failed','stopped'].includes(s.status)?`<div class="running">All tasks finished — now in the ${({verify:'acceptance check',review:'independent review',repair:'repair'})[s.next.kind]||esc(s.next.kind)} phase: ${esc(s.next.summary)}</div>`:''}${(()=>{const w=s.working_on;if(!w||(!w.tasks.length&&!w.job))return'';
+ return `<div class="working"><b>Working on</b>`+(w.job?`<div class="running">⏳ controller check job <code>${esc(w.job.id)}</code> · ${w.job.checks} checks${w.job.task?` for <code>${esc(w.job.task)}</code>`:''} · ${w.job.minutes} min</div>`:'')
+ +w.tasks.map(x=>{const p=x.checks?Math.round(100*x.checks_passed/x.checks):0;return `<div style="margin-top:6px"><code>${esc(x.id)}</code>${x.id===w.focus?' <b>◀ now</b>':''} <span class="muted">checks ${x.checks_passed}/${x.checks} · ${x.turns} recent turns</span><div class="bar"><i style="width:${p}%"></i></div>${x.last?`<div class="muted" style="font-size:12px">turn ${x.last_turn}: ${esc(x.last)}</div>`:''}</div>`}).join('')+'</div>'})()}<ul>`+d.tasks.map(x=>`<li><span class="${esc(x.status)}">${esc(x.status)}</span> <code>${esc(x.id)}</code> ${esc(x.title)} <span class="muted">${esc(x.team||x.role||'')}</span></li>`).join('')+'</ul>';
+$('checks').innerHTML=(Object.entries(s.acceptance).map(([k,v])=>`<li><span class="${esc(v)}">${esc(v)}</span> <code>${esc(k)}</code></li>`).join('')+(d.reviews||[]).map(r=>`<li><span class="${esc(r.verdict)}">${esc(r.verdict)}</span> <code>review.${esc(r.id)}</code> <span class="muted">(${esc(r.by)})</span>${r.by==='agent'&&r.verdict!=='pass'?` <button data-c="review_now" data-r="${esc(r.id)}" style="font-size:12px;padding:1px 6px">▶ 现在评审</button>`:''}</li>`).join(''))||'<li class="muted">none</li>';
 $('pipecard').hidden=!s.pipeline;if(s.pipeline)$('pipeline').innerHTML=s.pipeline.map(p=>`<div style="flex:1 1 120px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;${p.state==='current'?'outline:2px solid var(--run)':''}"><div class="${p.state==='done'?'ok':p.state==='current'?'running':'muted'}"><b>${p.state==='done'?'✓':p.state==='current'?'◐':'○'} ${esc(p.stage)}</b></div><div class="muted" style="font-size:12px">${esc(p.detail)}</div></div>`).join('');
 $('queue').innerHTML=(d.queue||[]).map(r=>`<li class="${r.id===s.goal?'running':''}">${r.position}. <a href="?goal=${encodeURIComponent(r.id)}"><code>${esc(r.id)}</code></a> <span class="${esc(r.status)}">${esc(r.status)}</span>${r.status!=='done'&&!r.approved?' <span class="waiting">needs approval</span>':''}<div class="muted">${esc(r.title)}</div></li>`).join('')||'<li class="muted">empty — <code>loop goal … --enqueue</code></li>';
-$('questions').innerHTML=s.open_questions.map(q=>`<li><code>${esc(q.id)}</code> ${esc(q.text)}<div class="muted"><code>loop answer ${esc(q.id)} "…"</code></div></li>`).join('')||'<li class="muted">none</li>';
+const qs=$('questions');const typing=qs.contains(document.activeElement);
+if(!typing){qs.innerHTML=s.open_questions.map(q=>`<li style="margin-bottom:10px"><div><code>${esc(q.id)}</code> ${q.blocking?'<span class="waiting">blocking</span>':''} ${esc(q.text)}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${(q.options||[]).filter(o=>!o.startsWith('<')).map(o=>`<button data-q="${esc(q.id)}" data-a="${esc(o)}">${esc(o==='approve'?'✅ 批准 approve':o==='deny'?'❌ 拒绝 deny':o)}</button>`).join('')}<input data-qi="${esc(q.id)}" placeholder="或输入回答…" style="flex:1 1 200px;min-width:0;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg)"><button data-qs="${esc(q.id)}">回答</button></div></li>`).join('')||'<li class="muted">none</li>';}
+const ctl=$('controls');if(!ctl.contains(document.activeElement)){const r=s.runner.state==='running';
+ctl.innerHTML=(s.next.kind==='approve_goal'?`<div style="flex:1 1 100%"><b>等待批准的合同变更：</b><ul>${(d.contract_changes||[]).map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div><button data-c="approve">✅ 批准变更</button>`:'')+(s.blocker?`<input id="unote" placeholder="处理说明（可选）" style="flex:1 1 200px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg)"><button data-c="unblock">▶️ 继续（解除阻塞）</button>`:'')+
+(r?`<button data-c="pause">⏸ 暂停</button><button data-c="stop">⏹ 停止</button>`:(['done','stopped'].includes(s.status)?'':`<button data-c="start">▶️ 启动 runner</button>`))+
+(['paused','limit','stopped'].includes(s.status)?`<button data-c="resume">↩️ 恢复</button>`:'');}
 $('md').textContent=d.markdown;$('beat').textContent=s.runner.heartbeat_age_s!=null?`heartbeat ${s.runner.heartbeat_age_s}s ago`:'';
 await activity();}catch(e){$('reason').textContent='dashboard: '+e}}
 async function activity(){
@@ -98,6 +109,11 @@ document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');i
 $('latest').onclick=()=>{jump=true;lastTurnKey='';lastRunner='';if(tab==='turns'){selTurn=null;followLatest=true}activity();if(tab==='md')toEnd(document.scrollingElement)};
 $('turnlist').onclick=e=>{const d=e.target.closest('[data-n]');if(d){const all=[...$('turnlist').querySelectorAll('[data-n]')];selTurn=+d.dataset.n;followLatest=d===all[all.length-1];lastTurnKey='';jump=true;activity()}};
 $('checklist').onclick=e=>{const d=e.target.closest('[data-c]');if(d){selCheck=d.dataset.c;jump=true;activity()}};
+async function post(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-Loop-Token':TOKEN},body:JSON.stringify({goal,...body})});const d=await r.json();$('toast').textContent=d.error?('⚠️ '+d.error):('✓ '+(d.message||'done'));tick()}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.q){post('/api/answer',{question_id:b.dataset.q,answer:b.dataset.a})}
+ else if(b.dataset.qs){const i=document.querySelector(`[data-qi="${b.dataset.qs}"]`);if(i&&i.value.trim())post('/api/answer',{question_id:b.dataset.qs,answer:i.value.trim()})}
+ else if(b.dataset.c){if(b.dataset.c==='stop'&&!confirm('立即停止当前一轮？'))return;post('/api/control',{command:b.dataset.c,review_id:b.dataset.r,note:($('unote')||{}).value||''})}});
 $('goal').onchange=e=>{goal=e.target.value;selTurn=null;history.replaceState(null,'','?goal='+encodeURIComponent(goal));tick()};
 tick();setInterval(tick,3000);
 </script></body></html>"""
@@ -112,6 +128,8 @@ def payload(project: Project, goal_id: str | None) -> dict:
     from . import queue as queue_mod
     return {"summary": status.summary(store), "goals": project.goal_ids(), "markdown": status.markdown(store),
             "queue": queue_mod.view(project),
+            "contract_changes": (engine.contract_changes(goal, state)
+                                 if state.get("approved_digest") != model.contract_digest(goal) else []),
             "tasks": [{**{k: t.get(k) for k in ("id", "title", "status", "role")},
                        "team": " + ".join(f"{s['count']}×{s['role']}" for s in t.get("team", []))}
                       for t in state["tasks"]],
@@ -188,17 +206,81 @@ def check_log(store, check_id: str) -> dict:
     return {"text": header + ("\n\n".join(parts) or "(no output)")}
 
 
-def serve(project: Project, port: int = 8765, host: str = "127.0.0.1") -> None:
+def act(project: Project, body: dict) -> dict:
+    """Human actions from the dashboard: answer, unblock, pause/resume/stop, start the runner."""
+    from .api import Service
+    from .runner import start_background
+    goal = body.get("goal") or None
+    service = Service(project, actor="human (dashboard)", interactive=True)
+
+    def runner(goal_id):
+        from .runner import goal_to_run
+        try:
+            result = start_background(project, goal_to_run(project, goal_id), None)
+            return "runner already running" if result.get("already_running") else "runner started"
+        except LoopError as exc:
+            return f"runner not started: {exc}"
+    if "question_id" in body:
+        answer = str(body.get("answer") or "").strip()
+        if not answer:
+            raise LoopError("Empty answer")
+        service.answer(body["question_id"], answer, goal, by="human (dashboard)")
+        return {"message": f"answered {body['question_id']} · {runner(goal)}"}
+    command = body.get("command")
+    if command == "unblock":
+        service.unblock(str(body.get("note") or "Continue approved from the dashboard"), goal, by="human (dashboard)")
+        return {"message": f"unblocked · {runner(goal)}"}
+    if command in {"pause", "resume", "stop"}:
+        service.control(command, goal, by="human (dashboard)")
+        if command == "stop":
+            from .cli import _signal_runner
+            _signal_runner(project, goal)
+        return {"message": f"{command} · " + (runner(goal) if command == "resume" else "ok")}
+    if command == "review_now":
+        service.request_review(str(body.get("review_id") or ""), goal, by="human (dashboard)")
+        return {"message": f"early review requested · {runner(goal)}"}
+    if command == "approve":
+        service.goal_approve(True, goal, by="human (dashboard)")
+        return {"message": f"approved · {runner(goal)}"}
+    if command == "start":
+        state = project.goal(goal).state()
+        if state.get("control") == "pause" or state["status"] == "paused":
+            service.control("resume", goal, by="human (dashboard)")
+        return {"message": runner(goal)}
+    raise LoopError("Unknown action")
+
+
+def serve(project: Project, port: int = 8765, host: str = "127.0.0.1", reload: bool = False) -> None:
+    token = secrets.token_urlsafe(18)  # per dashboard process; required for every POST
+    stamp = str(code_stamp())  # an open page reloads itself when the server runs newer code
+    page = PAGE.replace("__LOOP_TOKEN__", token).replace("__LOOP_CODE__", stamp)
+
     class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            origin = self.headers.get("Origin")
+            allowed = {f"http://{host}:{self.server.server_address[1]}", f"http://localhost:{self.server.server_address[1]}"}
+            if self.headers.get("X-Loop-Token") != token or (origin and origin not in allowed):
+                self.send_error(403)
+                return
+            try:
+                length = min(int(self.headers.get("Content-Length") or 0), 65536)
+                body = json.loads(self.rfile.read(length) or b"{}")
+                if urlparse(self.path).path not in {"/api/answer", "/api/control"} or not isinstance(body, dict):
+                    raise LoopError("Unknown endpoint")
+                data = act(project, body)
+            except (LoopError, ValueError, OSError) as exc:
+                data = {"error": str(exc)}
+            self._send(json.dumps(data, ensure_ascii=False).encode(), "application/json; charset=utf-8")
+
         def do_GET(self):
             url = urlparse(self.path)
             query = parse_qs(url.query)
             goal = (query.get("goal") or [None])[0] or None
             try:
                 if url.path in {"/", "/index.html"}:
-                    return self._send(PAGE.encode(), "text/html; charset=utf-8")
+                    return self._send(page.encode(), "text/html; charset=utf-8")
                 if url.path == "/api/status":
-                    data = payload(project, goal)
+                    data = {**payload(project, goal), "code": stamp}
                 else:
                     store = project.goal(goal)
                     if url.path == "/api/turns":
@@ -240,12 +322,25 @@ def serve(project: Project, port: int = 8765, host: str = "127.0.0.1") -> None:
     actual = server.server_address[1]
     note = f" (port {port} was busy)" if actual != port else ""
     print(f"Loop dashboard for {project.root}: http://{host}:{actual}/{note}  (Ctrl-C to stop)", flush=True)
+    updated = threading.Event()
+
+    def watch():  # never serve stale code: re-exec on the same port when the framework changes
+        while not updated.wait(5):
+            if str(code_stamp()) != stamp:
+                updated.set()
+                server.shutdown()
+    if reload:
+        threading.Thread(target=watch, name="loop-code-watch", daemon=True).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
         server.server_close()
+    if updated.is_set():
+        print("framework code changed; restarting the dashboard", flush=True)
+        os.execv(sys.executable, [sys.executable, "-m", "loop_engineering", "--project", str(project.root),
+                                  "dashboard", "--port", str(actual)])
 
 
 __all__ = ["serve", "payload", "turns", "turn", "check_rows", "check_log", "Path"]

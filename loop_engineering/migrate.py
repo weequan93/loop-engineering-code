@@ -126,6 +126,18 @@ def build_goal(project: Project, export: dict, draft_plans: list[dict]) -> tuple
             acceptance.append(command)
         elif gate:
             reviews.append(gate)
+    # Review/interaction gates of the other tasks are goal-level reviews too (v2 runs every review
+    # after acceptance); dropping them would let those tasks finish with no gate at all.
+    for task_id, contract in contracts.items():
+        if task_id == final:
+            continue
+        for check in contract.get("checks") or []:
+            _, gate = convert_check(check)
+            if gate and gate["id"] not in {r["id"] for r in reviews}:
+                gate["instructions"] = f"(from v1 task {task_id}) " + gate["instructions"]
+                if "security" in gate["id"]:
+                    gate["role"] = "security"
+                reviews.append(gate)
     if not acceptance:
         seen = set()
         for contract in contracts.values():

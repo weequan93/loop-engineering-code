@@ -320,6 +320,20 @@ class PipelineTests(ProjectCase):
         self.assertIn("Traceability matrix", final_prompt)
         status = (self.root / ".loop" / "STATUS.md").read_text()
         self.assertIn("## Pipeline", status)
+        from loop_engineering import status as status_mod
+        view = status_mod.summary(store)["pipeline"]
+        self.assertTrue(all(p["state"] == "done" for p in view))
+
+    def test_pipeline_view_marks_completed_stages_while_waiting_for_a_human(self):
+        from loop_engineering import status as status_mod
+        store = self.make(id="waiting")
+        store.mutate("r", lambda g, s: engine.set_requirements(g, s, [
+            {"id": "R1", "text": "a", "source": "doc", "verify": "unit"}], None, True))
+        Service(self.project, actor="chat").ask("Need a decision", ["a", "b"])
+        view = {p["stage"]: p["state"] for p in status_mod.summary(store)["pipeline"]}
+        self.assertEqual(view["requirements"], "done")
+        self.assertEqual(view["plan"], "current")
+        self.assertEqual(view["develop"], "pending")
 
     def test_pipeline_skip_runs_a_lighter_workflow(self):
         store = self.make(id="light", pipeline={"skip": ["intake", "requirements_review", "solution", "test_design",
@@ -484,3 +498,114 @@ class WorkflowTeamTests(ProjectCase):
         self.assertIn("Role: tester", guide.read_text())
         status = (self.root / ".loop" / "STATUS.md").read_text()
         self.assertIn("2×backend + 1×tester", status)
+
+
+class GoalOrderTests(ProjectCase):
+    def test_answering_a_queued_goal_runs_the_unfinished_current_goal_first(self):
+        from loop_engineering import queue
+        from loop_engineering.runner import goal_to_run
+        current = self.project.create_goal({"id": "current", "title": "C", "objective": "o",
+                                            "acceptance": [{"id": "t", "run": "true"}], "agent": {"adapter": "fake"}})
+        self.project.create_goal({"id": "later", "title": "L", "objective": "o",
+                                  "acceptance": [{"id": "t", "run": "true"}], "agent": {"adapter": "fake"}},
+                                 make_current=False)
+        queue.add(self.project, ["later"])
+        self.assertEqual(goal_to_run(self.project, "later"), "current")
+        current.mutate("done", lambda g, s: s.update(status="done"))
+        self.assertEqual(goal_to_run(self.project, "later"), "later")
+
+
+class SchedulingAndDriftTests(ProjectCase):
+    def test_active_task_with_new_unfinished_dependency_does_not_starve_its_prerequisite(self):
+        store = self.goal()
+        approve(store)
+        service = Service(self.project, actor="chat")
+        service.plan([{"id": "main", "title": "Main"}])
+        service.next()  # main becomes active
+        service.plan([{"id": "prep", "title": "Prep"}, {"id": "main", "depends_on": ["prep"]}])
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual((act["kind"], act["task"]), ("work", "prep"))
+        with self.assertRaises(LoopError):
+            Service(self.project, actor="agent", interactive=False).task("done", "main", "too early")
+
+    def test_human_can_request_an_early_review(self):
+        os.environ["FAKE_MODE"] = "fix"
+        store = self.goal(reviews=[{"id": "code", "instructions": "Review"}])
+        approve(store)
+        Service(self.project, actor="chat").plan([{"id": "a", "title": "A"}, {"id": "b", "title": "B"}])
+        Service(self.project, actor="human").request_review("code")
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual((act["kind"], act["review"], act.get("early")), ("review", "code", True))
+        Runner(self.project, store.id, log=lambda m: None, max_turns=1).run()
+        state = store.state()
+        self.assertEqual(state["reviews"]["code"]["verdict"], "pass")
+        self.assertTrue(state["reviews"]["code"]["early"])
+        self.assertEqual(state["review_requests"], [])
+        self.assertEqual(engine.next_action(store.goal(), state)["kind"], "work")  # back to normal work
+
+    def test_drift_detection_stops_busy_turns_without_results(self):
+        os.environ["FAKE_MODE"] = "idle"
+        (self.root / ".loop" / "settings.json").write_text(json.dumps({"propose_next": False, "drift_limit": 3}))
+        store = self.goal(policy={"stagnation_limit": 50, "max_iterations": 20})
+        approve(store)
+        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [{"id": "c", "run": "true"}]}])
+        # Idle turns that still touch files would fool the stagnation check; drift catches them.
+        import loop_engineering.runner as runner_mod
+        original = runner_mod.checks_mod.fingerprint
+        counter = {"n": 0}
+
+        def changing(root):
+            counter["n"] += 1
+            return f"fp-{counter['n']}"
+        runner_mod.checks_mod.fingerprint = changing
+        try:
+            Runner(self.project, store.id, log=lambda m: None).run()
+        finally:
+            runner_mod.checks_mod.fingerprint = original
+        state = store.state()
+        self.assertEqual(state["status"], "blocked")
+        self.assertIn("no concrete result", state["blocker"]["reason"])
+        self.assertEqual(state["iteration"], 3)
+        Service(self.project, actor="human").unblock("re-planned")
+        self.assertEqual(store.state()["turns_without_result"], 0)  # a human decision restarts the window
+
+    def test_unblock_during_the_fingerprint_is_not_lost(self):
+        store = self.goal()
+        approve(store)
+        store.mutate("test.blocked", lambda g, s: engine.block(g, s, "other", "drift", "x", "y", "runner"))
+        import loop_engineering.runner as runner_mod
+        original = runner_mod.checks_mod.fingerprint
+        human = {"done": False}
+
+        def slow(root):  # a human unblocks from Telegram while the runner fingerprints the tree
+            if not human["done"]:
+                human["done"] = True
+                Service(self.project, actor="human").unblock("go on")
+            return original(root)
+        runner_mod.checks_mod.fingerprint = slow
+        try:
+            Runner(self.project, store.id, log=lambda m: None, max_turns=1).run()
+        finally:
+            runner_mod.checks_mod.fingerprint = original
+        self.assertEqual(store.state()["iteration"], 1)  # it worked instead of exiting "Needs a human"
+
+    def test_results_recorded_between_turns_count_as_progress(self):
+        os.environ["FAKE_MODE"] = "idle"
+        (self.root / ".loop" / "settings.json").write_text(json.dumps({"propose_next": False, "drift_limit": 3}))
+        store = self.goal(policy={"stagnation_limit": 50, "max_iterations": 20})
+        approve(store)
+        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [{"id": "c", "run": "true"}]}])
+        # A mark from before a background job finished a task: the first turn must see that result.
+        store.mutate("test.mark", lambda g, s: s.update(progress_mark="before-the-job"))
+        import loop_engineering.runner as runner_mod
+        original, counter = runner_mod.checks_mod.fingerprint, {"n": 0}
+
+        def changing(root):
+            counter["n"] += 1
+            return f"fp-{counter['n']}"
+        runner_mod.checks_mod.fingerprint = changing
+        try:
+            Runner(self.project, store.id, log=lambda m: None).run()
+        finally:
+            runner_mod.checks_mod.fingerprint = original
+        self.assertEqual(store.state()["iteration"], 4)  # turn 1 counted the result; three idle turns after it

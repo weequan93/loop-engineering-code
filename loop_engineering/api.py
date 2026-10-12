@@ -224,10 +224,11 @@ class Service:
                                                                      finding_status, self.actor))
         return {"recorded": True, **(result or {})}
 
-    def ask(self, question, options=None, blocking=True, kind="question", action=None, goal_id=None) -> dict:
+    def ask(self, question, options=None, blocking=True, kind="question", action=None, goal_id=None,
+            amend_policy=None) -> dict:
         store = self._store(goal_id)
         result = store.mutate("question.asked", lambda g, s: engine.ask(g, s, question, options, blocking, kind,
-                                                                        action, self.actor))
+                                                                        action, self.actor, amend_policy))
         return {"question": result["question"],
                 "next": "Stop working on anything that depends on this answer. The human answers with "
                         f"`loop answer {result['question']['id']} ...`."}
@@ -236,7 +237,30 @@ class Service:
         self._interactive_only("answer questions")
         store = self._store(goal_id)
         store.mutate("question.answered", lambda g, s: engine.answer(g, s, question_id, reply, by or self.actor))
+        question = next(q for q in store.state()["questions"] if q["id"] == question_id)
+        if question.get("amend") and question.get("approved"):
+            self._apply_amendment(store, question, by or self.actor)
         return self.status(store.id)
+
+    def _apply_amendment(self, store, question: dict, by: str) -> None:
+        """The human approved an exact policy amendment: write it and approve that contract."""
+        if store.state().get("approved_digest") != model.contract_digest(store.goal()):
+            return  # other unapproved edits exist; leave the whole contract for explicit review
+        store.mutate("contract.snapshot", lambda g, s: s.update(
+            approved_contract={k: g.get(k) for k in engine.CONTRACT_KEYS}))
+        raw = store.raw_goal()
+        raw["policy"] = {**raw.get("policy", {}), **question["amend"]["policy"]}
+        write_json(store.goal_path, model.goal(raw))
+
+        def approve(goal, state):
+            result = engine.approve(goal, state, f"{by} (approved {question['id']})")
+            if state.get("blocker") and question["id"] in f"{state['blocker'].get('reason', '')} " \
+                                                           f"{state['blocker'].get('evidence', '')}":
+                state["blocker"] = None
+            if state["status"] in {"limit", "blocked"} and not state.get("blocker"):
+                state["status"] = "ready"  # the larger limit is checked again before the next turn
+            return result
+        store.mutate("goal.amended", approve, question=question["id"], policy=question["amend"]["policy"])
 
     def block(self, category, reason, evidence="", attempted="", goal_id=None) -> dict:
         store = self._store(goal_id)
@@ -260,6 +284,14 @@ class Service:
         job_id = checks_mod.start_job(store, checks_mod.select(goal, store.state(), "acceptance", None),
                                       self.actor, {"type": "acceptance"})
         return self._job_view(store, checks_mod.wait_job(store, job_id, wait_seconds))
+
+    def request_review(self, review_id: str, goal_id=None, by=None) -> dict:
+        """A human asks for an independent review now, before all tasks are finished."""
+        self._interactive_only("request early reviews")
+        store = self._store(goal_id)
+        store.mutate("review.requested", lambda g, s: engine.request_review(g, s, review_id, by or self.actor),
+                     review=review_id)
+        return self.status(store.id)
 
     def stage_done(self, stage: str, path: str, summary: str = "", goal_id=None) -> dict:
         """A document stage (intake, solution, test_design, resources) delivered its file."""

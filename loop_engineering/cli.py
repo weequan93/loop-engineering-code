@@ -132,6 +132,8 @@ def parser() -> argparse.ArgumentParser:
     add("roles", "List specialist roles and where each guide comes from (.loop/roles/<role>.md overrides)")
     x = add("notify", "Send a test notification; --progress on|off toggles per-turn progress messages")
     x.add_argument("--progress", choices=["on", "off"])
+    x = add("telegram-bot", "Run the two-way Telegram bot (answer/approve/unblock from the chat); `start` launches it")
+    x.add_argument("--once", action="store_true", help="Process pending updates once and exit")
     x = add("telegram-setup", "Connect Telegram notifications (asks for the bot token in this terminal)")
     x.add_argument("--chat-id", help="Skip discovery if you know the chat id")
     x.add_argument("--wait", type=int, default=180)
@@ -152,6 +154,8 @@ def parser() -> argparse.ArgumentParser:
     x.add_argument("--count", type=int, help="Maximum goals to draft (default 5)")
     x.add_argument("--adapter", help="Agent for the planning turn (default: the current goal's adapter)")
     x.add_argument("--instructions", help="Extra guidance, e.g. 'only G2 identity work'")
+    x = add("review-now", "Run an agent review now, before all tasks are finished (early review)")
+    x.add_argument("review_id")
     x = add("review", "Record a review verdict yourself (human override)")
     x.add_argument("review_id")
     x.add_argument("verdict", choices=["pass", "fail"])
@@ -339,7 +343,12 @@ def dispatch(args, project, goal_id):
         return Runner(project, goal_id, adapter=args.adapter, max_turns=args.max_turns).run()
     if c == "dashboard":
         from .dashboard import serve
-        serve(project, args.port)
+        serve(project, args.port, reload=True)
+        return None
+    if c == "telegram-bot":
+        from .telegram_bot import register, run
+        register(project.root)
+        run(once=args.once, log=lambda m: print(f"[telegram {time.strftime('%H:%M:%S')}] {m}", flush=True))
         return None
     if c == "telegram-setup":
         import getpass
@@ -349,7 +358,11 @@ def dispatch(args, project, goal_id):
         if not token:
             raise LoopError("No token given")
         try:
-            return telegram_setup(token, args.chat_id, args.wait)
+            result = telegram_setup(token, args.chat_id, args.wait)
+            from .telegram_bot import ensure_running, register
+            register(project.root)
+            ensure_running(project.root)
+            return {**result, "two_way": "Bot started: answer questions with the buttons or by replying in Telegram."}
         except (OSError, ValueError) as exc:
             raise LoopError(f"Telegram setup failed: {exc}")
     if c == "roles":
@@ -375,6 +388,8 @@ def dispatch(args, project, goal_id):
     if c == "audit":
         problems = project.goal(goal_id).verify()
         return {"ok": not problems, "problems": problems}
+    if c == "review-now":
+        return service.request_review(args.review_id, goal_id, by="human")
     if c == "review":
         return service.review(args.review_id, args.verdict, args.findings, goal_id)
     if c == "repair":

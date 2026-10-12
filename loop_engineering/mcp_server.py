@@ -94,9 +94,13 @@ TOOLS = [
           "finding_status": {"type": "string", "enum": ["open", "confirmed", "rejected", "recorded"]}},
          ["kind", "text"]),
     tool("loop_ask", "Ask the human a question, or request approval (kind='approval', action=the exact operation) "
-         "before any action that needs approval. Blocking questions pause dependent work.",
+         "before any action that needs approval. blocking=true (default) pauses the goal; blocking=false lets other "
+         "work continue — never perform the action itself until it is approved.",
          {"question": S, "options": {"type": "array", "items": S}, "blocking": {"type": "boolean"},
-          "kind": {"type": "string", "enum": ["question", "approval"]}, "action": S}, ["question"]),
+          "kind": {"type": "string", "enum": ["question", "approval"]}, "action": S,
+          "amend_policy": {"type": "object", "description": "Budget/limit change for this goal (e.g. {max_iterations: "
+                                                            "120, max_hours: 144}); approving it applies it exactly"}},
+         ["question"]),
     tool("loop_answer", "Record the user's answer to an open question (only what the user actually said).",
          {"question_id": S, "answer": S}, ["question_id", "answer"], human=True),
     tool("loop_block", "Stop the goal for a human. permission/environment/external need the exact reproduction "
@@ -187,7 +191,8 @@ class Server:
                 "loop_note": lambda: s.note(args["kind"], args["text"], args.get("task_id"), args.get("finding_id"),
                                             args.get("finding_status"), goal),
                 "loop_ask": lambda: s.ask(args["question"], args.get("options"), args.get("blocking", True),
-                                          args.get("kind", "question"), args.get("action"), goal),
+                                          args.get("kind", "question"), args.get("action"), goal,
+                                          args.get("amend_policy")),
                 "loop_answer": lambda: s.answer(args["question_id"], args["answer"], goal),
                 "loop_block": lambda: s.block(args["category"], args["reason"], args.get("evidence", ""),
                                               args.get("attempted", ""), goal),

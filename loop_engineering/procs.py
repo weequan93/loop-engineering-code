@@ -291,8 +291,47 @@ def _exited(process: subprocess.Popen) -> bool:
     return process.poll() is not None
 
 
+_LOGIN_PATH: str | None = None
+
+
+def login_path() -> str:
+    """The PATH of the user's login shell (nvm/.local/bin/pyenv set-ups included).
+
+    Background processes started from Telegram, the dashboard or another tool otherwise
+    inherit that launcher's PATH and can pick a different toolchain than the user's terminal
+    (observed: Node 20 instead of the project's required Node 22).
+    """
+    global _LOGIN_PATH
+    if _LOGIN_PATH is None:
+        _LOGIN_PATH = os.environ.get("PATH", "")
+        shell = os.environ.get("SHELL") or "/bin/zsh"
+        if POSIX and os.path.exists(shell) and os.environ.get("LOOP_LOGIN_PATH") != "0":
+            try:
+                out = subprocess.run([shell, "-lic", 'printf "__LOOP_PATH__%s__END__" "$PATH"'], capture_output=True,
+                                     text=True, timeout=15, stdin=subprocess.DEVNULL).stdout
+                if "__LOOP_PATH__" in out and "__END__" in out:
+                    found = out.split("__LOOP_PATH__", 1)[1].split("__END__", 1)[0]
+                    if found.strip():
+                        _LOGIN_PATH = found
+            except (OSError, subprocess.SubprocessError):
+                pass
+    return _LOGIN_PATH
+
+
+def user_env(extra: dict | None = None) -> dict:
+    return {"PATH": login_path(), **(extra or {})}
+
+
 def spawn_detached(argv: list[str], *, cwd: Path, log: Path, env: dict | None = None) -> int:
     log.parent.mkdir(parents=True, exist_ok=True)
+    if POSIX:
+        # Double fork through sh: the child is reparented to init/launchd at once, so it never becomes a
+        # zombie of a long-lived parent, even one that re-execs itself (the Telegram bot) and loses its reapers.
+        shim = subprocess.run(["/bin/sh", "-c", '"$@" </dev/null >>"$LOOP_SPAWN_LOG" 2>&1 & echo $!',
+                               "loop-spawn", *argv], cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                              start_new_session=True, check=True,
+                              env={**os.environ, **(env or {}), "LOOP_SPAWN_LOG": str(log)})
+        return int(shim.stdout.decode().strip())
     with log.open("ab") as handle:
         process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=handle, stderr=handle,
                                    start_new_session=POSIX, env={**os.environ, **(env or {})},

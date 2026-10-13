@@ -89,17 +89,20 @@ def working_on(state: dict) -> dict:
                "type": (running.get("purpose") or {}).get("type"), "checks": len(running.get("checks", [])),
                "minutes": round((age_seconds(running.get("started_at")) or 0) / 60)}
     recent = [t for t in state["turns"] if t.get("task")]
+    finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
     tasks = []
     for task in state["tasks"]:
         if task["status"] not in {"active", "blocked"}:
             continue
         results = [state["checks"].get(f"{task['id']}.{c['id']}", {}).get("status") for c in task["checks"]]
-        mine = [t for t in recent if t["task"] == task["id"]]
+        mine = [t for t in recent if t["task"] == task["id"] or task["id"] in (t.get("batch") or [])]
         tasks.append({"id": task["id"], "title": task.get("title", ""), "status": task["status"],
                       "checks_passed": sum(r == "pass" for r in results), "checks": len(results),
+                      "waiting_on": [d for d in task["depends_on"] if d not in finished],
                       "turns": len(mine), "last": (mine[-1].get("summary") or "")[:300] if mine else "",
                       "last_turn": mine[-1]["n"] if mine else None})
-    focus = (job or {}).get("task") or next((t["task"] for t in reversed(recent)), None)
+    open_ids = {t["id"] for t in tasks}
+    focus = (job or {}).get("task") or next((t["task"] for t in reversed(recent) if t["task"] in open_ids), None)
     tasks.sort(key=lambda t: (t["id"] != focus, -(t["last_turn"] or 0)))
     return {"tasks": tasks, "job": job, "focus": focus}
 
@@ -186,6 +189,7 @@ def markdown(store) -> str:
             out.append(f"- Controller check job `{w['job']['id']}` ({w['job']['checks']} checks"
                        + (f" for `{w['job']['task']}`" if w["job"]["task"] else "") + f") running {w['job']['minutes']} min")
         out += [f"- `{t['id']}` {t['title'][:80]} · checks {t['checks_passed']}/{t['checks']} · {t['turns']} recent turns"
+                + (f" · waits for {', '.join(t['waiting_on'])}" if t["waiting_on"] else "")
                 + (f" · last (turn {t['last_turn']}): {t['last'][:200]}" if t["last"] else "") for t in w["tasks"]]
         out.append("")
     if s["pipeline"]:

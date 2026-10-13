@@ -17,10 +17,13 @@ goal's acceptance checks, and the plan review findings if a review sent the plan
 Put contracts and architecture first, implementation next, and test suites last, staged as unit,
 integration, e2e, performance and security. Give each task one lead role. Then call `loop_plan(final=true)`.
 
-**Staffing:** decide how many specialists each task needs. Most tasks need one. Add a `team` only when the work
-splits cleanly into parallel slices with separate files, for example
-`[{"role": "backend", "count": 2, "focus": "API and persistence"}, {"role": "tester", "count": 1}]`. Stay
-within the goal's `team_limit`. Larger teams cost more and conflict more, so justify every extra seat.
+**Parallel by default:** work runs in parallel wherever it can. Keep tasks independent when their files are,
+and avoid `depends_on` that is not real: the controller hands up to `parallel_tasks` (default 3) ready
+tasks to one turn, one sub-agent each. Give a task a `team` when it splits cleanly into slices with separate
+files, for example
+`[{"role": "backend", "count": 2, "focus": "API and persistence"}, {"role": "tester", "count": 1}]`, within
+the goal's `team_limit`. Keep work serial only where it must be, such as performance measurements that need
+an otherwise idle machine, and say so in the task detail.
 
 **Done when:** every requirement is covered, every task is checkable and small enough for one turn, and the
 order respects the dependencies.

@@ -139,10 +139,12 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
             "it delivers), `depends_on`, a `detail` with the expected outcome, a `role` (the specialist who does it: "
             "architect, backend, frontend, mobile, data, tester, security, devops, or a project role in "
             ".loop/roles/), and real `checks` (tests that prove it). Split work so each task has one lead role. "
-            "When a task really benefits from several specialists working in parallel, add `team`, for example "
+            "Work runs in parallel by default: independent ready tasks share a turn, one sub-agent each, so "
+            "only add `depends_on` that is real. When a task splits into slices with separate files, add `team`, for example "
             "[{\"role\": \"backend\", \"count\": 2, \"focus\": \"API and persistence\"}, {\"role\": \"tester\", \"count\": 1}] "
             f"(at most {goal['agent'].get('team_limit', 4)} seats). The turn's agent then coordinates them as "
-            "sub-agents. Leave `team` empty when one specialist is enough. Every requirement must be covered by at "
+            "sub-agents. Keep work serial only where it must be (e.g. performance measurements on an idle machine). "
+            "Every requirement must be covered by at "
             "least one task. Order the work: architecture and contracts first, then implementation, then the test "
             "suites (unit, integration, e2e, performance, security). When the plan is complete, call "
             "loop_plan(final=true); an independent reviewer checks it before development starts.\n\n"
@@ -165,6 +167,20 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
                          f"{tail(task['last_failure']['tail'], 3000)}\n```")
         if task["notes"]:
             lines.append("Task notes:\n" + "\n".join(f"- {n['text'][:500]}" for n in task["notes"][-5:]))
+        batch = [t for t in state["tasks"] if t["id"] in (act.get("batch") or [])]
+        if batch:
+            lines.append(
+                f"## Parallel tasks this turn ({len(batch)} more)\n\nThese tasks are also ready and independent of "
+                f"`{task['id']}`. Work on all of them at once: start one sub-agent per task with your host's sub-agent "
+                "feature (Codex: spawn_agent; Claude Code: the Task tool) and keep the main task yourself. Give each "
+                "sub-agent its task, its checks, its role guide and exact file ownership, so that no two agents edit "
+                "the same file. Wait for all, integrate, then call `loop_task(action=\"done\")` for each finished "
+                "task: one check job runs at a time, so later claims are queued and the controller verifies them in "
+                "order (do not wait for them). If the goal's constraints require serial work (for example "
+                "performance measurements with nothing else running), or your host cannot start sub-agents, do only "
+                f"`{task['id']}`.\n\n" + "\n\n".join(
+                    f"### `{t['id']}`: {t['title']}\n{(t.get('detail') or '')[:1500]}\nRole: {t.get('role') or '-'}"
+                    f"\nChecks:\n{_checks_text(t['checks'])}" for t in batch))
     elif kind == "review" and act["review"] == "requirements_review":
         requirements = "\n".join(f"- `{r['id']}` {r['text'][:300]} — source {r['source'][:120]}; verify: "
                                   f"{r['verify'][:150]}" for r in state.get("requirements", []))

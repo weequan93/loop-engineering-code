@@ -199,7 +199,7 @@ def agent(values) -> dict:
     values = values or {}
     if not isinstance(values, dict):
         raise LoopError("agent must be an object")
-    unknown = set(values) - set(DEFAULT_AGENT) - {"effort", "stages", "roles", "team_limit"}
+    unknown = set(values) - set(DEFAULT_AGENT) - {"effort", "stages", "roles", "team_limit", "parallel_tasks"}
     if unknown:
         raise LoopError(f"Unknown agent fields {sorted(unknown)}")
     result = {**DEFAULT_AGENT, **values}
@@ -212,6 +212,9 @@ def agent(values) -> dict:
     if "team_limit" in values:
         if type(values["team_limit"]) is not int or not 1 <= values["team_limit"] <= 12:
             raise LoopError("agent.team_limit must be 1..12 sub-agents per task")
+    if "parallel_tasks" in values:
+        if type(values["parallel_tasks"]) is not int or not 1 <= values["parallel_tasks"] <= 8:
+            raise LoopError("agent.parallel_tasks must be 1..8 tasks per work turn (1 = serial)")
     if "stages" in values:
         stages = values["stages"]
         if not isinstance(stages, dict) or set(stages) - set(STAGE_PROFILES):

@@ -184,7 +184,7 @@ class CodexAdapter(Adapter):
         if goal["policy"].get("allow_network") and sandbox == "workspace-write":
             overrides["sandbox_workspace_write.network_access"] = True
         if agent.get("effort"):
-            overrides["model_reasoning_effort"] = {"max": "xhigh"}.get(agent["effort"], agent["effort"])
+            overrides["model_reasoning_effort"] = agent["effort"]  # current Codex models accept max
         for key, value in overrides.items():
             argv += ["-c", f"{key}={_toml(value)}"]
         if agent.get("model"):

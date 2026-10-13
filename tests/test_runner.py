@@ -393,7 +393,7 @@ class PipelineTests(ProjectCase):
         work.mkdir()
         turn = codex.build("p", self.root, work, {**goal, "agent": {**goal["agent"], "model": "thinker",
                                                                     "effort": "max"}}, None)
-        self.assertIn('model_reasoning_effort="xhigh"', turn.argv)
+        self.assertIn('model_reasoning_effort="max"', turn.argv)
         self.assertEqual(turn.argv[turn.argv.index("--model") + 1], "thinker")
         claude = adapters.ClaudeAdapter({}).build("p", self.root, work, {**goal, "agent": {
             **goal["agent"], "effort": "high"}}, None)
@@ -609,3 +609,19 @@ class SchedulingAndDriftTests(ProjectCase):
         finally:
             runner_mod.checks_mod.fingerprint = original
         self.assertEqual(store.state()["iteration"], 4)  # turn 1 counted the result; three idle turns after it
+
+
+class ReloadTests(ProjectCase):
+    def test_runner_stops_between_turns_to_reload_new_code(self):
+        from unittest import mock
+        import loop_engineering.runner as runner_mod
+        store = self.goal()
+        approve(store)
+        runner = Runner(self.project, store.id, log=lambda m: None, reload=True)
+        with mock.patch.object(runner_mod, "code_stamp", return_value=runner.code + 1), \
+                mock.patch.object(runner_mod.os, "execv") as execv:
+            runner.run()
+        self.assertEqual(store.state()["iteration"], 0)  # no turn started with stale code
+        argv = execv.call_args[0][1]
+        self.assertEqual(argv[2:5], ["loop_engineering", "run", "--project"])
+        self.assertEqual(argv[-2:], ["--goal", store.id])

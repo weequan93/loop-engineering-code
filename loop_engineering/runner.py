@@ -25,7 +25,7 @@ from . import checks as checks_mod
 from . import engine, procs, prompts
 from . import queue as queue_mod
 from .store import Project, try_lock
-from .util import LoopError, digest, now, write_json
+from .util import LoopError, code_stamp, digest, now, write_json
 
 POLL_SECONDS = 5
 HEARTBEAT_SECONDS = 15
@@ -35,8 +35,11 @@ SUBSTANTIVE = ("plan.", "task.", "review.", "check.result", "job.started", "goal
 
 class Runner:
     def __init__(self, project: Project, goal_id: str | None = None, *, adapter: str | None = None,
-                 max_turns: int | None = None, sleep=time.sleep, clock=time.time, log=None):
+                 max_turns: int | None = None, sleep=time.sleep, clock=time.time, log=None, reload: bool = False):
         self.project = project
+        self.reload = reload  # re-exec between turns when the framework code changes (the CLI runner)
+        self.code = code_stamp()
+        self.reload_requested = False
         self.store = project.goal(goal_id)
         self.adapter_name = adapter
         self.max_turns = max_turns
@@ -82,9 +85,13 @@ class Runner:
             final = completed[-1]
             if len(completed) > 1:
                 final["goals"] = [{"goal": r["goal"], "status": r["status"]} for r in completed]
-            return final
         finally:
             project_lock.close()
+        if self.reload_requested:  # locks are released; continue the same goal with the new code
+            os.execv(sys.executable, [sys.executable, "-m", "loop_engineering", "run", "--project",
+                                      str(self.project.root), "--goal", self.store.id,
+                                      *(["--adapter", self.adapter_name] if self.adapter_name else [])])
+        return final
 
     def _propose_next(self):
         """Queue ran dry: let the planning agent draft the next goals (once per finished goal)."""
@@ -199,6 +206,9 @@ class Runner:
         while True:
             if self.stop_requested:
                 return self._exit("Runner received a stop signal.")
+            if self.reload and code_stamp() != self.code:  # between turns only, never mid-turn
+                self.reload_requested = True
+                return self._exit("Framework code changed; restarting the runner with it.")
             # The fingerprint can take a minute on a big tree: take it first, then read the state, and
             # recheck before exiting so a human acting meanwhile (unblock, answer) is never lost.
             stamp = checks_mod.fingerprint(self.project.root)
@@ -249,6 +259,12 @@ class Runner:
 
     def _controller_step(self, goal, act):
         self.log(f"controller: {act['kind']}")
+        if act["kind"] == "verify_task":  # a queued done-claim from a parallel turn
+            task_id = act["task"]
+            self.store.mutate("task.dequeued", lambda g, s: engine.queue_claim(g, s, task_id, False), task=task_id)
+            checks = [f"{task_id}.{c['id']}" for c in engine.task_by_id(self.store.state(), task_id)["checks"]]
+            checks_mod.start_job(self.store, checks, "controller", {"type": "task", "task": task_id})
+            return
         engine.verify_now(self.store, actor="controller", cancelled=lambda: self.stop_requested)
         state = self.store.state()
         self.log(f"→ {state['status']}: {state['status_reason']}")
@@ -300,9 +316,7 @@ class Runner:
                 f"adapter={self._adapter_name()}", "Checked PATH and adapters.json", "runner"))
             return
         if act["kind"] == "work":
-            task = engine.task_by_id(state, act["task"])
-            if task["status"] == "pending":
-                self.store.mutate("task.started", lambda g, s: engine.start_task(g, s, act["task"]), task=act["task"])
+            engine.start_work(self.store, act)
         n = state["iteration"] + 1
         workdir = self.store.runs / f"turn-{n:04d}"
         workdir.mkdir(parents=True, exist_ok=True)
@@ -381,7 +395,8 @@ class Runner:
             usage["output_tokens"] += report.output_tokens or 0
             if report.session_id:
                 state["session_id"] = report.session_id
-            state["turns"].append({"n": n, "action": act["kind"], "task": act.get("task"), "adapter": adapter.name,
+            state["turns"].append({"n": n, "action": act["kind"], "task": act.get("task"), "batch": act.get("batch"),
+                                   "adapter": adapter.name,
                                    "model": chosen["model"], "effort": chosen["effort"], "stage": chosen["stage"],
                                    "role": chosen["role"],
                                    "outcome": outcome, "started_at": started, "finished_at": now(),
@@ -392,8 +407,10 @@ class Runner:
             state["turns"] = state["turns"][-50:]
             state["stagnant_turns"] = 0 if progress else state.get("stagnant_turns", 0) + 1
             # Drift: busy turns (notes, docs, re-blocking) that never finish a task, pass a check or record a review.
+            # A turn whose check job is still running has no verdict yet: neither a result nor drift.
+            judging = any(j["status"] == "running" for j in state.get("jobs", {}).values())
             state["turns_without_result"] = (0 if progress_mark(state) != mark_before
-                                             else state.get("turns_without_result", 0) + 1)
+                                             else state.get("turns_without_result", 0) + (0 if judging else 1))
             state["progress_mark"] = progress_mark(state)
             drift_limit = drift_setting(self.project)
             if state["turns_without_result"] >= drift_limit and not state["blocker"]:

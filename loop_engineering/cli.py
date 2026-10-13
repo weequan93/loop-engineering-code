@@ -340,7 +340,8 @@ def dispatch(args, project, goal_id):
     if c == "run":
         from .runner import Runner
         _require_runnable(project, goal_id, None if autonomous else service)
-        return Runner(project, goal_id, adapter=args.adapter, max_turns=args.max_turns).run()
+        return Runner(project, goal_id, adapter=args.adapter, max_turns=args.max_turns,
+                      reload=args.max_turns is None).run()
     if c == "dashboard":
         from .dashboard import serve
         serve(project, args.port, reload=True)

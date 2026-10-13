@@ -21,6 +21,9 @@ NOTE_KINDS = ("progress", "handoff", "decision", "risk", "hypothesis", "evidence
 FINDING_KINDS = {"hypothesis", "evidence", "root_cause"}
 
 
+PARALLEL_TASKS = 3  # independent ready tasks per work turn, one sub-agent each (agent.parallel_tasks)
+
+
 def action(kind: str, actor: str, summary: str, **extra) -> dict:
     return {"kind": kind, "actor": actor, "summary": summary, **extra}
 
@@ -307,6 +310,11 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
         job = sorted(running, key=lambda j: j["started_at"])[0]
         return action("wait_job", "controller", f"Waiting for check job {job['id']} "
                       f"({', '.join(job['checks'])}), started {job['started_at']}.", job=job["id"])
+    # Parallel work claims several tasks in one turn; checks run one job at a time, so claims queue.
+    queued = [t for t in state["tasks"] if t["status"] == "active" and (t.get("claim") or {}).get("queued")]
+    if queued:
+        return action("verify_task", "controller", f"Run the checks of claimed task {queued[0]['id']}.",
+                      task=queued[0]["id"])
 
     if goal["kind"] == "operate":
         incident = open_incident(state)
@@ -329,12 +337,17 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
             return action("review", "agent", stage_def["summary"], review=sid)
     finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
     # An active task whose dependencies were added later must wait for them (no starvation).
-    active = [t for t in state["tasks"] if t["status"] == "active" and set(t["depends_on"]) <= finished]
-    if active:
-        return action("work", "agent", f"Continue task {active[0]['id']}: {active[0]['title']}", task=active[0]["id"])
+    active = [t for t in state["tasks"] if t["status"] == "active" and set(t["depends_on"]) <= finished
+              and not (t.get("claim") or {}).get("queued")]
     ready = ready_tasks(state)
-    if ready:
-        return action("work", "agent", f"Start task {ready[0]['id']}: {ready[0]['title']}", task=ready[0]["id"])
+    workable = active + [t for t in ready if t not in active]
+    if workable:
+        # Independent ready tasks run in the same turn, one sub-agent each (agent.parallel_tasks, default 3).
+        first, batch = workable[0], [t["id"] for t in workable[1:goal["agent"].get("parallel_tasks", PARALLEL_TASKS)]]
+        verb = "Continue" if first in active else "Start"
+        return action("work", "agent", f"{verb} task {first['id']}: {first['title']}"
+                      + (f" (+ {len(batch)} in parallel: {', '.join(batch)})" if batch else ""),
+                      task=first["id"], batch=batch)
     pending = [t for t in state["tasks"] if t["status"] in {"pending", "blocked", "active"}]
     if pending:
         return action("unblock", "human", "Remaining tasks wait on blocked or missing dependencies: " +
@@ -504,7 +517,8 @@ def approve(goal: dict, state: dict, by: str) -> dict:
     state["approved_digest"] = model.contract_digest(goal)
     state["approved_by"], state["approved_at"] = by, now()
     state["approved_contract"] = {k: goal.get(k) for k in CONTRACT_KEYS}
-    if state["status"] not in model.TERMINAL | {"limit", "blocked"}:  # those resume only via unblock
+    # limit/blocked resume only via unblock; a running turn keeps its status
+    if state["status"] not in model.TERMINAL | {"limit", "blocked", "running"}:
         state["status"], state["status_reason"] = "ready", f"Approved by {by}. Start with `loop start`."
     return {"_event": {"by": by, "digest": state["approved_digest"]}}
 
@@ -665,6 +679,24 @@ def claim_done(goal: dict, state: dict, task_id: str, summary: str) -> dict:
         return {"_event": {"task": task_id, "verified": False}, "needs_checks": False}
     return {"_event": {"task": task_id}, "needs_checks": True,
             "checks": [f"{task_id}.{c['id']}" for c in task["checks"]]}
+
+
+def start_work(store, act: dict) -> None:
+    """Mark the turn's task and its parallel batch active."""
+    for task_id in [act["task"], *act.get("batch", [])]:
+        if task_by_id(store.state(), task_id)["status"] == "pending":
+            store.mutate("task.started", lambda g, s, t=task_id: start_task(g, s, t), task=task_id)
+
+
+def queue_claim(goal: dict, state: dict, task_id: str, queued: bool) -> dict:
+    """A done-claim waits while another check job runs; the controller starts its checks next."""
+    task = task_by_id(state, task_id)
+    if not task.get("claim") or task["status"] != "active":
+        raise LoopError(f"Task {task_id} has no open done-claim")
+    task["claim"]["queued"] = queued
+    if queued:
+        state["status_reason"] = f"Task {task_id} claimed done; its checks run after the current check job."
+    return {"_event": {"task": task_id, "queued": queued}}
 
 
 def _finish_task(task: dict, summary: str) -> None:

@@ -39,10 +39,8 @@ class Service:
         goal, state = store.goal(), store.state()
         act = engine.next_action(goal, state, checks_mod.fingerprint(self.project.root))
         if act["actor"] == "agent" and act["kind"] == "work":
-            task = engine.task_by_id(state, act["task"])
-            if task["status"] == "pending":
-                store.mutate("task.started", lambda g, s: engine.start_task(g, s, act["task"]), task=act["task"])
-                state = store.state()
+            engine.start_work(store, act)
+            state = store.state()
         result = {"action": act}
         if act["kind"] == "review" and not self.review_token:
             result["assignment"] = ("An independent review is next. It must not be done by the agent that did the "
@@ -169,7 +167,15 @@ class Service:
             if not result["needs_checks"]:
                 return {"task": self._task_view(store, task_id), "verified": False,
                         "note": "No task checks; accepted. Final acceptance still applies."}
-            job_id = checks_mod.start_job(store, result["checks"], self.actor, {"type": "task", "task": task_id})
+            try:
+                job_id = checks_mod.start_job(store, result["checks"], self.actor, {"type": "task", "task": task_id})
+            except LoopError as exc:
+                if not str(exc).startswith("Another check job"):
+                    raise
+                store.mutate("task.queued", lambda g, s: engine.queue_claim(g, s, task_id, True), task=task_id)
+                return {"task": self._task_view(store, task_id), "queued": True,
+                        "note": "Another check job is running. Your claim is queued: the controller runs this "
+                                "task's checks next. Do not wait; continue with your other work."}
             job = checks_mod.wait_job(store, job_id, wait_seconds)
             return self._job_view(store, job) | {"task": self._task_view(store, task_id)}
         if action == "block":

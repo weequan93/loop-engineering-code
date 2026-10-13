@@ -352,3 +352,43 @@ class AmendmentTests(ProjectCase):
             "More turns?", amend_policy={"max_iterations": 99})["question"]
         Service(self.project, actor="human").answer(q["id"], "deny")
         self.assertEqual(store.goal()["policy"]["max_iterations"], 10)
+
+
+class ParallelWorkTests(ProjectCase):
+    def test_independent_tasks_share_a_turn_and_claims_queue_behind_the_running_job(self):
+        from loop_engineering.runner import Runner
+        store = self.goal()
+        Service(self.project, actor="chat").goal_approve(True)
+        Service(self.project, actor="chat").plan([
+            {"id": "a", "title": "A", "checks": [{"id": "slow", "run": "sleep 2"}]},
+            {"id": "b", "title": "B", "checks": [{"id": "ok", "run": "true"}]},
+            {"id": "c", "title": "C", "checks": [{"id": "ok", "run": "true"}]},
+            {"id": "d", "title": "D", "depends_on": ["a"], "checks": [{"id": "ok", "run": "true"}]},
+            {"id": "e", "title": "E", "checks": [{"id": "ok", "run": "true"}]}])
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual((act["kind"], act["task"], act["batch"]), ("work", "a", ["b", "c"]))  # default 3, d waits
+        engine.start_work(store, act)
+        self.assertEqual({t["id"] for t in store.state()["tasks"] if t["status"] == "active"}, {"a", "b", "c"})
+        agent = Service(self.project, actor="agent", interactive=False)
+        agent.task("done", "a", "did A", wait_seconds=0)               # job for a is running
+        queued = agent.task("done", "b", "did B")
+        self.assertTrue(queued["queued"])
+        runner = Runner(self.project, store.id, log=lambda m: None)
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual(act["kind"], "wait_job")
+        runner._wait_job(act["job"])
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual((act["kind"], act["task"]), ("verify_task", "b"))
+        runner._controller_step(store.goal(), act)
+        runner._wait_job(engine.next_action(store.goal(), store.state())["job"])
+        done = {t["id"] for t in store.state()["tasks"] if t["status"] == "done"}
+        self.assertEqual(done, {"a", "b"})
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual((act["task"], act["batch"]), ("c", ["d", "e"]))
+
+    def test_parallel_tasks_one_means_serial(self):
+        store = self.goal(agent={"adapter": "fake", "parallel_tasks": 1})
+        Service(self.project, actor="chat").goal_approve(True)
+        Service(self.project, actor="chat").plan([{"id": x, "title": x, "checks": [{"id": "ok", "run": "true"}]}
+                                                  for x in "ab"])
+        self.assertEqual(engine.next_action(store.goal(), store.state())["batch"], [])

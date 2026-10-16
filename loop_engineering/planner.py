@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import adapters as adapters_mod
+from . import model
 from . import procs
 from . import queue as queue_mod
 from .util import LoopError, digest, now, read_json, write_json
@@ -84,7 +85,8 @@ def prompt(project, count: int, instructions: str | None) -> str:
         f"You are the planning agent for the project at {project.root}. Propose the NEXT goals for the autonomous",
         "Loop Engineering controller. You do not implement anything and you must not modify any file.",
         "",
-        "## Existing goals (oldest first)", "", *_goal_digest_lines(project),
+        "## Existing goals (oldest first)", "",
+        *(_goal_digest_lines(project) or ["None yet: this is a new project. Plan its first goals from the documents.", ""]),
         "## Documents to read first", "", *[f"- {c}" for c in context or ["README.md", "docs/"]],
         "Also look for roadmaps, plans, requirement ledgers and specifications in the repository.", "",
         "## Your job",
@@ -117,10 +119,11 @@ def prompt(project, count: int, instructions: str | None) -> str:
 def propose(project, *, count: int | None = None, instructions: str | None = None, adapter: str | None = None,
             after_goal: str | None = None, log=lambda message: None, cancelled=lambda: False) -> dict:
     ids = project.goal_ids()
-    if not ids:
-        raise LoopError("Create the first goal yourself (or in chat); the planner extends an existing plan")
     count = count or settings(project)["propose_count"]
-    latest = project.goal(project.current_id() or ids[-1]).goal()
+    # A new project has no goal to borrow settings from: plan its first goals with the defaults.
+    latest = (project.goal(project.current_id() or ids[-1]).goal() if ids else
+              model.goal({"id": "first-plan", "kind": "develop", "title": "First plan",
+                          "objective": "Plan the first goals of this project", "agent": {"adapter": adapter or "codex"}}))
     planner_profile = (latest["agent"].get("stages") or {}).get("planner") or {}
     name = adapter or planner_profile.get("adapter") or latest["agent"]["adapter"]
     agent = adapters_mod.get(name, project.root)
@@ -158,6 +161,8 @@ def propose(project, *, count: int | None = None, instructions: str | None = Non
              "summary": (report.error or report.summary or "")[:4000]}
     data["history"] = (data.get("history", []) + [entry])[-50:]
     write_json(session_path(project), data)
+    if not ids and created:
+        project.set_current(created[0])  # a new project starts with the first planned goal
     _notify(project, entry)
     log(f"planner: drafted {len(created)} goal(s): {', '.join(created) or 'none'}")
     return entry

@@ -5,6 +5,7 @@ The prompt arrives on stdin. Behaviour is controlled by FAKE_* environment varia
   FAKE_MODE=fix      plan one task, fix calc.py, claim done, finish (default)
   FAKE_MODE=idle     do nothing (stagnation)
   FAKE_MODE=sleep    sleep for a long time (timeouts / stop)
+  FAKE_MODE=credits  the service refuses: out of credits;  FAKE_MODE=busy: model at capacity
   FAKE_REVIEW=fail-once   first review fails, later reviews pass
 """
 
@@ -54,6 +55,10 @@ def main():
     if mode == "sleep":
         time.sleep(600)
         return
+    if mode in {"credits", "busy"}:  # the model service refuses the turn
+        sys.stderr.write("Your workspace is out of credits. Add credits to continue.\n" if mode == "credits"
+                         else "Selected model is at capacity. Please try a different model.\n")
+        sys.exit(1)
     client = Client(sys.argv[1])
     try:
         if "loop_goal_draft" in client.tools and "loop_next" not in client.tools:  # planner session

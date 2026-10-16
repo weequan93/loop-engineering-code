@@ -327,8 +327,10 @@ def spawn_detached(argv: list[str], *, cwd: Path, log: Path, env: dict | None = 
     if POSIX:
         # Double fork through sh: the child is reparented to init/launchd at once, so it never becomes a
         # zombie of a long-lived parent, even one that re-execs itself (the Telegram bot) and loses its reapers.
+        # The child calls setsid itself, so it leads its own process group (pid == pgid) and group signals reach it.
+        lead = [sys.executable, "-c", "import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])"]
         shim = subprocess.run(["/bin/sh", "-c", '"$@" </dev/null >>"$LOOP_SPAWN_LOG" 2>&1 & echo $!',
-                               "loop-spawn", *argv], cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                               "loop-spawn", *lead, *argv], cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                               start_new_session=True, check=True,
                               env={**os.environ, **(env or {}), "LOOP_SPAWN_LOG": str(log)})
         return int(shim.stdout.decode().strip())

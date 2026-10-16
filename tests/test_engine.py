@@ -1,3 +1,4 @@
+import os
 import json
 
 from loop_engineering import checks, engine, model
@@ -392,3 +393,48 @@ class ParallelWorkTests(ProjectCase):
         Service(self.project, actor="chat").plan([{"id": x, "title": x, "checks": [{"id": "ok", "run": "true"}]}
                                                   for x in "ab"])
         self.assertEqual(engine.next_action(store.goal(), store.state())["batch"], [])
+
+
+class JobCancelTests(ProjectCase):
+    def test_stopping_a_job_cancels_its_running_check_and_applies_no_verdict(self):
+        import signal, time
+        from loop_engineering import procs
+        store = self.goal()
+        Service(self.project, actor="chat").goal_approve(True)
+        marker = self.root / "child.pid"
+        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [
+            {"id": "slow", "run": f"echo $$ > {marker}; sleep 60"}]}])
+        job_id = checks.start_job(store, ["t.slow"], "agent", {"type": "task", "task": "t"})
+        deadline = time.time() + 15
+        while not marker.exists() or not (store.state()["jobs"][job_id].get("pid")):
+            self.assertLess(time.time(), deadline)
+            time.sleep(0.1)
+        job = store.state()["jobs"][job_id]
+        os.killpg(job["pid"], signal.SIGTERM)
+        while store.state()["jobs"][job_id]["status"] == "running":
+            self.assertLess(time.time(), deadline + 15)
+            time.sleep(0.1)
+        self.assertEqual(store.state()["jobs"][job_id]["status"], "cancelled")
+        time.sleep(0.5)
+        self.assertFalse(procs.alive(int(marker.read_text())))
+        self.assertEqual(engine.task_by_id(store.state(), "t").get("attempts", 0), 0)
+
+
+class FingerprintTests(ProjectCase):
+    def test_fingerprint_follows_content_not_commits(self):
+        import subprocess
+        def git(*a):
+            subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root, check=True,
+                           capture_output=True)
+        before = checks.fingerprint(self.root)
+        (self.root / "calc.py").write_text("def add(a, b):\n    return a + b\n")
+        (self.root / "new.txt").write_text("x\n")
+        changed = checks.fingerprint(self.root)
+        self.assertNotEqual(before, changed)
+        git("add", "-A"); git("commit", "-qm", "work")
+        self.assertEqual(checks.fingerprint(self.root), changed)  # same content after the commit
+        (self.root / "new.txt").unlink()
+        self.assertNotEqual(checks.fingerprint(self.root), changed)
+        (self.root / ".loop" / "x.json").write_text("{}")  # framework files never count
+        git("rm", "-q", "--cached", "new.txt")
+        self.assertEqual(checks.fingerprint(self.root), checks.fingerprint(self.root))

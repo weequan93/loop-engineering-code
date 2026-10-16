@@ -565,7 +565,8 @@ class SchedulingAndDriftTests(ProjectCase):
         state = store.state()
         self.assertEqual(state["status"], "blocked")
         self.assertIn("no concrete result", state["blocker"]["reason"])
-        self.assertEqual(state["iteration"], 3)
+        self.assertEqual(state["iteration"], 6)  # turn 3 drifted: automatic refocus; turn 6 drifted again: pause
+        self.assertTrue(any(n["by"] == "controller" and "Controller refocus" in n["text"] for n in state["notes"]))
         Service(self.project, actor="human").unblock("re-planned")
         self.assertEqual(store.state()["turns_without_result"], 0)  # a human decision restarts the window
 
@@ -608,7 +609,7 @@ class SchedulingAndDriftTests(ProjectCase):
             Runner(self.project, store.id, log=lambda m: None).run()
         finally:
             runner_mod.checks_mod.fingerprint = original
-        self.assertEqual(store.state()["iteration"], 4)  # turn 1 counted the result; three idle turns after it
+        self.assertEqual(store.state()["iteration"], 7)  # turn 1 counted; drift at 4 refocuses, at 7 pauses
 
 
 class ReloadTests(ProjectCase):
@@ -625,3 +626,36 @@ class ReloadTests(ProjectCase):
         argv = execv.call_args[0][1]
         self.assertEqual(argv[2:5], ["loop_engineering", "run", "--project"])
         self.assertEqual(argv[-2:], ["--goal", store.id])
+
+
+class ServiceRefusalTests(ProjectCase):
+    def test_out_of_credits_blocks_at_once_and_capacity_backs_off_without_stagnation(self):
+        os.environ["FAKE_MODE"] = "credits"
+        store = self.goal(policy={"stagnation_limit": 2, "max_iterations": 10})
+        approve(store)
+        Runner(self.project, store.id, log=lambda m: None).run()
+        state = store.state()
+        self.assertEqual((state["iteration"], state["blocker"]["category"]), (1, "environment"))
+        self.assertIn("out of credits", state["blocker"]["reason"])
+        self.assertEqual(state.get("stagnant_turns", 0), 0)
+        os.environ["FAKE_MODE"] = "busy"
+        Service(self.project, actor="human").unblock("credits added")
+        sleeps = []
+        Runner(self.project, store.id, log=lambda m: None, max_turns=2, sleep=sleeps.append).run()
+        state = store.state()
+        self.assertIsNone(state["blocker"])           # capacity is transient: never a stagnation block
+        self.assertEqual(state.get("stagnant_turns", 0), 0)
+        self.assertIn(300, sleeps)
+
+
+class FirstPlanTests(ProjectCase):
+    def test_planner_drafts_the_first_goals_of_a_new_project(self):
+        from loop_engineering import planner, queue
+        self.assertEqual(self.project.goal_ids(), [])
+        entry = planner.propose(self.project, count=2, adapter="fake")
+        self.assertEqual(entry["created"], ["next-1", "next-2"])
+        self.assertEqual([r["id"] for r in queue.view(self.project)], ["next-1", "next-2"])
+        self.assertIsNone(self.project.goal("next-1").state()["approved_digest"])  # still needs the human
+        prompt = next((self.root / ".loop" / "proposals").iterdir()) / "prompt.md"
+        self.assertIn("this is a new project", prompt.read_text())
+        self.assertEqual(self.project.current_id(), "next-1")

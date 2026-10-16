@@ -381,6 +381,8 @@ class Runner:
         progress = stamp_after != stamp_before or bool(substantive)
         outcome = result.outcome if result.outcome != "completed" else (
             "ok" if result.exit_code == 0 and not report.error else f"exit {result.exit_code}")
+        refused = (service_problem(report.error or report.summary or _tail(result))
+                   if outcome != "ok" or report.error else None)
         self.turns_here += 1
 
         def collect(goal, state):
@@ -405,6 +407,15 @@ class Runner:
                                    "summary": (report.error or report.summary or "")[:2000],
                                    "log": str(workdir.relative_to(self.project.root))})
             state["turns"] = state["turns"][-50:]
+            if refused:  # the model service refused the turn: not the agent's stagnation or drift
+                kind, message = refused
+                if kind == "exhausted" and not state["blocker"]:
+                    engine.block(goal, state, "environment", f"The {adapter.name} service refused the turn: {message} "
+                                 "Add credits/quota, or switch agent.adapter (for example to claude), then unblock.",
+                                 message, "Service response", "runner")
+                else:
+                    state["status_reason"] = f"Turn {n}: the {adapter.name} service is busy ({message}); retrying shortly."
+                return
             state["stagnant_turns"] = 0 if progress else state.get("stagnant_turns", 0) + 1
             # Drift: busy turns (notes, docs, re-blocking) that never finish a task, pass a check or record a review.
             # A turn whose check job is still running has no verdict yet: neither a result nor drift.
@@ -413,7 +424,19 @@ class Runner:
                                              else state.get("turns_without_result", 0) + (0 if judging else 1))
             state["progress_mark"] = progress_mark(state)
             drift_limit = drift_setting(self.project)
-            if state["turns_without_result"] >= drift_limit and not state["blocker"]:
+            if state["turns_without_result"] == 0:
+                state["drift_refocused"] = False
+            if (state["turns_without_result"] >= drift_limit and not state["blocker"]
+                    and not state.get("drift_refocused")):
+                # First drift: refocus the agent automatically instead of waiting for a human (often overnight).
+                state["drift_refocused"], state["turns_without_result"] = True, 0
+                state["notes"].append({"at": now(), "kind": "decision", "by": "controller", "text": (
+                    f"Controller refocus: {drift_limit} turns produced no concrete result (no task finished, no check "
+                    "newly passed, no review or stage recorded). Stop building tooling, diagnostics or evidence layers. "
+                    "Next turn: take the most direct step that produces a result now — run the real check or "
+                    "measurement with what exists, finish or split the task, or ask the open decision. If the same "
+                    "happens again, the goal pauses for a human.")})
+            elif state["turns_without_result"] >= drift_limit and not state["blocker"]:
                 engine.block(goal, state, "other", f"{state['turns_without_result']} turns produced no concrete result "
                              "(no task finished, no check newly passed, no review or stage recorded). Probably off "
                              "track: re-plan, narrow the next step, or answer the open decision.",
@@ -441,12 +464,32 @@ class Runner:
                              _tail(result), "Launching the adapter command", "runner")
         self.store.mutate("turn.finished", collect, turn=n, outcome=outcome, progress=progress)
         self.log(f"turn {n} finished: {outcome}, progress={progress}")
+        if refused and refused[0] == "transient":
+            self.log(f"service busy: {refused[1]}; backing off {SERVICE_BACKOFF_SECONDS}s")
+            self.sleep(SERVICE_BACKOFF_SECONDS)
 
     def _set_turn(self, turn):
         info = self.store.runner() or {}
         info["turn"] = turn
         info["heartbeat_at"] = now()
         self.store.write_runner(info)
+
+
+SERVICE_BACKOFF_SECONDS = 300
+_EXHAUSTED = ("out of credits", "add credits", "insufficient credit", "quota exceeded", "exceeded your current quota",
+              "billing", "usage limit", "credit balance is too low")
+_TRANSIENT = ("at capacity", "overloaded", "rate limit", "rate_limit", "too many requests", "temporarily unavailable",
+              "try again later")
+
+
+def service_problem(text: str) -> tuple[str, str] | None:
+    """A refusal by the model service (not the agent's work): ('exhausted'|'transient', message)."""
+    low = (text or "").lower()
+    if any(k in low for k in _EXHAUSTED):
+        return "exhausted", text.strip()[:300]
+    if any(k in low for k in _TRANSIENT):
+        return "transient", text.strip()[:300]
+    return None
 
 
 def concrete_progress(state: dict) -> tuple:

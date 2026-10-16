@@ -71,13 +71,15 @@ class ProcessGroupTests(unittest.TestCase):
         # A parent that re-execs loses its reaper threads; a detached child must never become its zombie.
         out = self.dir / "ppid"
         pid = procs.spawn_detached([sys.executable, "-c", f"import os, time; time.sleep(0.3); "
-                                    f"open({str(out)!r}, 'w').write(str(os.getppid()))"],
+                                    f"open({str(out)!r}, 'w').write(f'{{os.getppid()}} {{os.getpgid(0)}} {{os.getpid()}}')"],
                                    cwd=self.dir, log=self.dir / "spawn.log")
         deadline = time.time() + 10
         while not out.exists() or not out.read_text():
             self.assertLess(time.time(), deadline)
             time.sleep(0.05)
-        self.assertNotEqual(int(out.read_text()), os.getpid())
+        ppid, pgid, own = map(int, out.read_text().split())
+        self.assertNotEqual(ppid, os.getpid())
+        self.assertEqual((pgid, own), (pid, pid))  # it leads its own group, so group signals reach it
         with self.assertRaises(ChildProcessError):
             os.waitpid(pid, os.WNOHANG)
 

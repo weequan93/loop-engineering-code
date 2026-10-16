@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
@@ -29,26 +30,47 @@ def _framework(path: str) -> bool:
     return any(path == p.rstrip("/") or path.startswith(p) for p in FRAMEWORK_PATHS)
 
 
+def _git_content(root: Path) -> dict | None:
+    """{path: git blob id} of the working tree (tracked + untracked, not ignored, no framework files).
+
+    Depends only on file contents, so committing, staging or switching to an identical tree keeps it."""
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=root, capture_output=True, timeout=120)
+    index = git("ls-files", "-s", "-z")
+    status = git("status", "--porcelain=v1", "-z", "--untracked-files=all", "--no-renames")
+    if index.returncode or status.returncode:
+        return None
+    content = {}
+    for entry in index.stdout.decode("utf-8", "replace").split("\0"):
+        if entry:
+            meta, path = entry.split("\t", 1)
+            content[path] = meta.split()[1]
+    changed = []
+    for entry in status.stdout.decode("utf-8", "replace").split("\0"):
+        if len(entry) > 3:
+            path = entry[3:]
+            if (root / path).is_file():
+                changed.append(path)
+            else:
+                content.pop(path, None)  # deleted in the working tree
+    if changed:
+        hashed = subprocess.run(["git", "hash-object", "--stdin-paths"], cwd=root, capture_output=True,
+                                input="\n".join(changed).encode(), timeout=300)
+        if hashed.returncode:
+            return None
+        content.update(zip(changed, hashed.stdout.decode().split()))
+    return {p: b for p, b in content.items() if not _framework(p)}
+
+
 def fingerprint(root: Path) -> str:
     """Cheap content fingerprint of the working tree, excluding framework files."""
     h = hashlib.sha256()
     if (root / ".git").exists():
         try:
-            head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True,
-                                  timeout=30).stdout.strip()
-            listing = subprocess.run(["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
-                                     cwd=root, capture_output=True, timeout=60)
-            if listing.returncode == 0:
-                h.update(head.encode())
-                entries = [e for e in listing.stdout.decode("utf-8", "replace").split("\0") if e]
-                for entry in sorted(entries):
-                    path = entry[3:]
-                    if _framework(path):
-                        continue
-                    h.update(entry.encode())
-                    target = root / path
-                    if target.is_file() and target.stat().st_size <= 64 << 20:
-                        h.update(hashlib.sha256(target.read_bytes()).digest())
+            content = _git_content(root)
+            if content is not None:
+                for path in sorted(content):
+                    h.update(f"{path}\0{content[path]}\n".encode())
                 return "git:" + h.hexdigest()[:24]
         except (OSError, subprocess.SubprocessError):
             pass
@@ -137,6 +159,8 @@ def execute(store, qualified: list[str], *, actor: str, job_id: str | None = Non
     results = {}
     batch = job_id or new_id("checks")
     for qualified_id in qualified:
+        if cancelled():
+            break
         check = index[qualified_id]
         logs = store.runs / "checks" / batch / qualified_id
         result = run_check(root, check, logs, goal["policy"]["check_timeout_seconds"], cancelled)
@@ -215,8 +239,21 @@ def run_job(store, job_id: str) -> None:
     def mark_self(_goal, state):
         state["jobs"][job_id].update(pid=os.getpid(), identity=procs.identity(os.getpid()))
     store.mutate("job.pid", mark_self, job=job_id)
+    # Stopping the job (SIGTERM/SIGINT) cancels the running check's process group instead of orphaning it.
+    stop = {"requested": False}
+
+    def on_signal(_signum, _frame):
+        stop["requested"] = True
+    for name in ("SIGTERM", "SIGINT", "SIGHUP"):
+        if hasattr(signal, name):
+            signal.signal(getattr(signal, name), on_signal)
     try:
-        results = execute(store, job["checks"], actor=job["actor"], job_id=job_id)
+        results = execute(store, job["checks"], actor=job["actor"], job_id=job_id,
+                          cancelled=lambda: stop["requested"])
+        if stop["requested"]:  # a stopped job is no verdict: record it, apply nothing
+            store.mutate("job.cancelled", lambda _g, s: s["jobs"][job_id].update(
+                status="cancelled", finished_at=now(), results={k: v["status"] for k, v in results.items()}), job=job_id)
+            return
         summary = {k: v["status"] for k, v in results.items()}
         purpose = job.get("purpose") or {}
 

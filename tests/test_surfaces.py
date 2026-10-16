@@ -591,3 +591,19 @@ class ApproveByButtonTests(ProjectCase):
         ids = [r["id"] for r in goal["reviews"]]
         self.assertIn("security-review", ids)
         self.assertEqual(next(r for r in goal["reviews"] if r["id"] == "security-review")["role"], "security")
+
+
+class LiveTurnStatusTests(ProjectCase):
+    def test_a_live_turn_shows_running_even_after_a_mid_turn_answer(self):
+        import os
+        from loop_engineering import status
+        from loop_engineering import procs
+        from loop_engineering.util import now
+        store = self.goal()
+        store.write_runner({"pid": os.getpid(), "identity": procs.identity(os.getpid()), "heartbeat_at": now(),
+                            "turn": {"n": 7, "action": "work", "started_at": now(), "pgid": None}})
+        store.mutate("test.ready", lambda g, s: s.update(status="ready", status_reason="Answered q-1."))
+        s = status.summary(store)
+        self.assertEqual(s["status"], "running")
+        self.assertIn("Turn 7 (work) in progress", s["reason"])
+        self.assertIn("· running ·", status.line(store))

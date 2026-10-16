@@ -22,7 +22,10 @@ example `loop task done <id> --summary ...`.
 - `loop_note` records progress, decisions and findings. Before you stop, write one
   `kind="handoff"` note: what changed, what is next, and any traps. The next turn starts fresh
   and depends on it.
-- `loop_ask` asks the human. Use `kind="approval"` before any action under "needs approval".
+- `loop_ask` asks the human. Use `kind="approval"` before any action under "needs approval", and ask
+  when the documents leave a product decision open. Everything else is yours to decide: choose the best
+  option, record it with `loop_note(kind="decision")` and continue. To get the human's view without
+  stopping, ask with `blocking=false`.
 - `loop_block` only when no progress is possible without a person. Include the exact
   reproduction and what you already tried.
 - `loop_finish` is for when every task is finished. The controller then runs acceptance.
@@ -268,7 +271,8 @@ def context_block(goal: dict, state: dict) -> str:
     if goal["constraints"]:
         parts += ["", "Constraints:", *[f"- {c}" for c in goal["constraints"]]]
     parts += ["", "Needs approval first (`loop_ask kind=approval`):",
-              *[f"- {a}" for a in goal["policy"]["approval_required"]]]
+              *[f"- {a}" for a in goal["policy"]["approval_required"]],
+              "Anything not listed here or reserved by the constraints is pre-approved: decide, record it, continue."]
     decisions = [q for q in state["questions"] if q["answer"] is not None][-10:]
     if decisions:
         parts += ["", "Human answers so far:", *[f"- {q['text'][:200]} → **{q['answer'][:300]}**" for q in decisions]]
@@ -285,9 +289,10 @@ def context_block(goal: dict, state: dict) -> str:
 REVIEW_PROTOCOL = """\
 ## Reviewer protocol
 
-You are a read-only reviewer in a controller-run loop. Use only `loop_status`, `loop_next`,
-`loop_note` and `loop_review`. Do not edit files and do not start other agents. Record exactly
-one verdict with `loop_review`, then stop.
+You are a read-only reviewer in a controller-run loop. Read whatever you need: open the documents,
+plans, code and check scripts, and run read-only shell commands and tests. Of the Loop tools, use
+`loop_status`, `loop_next`, `loop_note` and `loop_review`. Do not edit files and do not start other
+agents. Record exactly one verdict with `loop_review`, then stop.
 """
 
 

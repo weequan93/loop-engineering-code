@@ -117,10 +117,15 @@ def summary(store, goal=None, state=None) -> dict:
                   for c in goal["acceptance"]}
     p = goal["policy"]
     act = next_action(goal, state, (state.get("verification") or {}).get("fingerprint"))
+    runner = runner_view(store)
+    status, reason = state["status"], state["status_reason"]
+    turn = runner.get("turn") if runner["state"] == "running" else None
+    if turn and status in {"ready", "waiting", "idle"}:  # answers mid-turn must not hide the live turn
+        status, reason = "running", f"Turn {turn['n']} ({turn['action']}) in progress. {reason}"
     return {
         "pipeline": pipeline_view(goal, state, act),
         "goal": goal["id"], "title": goal["title"], "kind": goal["kind"],
-        "status": state["status"], "reason": state["status_reason"],
+        "status": status, "reason": reason,
         "next": act,
         "tasks": {"total": len(tasks), **counts},
         "working_on": working_on(state),
@@ -130,7 +135,7 @@ def summary(store, goal=None, state=None) -> dict:
         "blocker": state["blocker"],
         "iteration": state["iteration"], "max_iterations": p["max_iterations"],
         "budget_used": state["iteration"] - state.get("iteration_base", 0),
-        "usage": state["usage"], "runner": runner_view(store),
+        "usage": state["usage"], "runner": runner,
         "incident": next((i["id"] for i in state["incidents"] if i["status"] == "open"), None),
         "next_cycle_at": state.get("next_cycle_at"), "updated_at": state["updated_at"],
     }

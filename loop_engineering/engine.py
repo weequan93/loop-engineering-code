@@ -922,6 +922,7 @@ def unblock(goal: dict, state: dict, note_text: str, by: str) -> dict:
     state["repair_rounds"] = 0
     state["stagnant_turns"] = 0
     state["turns_without_result"] = 0  # a human decision restarts the drift window
+    state["drift_refocused"] = False
     for record in state.get("stages", {}).values():  # ... and the gate failure counts
         if isinstance(record, dict) and record.get("rounds"):
             record["rounds"] = 0

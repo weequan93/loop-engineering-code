@@ -48,8 +48,10 @@ def tool(name, description, properties, required=(), human=False, readonly=False
 TOOLS = [
     tool("loop_status", "Current goal status: state, next action, tasks, checks, questions, blocker, budget, runner.",
          {"verbose": {"type": "boolean", "description": "Include STATUS.md text and an integrity audit"}}, readonly=True),
-    tool("loop_next", "Your current assignment with full context. Call at the start of every turn. "
-         "Starting a ready task marks it active.", {}),
+    tool("loop_next", "Your current assignment and context. In a chat, call it first. In an autonomous turn the "
+         "prompt already holds it, so loop_next says 'unchanged' unless the controller moved on; full=true repeats "
+         "it. Starting a ready task marks it active.",
+         {"full": {"type": "boolean", "description": "Repeat the whole assignment even if your prompt has it"}}),
     tool("loop_goal_draft", "Create or update a DRAFT goal from the user's request (intake). kind: develop | operate "
          "| investigate. acceptance: checks the controller runs to decide completion (develop/operate need at least "
          "one). operate needs schedule.interval_minutes. Show the result to the user before approving.",
@@ -178,7 +180,7 @@ class Server:
         try:
             handlers = {
                 "loop_status": lambda: s.status(goal, verbose=bool(args.get("verbose"))),
-                "loop_next": lambda: s.next(goal),
+                "loop_next": lambda: s.next(goal, full=bool(args.get("full"))),
                 "loop_goal_draft": lambda: s.goal_draft({k: v for k, v in args.items()}, goal),
                 "loop_goal_approve": lambda: s.goal_approve(args.get("confirmed_by_user"), goal),
                 "loop_plan": lambda: s.plan(args.get("tasks"), args.get("drop"), goal, args.get("final", False)),
@@ -217,7 +219,8 @@ class Server:
 
 
 INSTRUCTIONS = (
-    "Loop Engineering controller for this project. Start every turn with loop_next. The controller owns "
+    "Loop Engineering controller for this project. In an autonomous turn your prompt is the assignment; in a "
+    "chat, start with loop_next. Read state with loop_status or .loop/STATUS.md, never .loop/ JSON files. The controller owns "
     "completion: it runs task checks on loop_task done and acceptance on loop_finish. Record a handoff note "
     "before you stop. Ask (loop_ask kind=approval) before any action in the goal's approval list. Never edit "
     ".loop/ files directly. Status for humans: .loop/STATUS.md.")

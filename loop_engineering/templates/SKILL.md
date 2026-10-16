@@ -40,7 +40,10 @@ one takes `{adapter, model, effort}`.
 
 ## 2. Working a turn (in chat or autonomous)
 
-- Start with `loop_next` and do exactly that assignment.
+- In an autonomous turn your prompt already holds the assignment: do exactly that. In a chat, start with
+  `loop_next`.
+- Keep context small: read state with `loop_status` or `.loop/STATUS.md` (never `.loop/` JSON files), and
+  read large documents by section (search, then read the lines you need), not end to end.
 - Requirements stage: record every requirement from the documents with `loop_requirements`
   (id, text, source, verify), then call `final=true`. Don't write code in this stage.
 - Plan stage: every task lists the requirements it `covers` and has real checks. Call

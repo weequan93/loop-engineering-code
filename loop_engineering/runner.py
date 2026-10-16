@@ -353,12 +353,12 @@ class Runner:
                                      "turn": n, "recorded": False} if gate else None)
         self.store.mutate("turn.started", reserve, turn=n, action=act["kind"], adapter=adapter.name)
         started = now()
-        self._set_turn({"n": n, "action": act["kind"], "started_at": started, "pgid": None})
+        self._set_turn({"n": n, "action": act["kind"], "task": act.get("task"), "started_at": started, "pgid": None})
         self.log(f"turn {n}: {act['kind']} via {adapter.name}")
 
         def on_start(pid):
             self.current_pgid = pid
-            self._set_turn({"n": n, "action": act["kind"], "started_at": started, "pgid": pid})
+            self._set_turn({"n": n, "action": act["kind"], "task": act.get("task"), "started_at": started, "pgid": pid})
 
         def cancelled():
             if self.stop_requested:

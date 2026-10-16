@@ -651,3 +651,60 @@ class LiveTurnStatusTests(ProjectCase):
         self.assertEqual(s["status"], "running")
         self.assertIn("Turn 7 (work) in progress", s["reason"])
         self.assertIn("· running ·", status.line(store))
+
+
+class LightContextTests(ProjectCase):
+    """A turn's context is re-sent on every model call: the loop must not hand the agent the same text twice."""
+
+    def setUp(self):
+        super().setUp()
+        from loop_engineering.api import Service
+        self.store = self.project.create_goal({"id": "lc", "title": "LC", "objective": "o", "pipeline": "full",
+                                               "acceptance": [{"id": "t", "run": "true"}],
+                                               "agent": {"adapter": "fake"}})
+        self.store.mutate("a", lambda g, s: engine.approve(g, s, "me"))
+        self.service = Service(self.project, actor="agent", interactive=False)
+        self.long = "Every exposed path must enforce the same policy boundary " * 6
+        self.service.requirements([{"id": f"R-{i:03}", "text": self.long, "source": "docs/spec.md:" + str(i),
+                                    "verify": "integration test of the denial path"} for i in range(1, 4)])
+
+    def live_turn(self, action, task=None):
+        import os
+        from loop_engineering import procs
+        from loop_engineering.util import now
+        self.store.write_runner({"pid": os.getpid(), "identity": procs.identity(os.getpid()), "heartbeat_at": now(),
+                                 "turn": {"n": 9, "action": action, "task": task, "started_at": now(), "pgid": None}})
+
+    def test_loop_next_does_not_repeat_the_prompt_inside_a_runner_turn(self):
+        action = self.service.next()["action"]["kind"]
+        full = self.service.next()
+        self.assertIn("## Workflow", full["assignment"])
+        self.live_turn(action)
+        compact = self.service.next()
+        self.assertTrue(compact["assignment"].startswith("Unchanged since your turn 9 prompt"))
+        self.assertNotIn("context", compact)
+        self.assertIn("## Workflow", self.service.next(full=True)["assignment"])
+        self.live_turn("plan" if action != "plan" else "work")  # the controller moved on: the new step in full
+        self.assertIn("## Workflow", self.service.next()["assignment"])
+
+    def test_requirements_are_an_index_with_the_full_text_in_a_generated_file(self):
+        from loop_engineering import prompts
+        from loop_engineering.status import render_files
+        goal, state = self.store.goal(), self.store.state()
+        text = prompts.assignment(goal, state, {"kind": "review", "review": "plan_review", "summary": "s"}, self.root)
+        self.assertIn("`R-001`", text)
+        self.assertNotIn("docs/spec.md:1", text)              # sources and verify plans live in the file
+        self.assertLess(len(text.split("`R-001` ")[1].splitlines()[0]), 115)
+        render_files(self.store)
+        reference = (self.store.dir / "REQUIREMENTS.md").read_text()
+        self.assertIn("## R-002", reference)
+        self.assertIn(self.long.strip(), reference)
+        self.assertIn("- Source: docs/spec.md:2", reference)
+        self.assertIn("- Covered by: no task yet", reference)
+
+    def test_plan_writes_echo_only_what_changed(self):
+        self.service.plan([{"id": f"t{i}", "title": f"T{i}", "covers": [f"R-00{i}"]} for i in range(1, 4)])
+        reply = self.service.plan([{"id": "t2", "title": "T2 renamed", "covers": ["R-002"]}])
+        self.assertEqual([t["id"] for t in reply["changed"]], ["t2"])
+        self.assertEqual(reply["tasks"]["total"], 3)
+        self.assertEqual(reply["uncovered_requirements"], [])

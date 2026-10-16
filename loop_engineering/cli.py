@@ -68,7 +68,8 @@ def parser() -> argparse.ArgumentParser:
     x = add("status", "Show status")
     x.add_argument("--watch", action="store_true")
     x.add_argument("--interval", type=float, default=2.0)
-    add("next", "Show the next assignment")
+    x = add("next", "Show the next assignment")
+    x.add_argument("--full", action="store_true", help="Repeat the assignment even inside a runner turn")
     x = add("plan", "Add/update tasks from JSON (list of tasks) or one --add")
     x.add_argument("--file", type=Path)
     x.add_argument("--add", nargs=2, metavar=("ID", "TITLE"))
@@ -289,7 +290,7 @@ def dispatch(args, project, goal_id):
         print(markdown(project.goal(goal_id)), end="")
         return None
     if c == "next":
-        result = service.next(goal_id)
+        result = service.next(goal_id, full=args.full)
         if getattr(args, "json", False):
             return result
         print(result.get("context", "") + "\n\n" + result["assignment"] if result.get("context") else result["assignment"])

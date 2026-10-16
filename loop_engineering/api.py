@@ -34,7 +34,7 @@ class Service:
             result["integrity_problems"] = problems
         return result
 
-    def next(self, goal_id=None) -> dict:
+    def next(self, goal_id=None, full=False) -> dict:
         store = self._store(goal_id)
         goal, state = store.goal(), store.state()
         act = engine.next_action(goal, state, checks_mod.fingerprint(self.project.root))
@@ -42,7 +42,11 @@ class Service:
             engine.start_work(store, act)
             state = store.state()
         result = {"action": act}
-        if act["kind"] == "review" and not self.review_token:
+        turn = in_prompt_turn(store, act)
+        if turn and not full:  # the runner already put this assignment and context in the turn prompt
+            result["assignment"] = (f"Unchanged since your turn {turn} prompt: work from the assignment and context "
+                                    "there. Call loop_next(full=true) only if you no longer have them.")
+        elif act["kind"] == "review" and not self.review_token:
             result["assignment"] = ("An independent review is next. It must not be done by the agent that did the "
                                     "work: the runner dispatches a separate read-only reviewer (`loop run "
                                     "--max-turns 1`), or the user records one with `loop review <id> pass|fail`.")
@@ -141,8 +145,13 @@ class Service:
         store = self._store(goal_id)
         store.mutate("plan.updated", lambda g, s: engine.plan(g, s, tasks, drop, bool(final)))
         state = store.state()
-        return {"tasks": [{k: t[k] for k in ("id", "title", "status", "depends_on")} | {
-            "covers": t.get("covers", []), "checks": [c["id"] for c in t["checks"]]} for t in state["tasks"]],
+        # Echo what changed, not the whole plan: the reply stays in the agent's context for the rest of the turn.
+        touched = {t.get("id") for t in tasks or []} | set(drop or [])
+        counts = {s: sum(1 for t in state["tasks"] if t["status"] == s) for s in model.TASK_STATUSES}
+        return {"changed": [{k: t[k] for k in ("id", "title", "status", "depends_on")} | {
+            "covers": t.get("covers", []), "checks": [c["id"] for c in t["checks"]]}
+            for t in state["tasks"] if t["id"] in touched],
+            "tasks": {"total": len(state["tasks"]), **{s: n for s, n in counts.items() if n}},
             "uncovered_requirements": engine.uncovered(state) if engine.pipeline(store.goal()) else [],
             "plan_final": bool(state.get("plan_final"))}
 
@@ -377,3 +386,16 @@ def _git_head(root) -> str | None:
 def export(project: Project, goal_id=None) -> dict:
     store = project.goal(goal_id)
     return {"goal": read_json(store.goal_path), "state": deepcopy(store.state())}
+
+
+def in_prompt_turn(store, act: dict) -> int | None:
+    """The live runner turn whose prompt already carries this exact assignment (same action and task), if any."""
+    if act["actor"] != "agent":
+        return None
+    runner = status.runner_view(store)
+    turn = runner.get("turn") if runner["state"] == "running" else None
+    if not turn or turn.get("action") != act["kind"]:
+        return None
+    if "task" in turn and turn["task"] != act.get("task"):  # turn records before this field: action only
+        return None
+    return turn.get("n")

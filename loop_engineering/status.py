@@ -303,5 +303,9 @@ def markdown(store) -> str:
 def render_files(store) -> None:
     text = markdown(store)
     atomic_write(store.status_path, text)
+    goal, state = store.goal(), store.state()
+    if state.get("requirements"):  # agents read this instead of state.json (see prompts.requirement_index)
+        from .prompts import requirements_markdown
+        atomic_write(store.dir / "REQUIREMENTS.md", requirements_markdown(goal, state))
     if store.project.current_id() == store.id:
         atomic_write(store.project.loop / "STATUS.md", text)

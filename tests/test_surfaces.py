@@ -444,9 +444,22 @@ class TwoWayTests(ProjectCase):
         with mock.patch.object(notify, "telegram_api", lambda token, method, params, timeout=10.0: self.api(method, params)):
             notify.send({"desktop": False, "telegram": self.settings}, payload)
         markup = json.loads(self.sent[0][1]["reply_markup"])
-        self.assertEqual([r[0]["text"] for r in markup["inline_keyboard"]], ["1️⃣ postgres", "2️⃣ sqlite"])
-        self.assertIn("2️⃣ sqlite", self.sent[0][1]["text"])
-        data = markup["inline_keyboard"][1][0]["callback_data"]           # second option: sqlite
+        rows = markup["inline_keyboard"]
+        self.assertEqual([r[0]["text"] for r in rows[:-1]], ["1️⃣ postgres", "2️⃣ sqlite"])
+        self.assertEqual([b["text"] for b in rows[-1]], ["📊 Status", "⏸ Pause"])
+        card = self.sent[0][1]
+        self.assertEqual(card["parse_mode"], "HTML")
+        self.assertIn(f"❓ QUESTION · {self.root.name}", card["text"])
+        self.assertIn("2️⃣ sqlite", card["text"])
+        self.assertIn(f"🆔 {q['id']}", card["text"])
+        # The Status button answers with this project's status and leaves the card's buttons alone.
+        telegram_bot.register(self.root)
+        telegram_bot.handle({"callback_query": {"id": "c0", "data": rows[-1][0]["callback_data"],
+                                                "message": {"chat": {"id": 42}, "message_id": 777}}},
+                            self.settings, self.api)
+        self.assertIn("📊 LOOP STATUS", self.sent[-1][1]["text"])
+        self.assertFalse(any(m == "editMessageReplyMarkup" for m, _ in self.sent))
+        data = rows[1][0]["callback_data"]           # second option: sqlite
         telegram_bot.handle({"callback_query": {"id": "c1", "data": data,
                                                 "message": {"chat": {"id": 42}, "message_id": 777}}},
                             self.settings, self.api)
@@ -454,6 +467,15 @@ class TwoWayTests(ProjectCase):
         self.assertEqual(next(x for x in state["questions"] if x["id"] == q["id"])["answer"], "sqlite")
         self.assertEqual(state["status"], "ready")
         self.assertEqual(self.started, [self.store.id])
+        # The card keeps one inert button that says what was done; tapping it changes nothing.
+        edit = next(p for m, p in self.sent if m == "editMessageReplyMarkup")
+        done = json.loads(edit["reply_markup"])["inline_keyboard"]
+        self.assertEqual(len(done), 1)
+        self.assertTrue(done[0][0]["text"].startswith("✅ Answered"))
+        telegram_bot.handle({"callback_query": {"id": "c2", "data": done[0][0]["callback_data"],
+                                                "message": {"chat": {"id": 42}, "message_id": 777}}},
+                            self.settings, self.api)
+        self.assertEqual(self.sent[-1], ("answerCallbackQuery", {"callback_query_id": "c2", "text": "Already handled"}))
         # A free-text reply to a later question answers it too.
         q2 = self.service.ask("Name the release?", None, blocking=True)["question"]
         key = telegram_bot.remember({"project": str(self.root), "goal": self.store.id, "action": "answer",
@@ -463,6 +485,28 @@ class TwoWayTests(ProjectCase):
                                          "reply_to_message": {"message_id": 900}}}, self.settings, self.api)
         self.assertEqual(next(x for x in self.store.state()["questions"] if x["id"] == q2["id"])["answer"],
                          "R2 Phoenix")
+
+    def test_card_escapes_html_and_shows_progress(self):
+        from loop_engineering import notify
+        self.service.plan([{"id": "t1", "title": "T"}, {"id": "t2", "title": "U"}])
+        q = self.service.ask("Use <b>raw</b> & tags?", ["a<b", "c"], blocking=False, kind="approval")["question"]
+        goal, state = self.store.goal(), self.store.state()
+        item = next(i for i in notify.attention(goal, state) if i.get("id") == q["id"])
+        card = notify.telegram_card({**item, "goal": self.store.id, "project": str(self.root),
+                                     "context": notify.card_context(self.store, goal, state)})
+        self.assertIn("🔐 APPROVAL NEEDED", card)
+        self.assertIn("Use &lt;b&gt;raw&lt;/b&gt; &amp; tags?", card)
+        self.assertIn("a&lt;b", card)
+        self.assertIn("📋 Tasks 0/2", card)
+        self.assertNotIn("<b>raw", card)
+        self.assertEqual(notify.rich("See [plan](/abs/docs/plan.md:12), **3/9** done, run `make` "
+                                     "or [docs](https://x.dev/a)"),
+                         'See plan, <b>3/9</b> done, run <code>make</code> or <a href="https://x.dev/a">docs</a>')
+
+    def test_status_says_stopped_when_no_runner_drives_the_goal(self):
+        from loop_engineering import telegram_bot
+        text = telegram_bot.status_text(self.root)
+        self.assertIn(f"⚪ <b>{self.root.name}</b> · stopped", text)
 
     def test_foreign_chat_is_ignored_and_unblock_button_works(self):
         from loop_engineering import telegram_bot

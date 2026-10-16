@@ -18,12 +18,15 @@ so a sandboxed process that cannot notify leaves it for the runner to deliver.
 
 from __future__ import annotations
 
+import html
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.parse
 import urllib.request
 
@@ -39,7 +42,7 @@ def attention(goal: dict, state: dict) -> list[dict]:
             label = "Approval needed" if q["kind"] == "approval" else "Question"
             items.append({"key": f"q:{q['id']}", "title": f"{label} · {goal['title']}",
                           "message": q["text"][:1500], "command": f"loop answer {q['id']} \"...\"", "id": q["id"],
-                          "type": "question", "options": q.get("options") or []})
+                          "type": "question", "kind": q["kind"], "options": q.get("options") or []})
     from .engine import contract_changes
     from .model import contract_digest
     if not state.get("approved_digest"):
@@ -73,7 +76,9 @@ def progress_item(goal: dict, state: dict) -> dict:
     checks = [state["checks"].get(f"acceptance.{c['id']}", {}).get("status") for c in goal["acceptance"]]
     passed = sum(1 for c in checks if c == "pass")
     flag = "" if turn.get("progress") else " · ⚠️ no progress"
-    return {"key": f"t:{turn['n']}:{turn['outcome']}",
+    return {"key": f"t:{turn['n']}:{turn['outcome']}", "type": "progress", "turn": turn["n"],
+            "outcome": turn["outcome"], "action": turn["action"], "minutes": round(turn.get("seconds", 0) / 60),
+            "summary": (turn.get("summary") or "").strip()[:600],
             "title": f"Turn {turn['n']} {turn['action']} · {turn['outcome']} · {goal['title']}",
             "message": (f"Tasks {done}/{len(tasks)} · acceptance {passed}/{len(checks)} · "
                         f"{turn.get('seconds', 0) / 60:.0f} min{flag}\n{(turn.get('summary') or '').strip()[:600]}"),
@@ -123,9 +128,10 @@ def maybe_notify(store, goal: dict, state: dict) -> list[str]:
     delivered = []
     if fresh:
         settings = settings_cache or config(store.project.root)
+        context = card_context(store, goal, state)
         for item in fresh:
             payload = {**item, "goal": goal["id"], "project": str(store.project.root), "status": state["status"],
-                       "status_file": str(store.project.loop / "STATUS.md")}
+                       "status_file": str(store.project.loop / "STATUS.md"), "context": context}
             if send(settings, payload):
                 delivered.append(item["key"])
     # Forget resolved items, remember delivered ones.
@@ -152,17 +158,7 @@ def send(settings: dict, payload: dict) -> bool:
                 markup, key = markup_for(payload)
             except Exception:
                 markup, key = None, None
-        options = ""
-        if payload.get("type") == "question":
-            from .telegram_bot import option_lines
-            listed = option_lines(payload.get("options") or [])
-            options = f"\n\n选项：\n{listed}" if listed else ""
-        hint = {"question": "👇 点下方按钮选择，或长按这条消息 → 回复，写你的回答",
-                "blocked": "👇 处理后点「继续」，或回复这条消息写明处理说明",
-                "limit": "👇 点按钮追加预算继续",
-                "approve": "👇 看过改动后点「批准变更」"}.get(payload.get("type"), f"▶ {payload['command']}")
-        text = f"🔔 {payload['title']}\n{payload['message']}{options}\n\n{hint}\n📁 {payload['project']}"
-        message_id = telegram_send_message(telegram, text, markup)
+        message_id = telegram_send_message(telegram, telegram_card(payload), markup, html=True)
         if message_id and key:
             from .telegram_bot import sent
             sent(key, message_id)
@@ -176,6 +172,81 @@ def send(settings: dict, payload: dict) -> bool:
         except (OSError, subprocess.SubprocessError):
             pass
     return ok
+
+
+CARD_HEADERS = {"question": ("❓", "QUESTION"), "approval": ("🔐", "APPROVAL NEEDED"), "blocked": ("⛔", "BLOCKED"),
+                "limit": ("⏳", "BUDGET LIMIT"), "done": ("🎉", "DONE"), "failed": ("❌", "FAILED")}
+CARD_HINTS = {"question": "👇 Tap a button, or reply to this message with your answer",
+              "blocked": "👇 Fix it, then tap Continue, or reply with what you did",
+              "limit": "👇 Tap to add another budget window and continue",
+              "approve": "👇 Review the change, then tap Approve"}
+RULE = "━━━━━━━━━━━━━━━"
+
+
+def card_context(store, goal: dict, state: dict) -> dict:
+    """What a card shows besides the item itself: goal, stage, turn, tasks, acceptance."""
+    tasks = state["tasks"]
+    checks = [state["checks"].get(f"acceptance.{c['id']}", {}).get("status") for c in goal["acceptance"]]
+    context = {"goal_title": goal["title"], "turn": state["iteration"], "stage": None,
+               "tasks_done": sum(1 for t in tasks if t["status"] == "done"), "tasks_total": len(tasks),
+               "acceptance_passed": sum(1 for c in checks if c == "pass"), "acceptance_total": len(checks)}
+    try:
+        from .status import summary
+        s = summary(store, goal, state)
+        current = next((p["stage"] for p in s["pipeline"] or [] if p["state"] == "current"), None)
+        context["stage"] = current or s["next"]["kind"]
+    except Exception:  # a card must never fail for want of a stage
+        pass
+    return context
+
+
+def esc(text) -> str:
+    return html.escape(str(text), quote=False)
+
+
+def rich(text: str) -> str:
+    """Agent markdown → Telegram HTML: `code`, **bold**, web links; local file links become their label."""
+    out = esc(text)
+    out = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)", lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', out)
+    out = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", out)
+    out = re.sub(r"\*\*([^*\n]+)\*\*", r"<b>\1</b>", out)
+    return re.sub(r"`([^`\n]+)`", r"<code>\1</code>", out)
+
+
+def telegram_card(payload: dict) -> str:
+    """HTML card: header, goal, progress line, quoted message, options, what to do, footer."""
+    kind = payload.get("type")
+    context = payload.get("context") or {}
+    project = Path(payload["project"]).name
+    if kind == "question" and payload.get("kind") == "approval":
+        icon, label = CARD_HEADERS["approval"]
+    elif kind == "approve":
+        icon, label = "📝", ("APPROVE NEW GOAL" if payload.get("title", "").startswith("New goal") else "APPROVE CHANGE")
+    elif kind == "progress":
+        icon = "🔄" if payload.get("outcome") == "ok" else "⚠️"
+        label = f"TURN {payload.get('turn')} {payload.get('action', '')} · {payload.get('outcome')} · {payload.get('minutes', 0)} min"
+    else:
+        icon, label = CARD_HEADERS.get(kind, ("🔔", "LOOP"))
+    title = context.get("goal_title") or payload["title"].rpartition(" · ")[2]
+    lines = [f"<b>{icon} {esc(label)} · {esc(project)}</b>", f"<i>{esc(title)}</i>", RULE]
+    if context:
+        stage = f"🧭 Stage: {esc(context['stage'])}" if context.get("stage") else "🧭"
+        lines.append(stage if kind == "progress" else f"{stage} · Turn {context.get('turn', '?')}")
+        lines.append(f"📋 Tasks {context.get('tasks_done', 0)}/{context.get('tasks_total', 0)} · "
+                     f"✅ Acceptance {context.get('acceptance_passed', 0)}/{context.get('acceptance_total', 0)}")
+    body = str(payload.get("summary" if kind == "progress" else "message") or "").strip()
+    if body:
+        quote = "<blockquote expandable>" if len(body) > 500 else "<blockquote>"
+        lines += ["", f"{quote}{rich(body)}</blockquote>"]
+    if kind == "question":
+        from .telegram_bot import option_lines
+        listed = option_lines(payload.get("options") or [])
+        if listed:
+            lines += ["", esc(listed)]
+    hint = CARD_HINTS.get(kind) or f"▶ <code>{esc(payload.get('command', 'loop status'))}</code>"
+    footer = f"🆔 {esc(payload['id'])} · " if payload.get("id") else ""
+    lines += ["", hint, f"{footer}🕒 {time.strftime('%H:%M')}"]
+    return "\n".join(lines)
 
 
 def telegram_token(settings: dict) -> str | None:
@@ -193,12 +264,14 @@ def telegram_send(settings: dict, text: str) -> bool:
     return bool(telegram_send_message(settings, text))
 
 
-def telegram_send_message(settings: dict, text: str, markup: dict | None = None) -> int | None:
-    """Send a message (optionally with inline buttons); returns its message_id."""
+def telegram_send_message(settings: dict, text: str, markup: dict | None = None, html: bool = False) -> int | None:
+    """Send a message (optionally HTML, optionally with inline buttons); returns its message_id."""
     token = telegram_token(settings)
     if not token:
         return None
     params = {"chat_id": str(settings["chat_id"]), "text": text[:4000], "disable_web_page_preview": "true"}
+    if html:
+        params["parse_mode"] = "HTML"
     if markup:
         params["reply_markup"] = json.dumps(markup, ensure_ascii=False)
     try:

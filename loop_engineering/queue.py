@@ -52,7 +52,7 @@ def remove(project, goal_id: str) -> list[str]:
 
 def approved(store) -> bool:
     state = store.state()
-    return bool(state["approved_digest"]) and state["approved_digest"] == model.contract_digest(store.goal())
+    return model.contract_matches(store.goal(), state["approved_digest"])
 
 
 def next_after(project, current_id: str | None) -> str | None:

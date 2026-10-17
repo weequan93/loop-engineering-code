@@ -37,6 +37,12 @@ Rules: the controller decides completion. Never edit `.loop/` files directly. Ne
 delete or bypass checks. Stay within the constraints. One meaningful step per turn is fine.
 Stop when your assignment is done or you are waiting on the controller or a human.
 
+Checks prove required behaviour (the feature works, the budget holds), nothing else. Never pin hashes or
+contents of framework-managed files (`.loop/`, `.claude/skills/loop/`, `.agents/skills/loop/`, the managed
+AGENTS.md section), of earlier runs' artifacts, or of the whole source tree: such guards fail on unrelated
+changes and stop the loop. Removing a guard like that, or one an earlier turn added, is not weakening a check;
+record it with `loop_note(kind="decision")`.
+
 Keep your context small; everything you read is re-sent on every later step of this turn.
 - Read state with `loop_status`, `.loop/STATUS.md`, the goal's `GOAL.md` or `REQUIREMENTS.md`, never `.loop/`
   JSON files.

@@ -209,6 +209,11 @@ class Runner:
             if self.reload and code_stamp() != self.code:  # between turns only, never mid-turn
                 self.reload_requested = True
                 return self._exit("Framework code changed; restarting the runner with it.")
+            release = pinned_release(self.project)
+            if self.reload and release:  # `loop install` pinned this project to another framework release
+                self.reload_requested = True
+                os.environ["PYTHONPATH"] = release + os.pathsep + os.environ.get("PYTHONPATH", "")
+                return self._exit(f"Project pinned to framework {Path(release).name}; restarting the runner on it.")
             # The fingerprint can take a minute on a big tree: take it first, then read the state, and
             # recheck before exiting so a human acting meanwhile (unblock, answer) is never lost.
             stamp = checks_mod.fingerprint(self.project.root)
@@ -532,6 +537,16 @@ def concrete_progress(state: dict) -> tuple:
                          if (v or {}).get("done") or (v or {}).get("verdict") == "pass")),
             bool(state.get("requirements_final")), bool(state.get("plan_final")),
             bool((state.get("verification") or {}).get("passed")), len(state.get("incidents", [])))
+
+
+def pinned_release(project) -> str | None:
+    """The pinned release path when it is not the code running now (see install.pin), else None."""
+    from .install import pinned
+    record = pinned(project)
+    if not record or not Path(record["path"], "loop_engineering").is_dir():
+        return None
+    running = Path(__file__).resolve().parent.parent
+    return None if Path(record["path"]).resolve() == running else record["path"]
 
 
 def progress_mark(state: dict) -> str:

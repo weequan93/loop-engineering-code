@@ -74,9 +74,10 @@ class Bill:
         return result
 
 
-def mcp_server_spec(project_root: Path, autonomous: bool = True, extra: list[str] | None = None) -> dict:
-    """How any host launches the loop MCP server for this project."""
-    package_root = str(Path(__file__).resolve().parent.parent)
+def mcp_server_spec(project_root: Path, autonomous: bool = True, extra: list[str] | None = None,
+                    package_root: Path | None = None) -> dict:
+    """How any host launches the loop MCP server for this project (from its pinned framework copy, see install)."""
+    package_root = str(package_root or Path(__file__).resolve().parent.parent)
     args = ["-m", "loop_engineering", "mcp", "--project", str(project_root)]
     if autonomous:
         args.append("--autonomous")

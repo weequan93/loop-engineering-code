@@ -133,7 +133,7 @@ def payload(project: Project, goal_id: str | None) -> dict:
     return {"summary": status.summary(store), "goals": project.goal_ids(), "markdown": status.markdown(store),
             "queue": queue_mod.view(project),
             "contract_changes": (engine.contract_changes(goal, state)
-                                 if state.get("approved_digest") != model.contract_digest(goal) else []),
+                                 if not model.contract_matches(goal, state.get("approved_digest")) else []),
             "tasks": [{**{k: t.get(k) for k in ("id", "title", "status", "role")},
                        "team": " + ".join(f"{s['count']}×{s['role']}" for s in t.get("team", []))}
                       for t in state["tasks"]],

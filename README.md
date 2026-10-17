@@ -20,7 +20,7 @@
 - 至少安装并登录一个 agent CLI：`claude` 或 `codex`。
 - 项目最好是 git 仓库。
 
-下文中 `LOOP` 指框架路径 `/Users/super/Documents/ai/loop-engineering-code`。接入项目后，在项目目录里一律使用 `.loop/bin/loop`。
+下文中 `LOOP` 指框架路径 `/Volumes/Crucial/Users/mini/Documents/ai/loop-engineering-code`。接入项目后，在项目目录里一律使用 `.loop/bin/loop`。
 
 ## 1. 接入项目（每个项目一次）
 
@@ -29,6 +29,10 @@ $LOOP/bin/loop --project /path/to/app install
 ```
 
 这一步会写入 Claude Code 和 Codex 的 MCP 配置（`.mcp.json`、`.codex/config.toml`）、skill 文件、`AGENTS.md` 说明，以及命令行入口 `.loop/bin/loop`。改完配置后，在 Claude Code 或 Codex 里重启会话（或执行 `/mcp`）让配置生效。
+
+**框架版本固定在项目上。** `install` 会把当前框架代码复制成一个只读快照 `$LOOP/.releases/r-<内容哈希>/`，项目的 `.loop/bin/loop`、MCP 配置和 runner 都只用这个快照（记录在 `.loop/framework.json`）。所以修改 `$LOOP` 里的框架代码不会影响正在跑的项目。
+
+升级某个项目时，从框架目录再运行一次 `$LOOP/bin/loop --project /path/to/app install`。正在跑的 runner 会在两个回合之间自动切到新快照；Claude Code、Codex 的会话需要重启。项目里的 `.loop/bin/loop install` 只会保持当前快照，不会升级。可以先升级一个项目验证，再升级其他项目。
 
 可选：在 Claude Code 底部状态栏显示进度：
 

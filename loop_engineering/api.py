@@ -82,7 +82,7 @@ class Service:
             write_json(store.goal_path, data)
 
             def touched(_goal, state):
-                if state["approved_digest"] and state["approved_digest"] != model.contract_digest(data):
+                if state["approved_digest"] and not model.contract_matches(data, state["approved_digest"]):
                     state["status_reason"] = "Contract changed; it needs approval again."
             store.mutate("goal.updated", touched)
             if not enqueue:
@@ -265,7 +265,7 @@ class Service:
 
     def _apply_amendment(self, store, question: dict, by: str) -> None:
         """The human approved an exact policy amendment: write it and approve that contract."""
-        if store.state().get("approved_digest") != model.contract_digest(store.goal()):
+        if not model.contract_matches(store.goal(), store.state().get("approved_digest")):
             return  # other unapproved edits exist; leave the whole contract for explicit review
         store.mutate("contract.snapshot", lambda g, s: s.update(
             approved_contract={k: g.get(k) for k in engine.CONTRACT_KEYS}))

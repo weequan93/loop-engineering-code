@@ -44,7 +44,7 @@ def attention(goal: dict, state: dict) -> list[dict]:
                           "message": q["text"][:1500], "command": f"loop answer {q['id']} \"...\"", "id": q["id"],
                           "type": "question", "kind": q["kind"], "options": q.get("options") or []})
     from .engine import contract_changes
-    from .model import contract_digest
+    from .model import contract_digest, contract_matches
     if not state.get("approved_digest"):
         acceptance = ", ".join(c["id"] for c in goal["acceptance"]) or "none"
         reviews = ", ".join(r["id"] for r in goal["reviews"]) or "none"
@@ -53,7 +53,7 @@ def attention(goal: dict, state: dict) -> list[dict]:
                                  f"Budget: {goal['policy']['max_iterations'] or 'unlimited'} turns, "
                                  f"{goal['policy']['max_hours'] or 'unlimited'}h",
                       "command": f"loop approve --goal {goal['id']}", "type": "approve"})
-    elif state["approved_digest"] != contract_digest(goal):
+    elif not contract_matches(goal, state["approved_digest"]):
         changes = contract_changes(goal, state)
         items.append({"key": f"v:{contract_digest(goal)}", "title": f"Approve contract change · {goal['title']}",
                       "message": "goal.json changed after approval:\n- " + "\n- ".join(changes),

@@ -1,4 +1,6 @@
 import io
+import os
+import sys
 import json
 from pathlib import Path
 import shutil
@@ -106,6 +108,47 @@ class InstallTests(ProjectCase):
             # The generated TOML must parse.
             import tomllib
             tomllib.loads(config)
+
+    def test_install_pins_the_project_to_a_framework_snapshot(self):
+        from loop_engineering import install as install_mod
+        from loop_engineering.runner import pinned_release
+        result = install(self.project, ["claude"])
+        record = install_mod.pinned(self.project)
+        release = Path(record["path"])
+        self.assertEqual(result["framework"]["release"], release.name)
+        self.assertTrue((release / "loop_engineering" / "engine.py").is_file())
+        self.assertTrue((release / "RELEASE").is_file())
+        self.assertNotEqual(release.resolve(), Path(install_mod.__file__).resolve().parent.parent)
+        self.assertIn(str(release), (self.root / ".loop" / "bin" / "loop").read_text())   # CLI wrapper
+        spec = json.loads((self.root / ".mcp.json").read_text())["mcpServers"]["loop"]
+        self.assertEqual(spec["env"]["PYTHONPATH"], str(release))                       # MCP server
+        self.assertIn("framework.json", (self.root / ".loop" / ".gitignore").read_text())
+        self.assertEqual(install(self.project, ["claude"])["framework"]["release"], release.name)  # same code
+        self.assertEqual(pinned_release(self.project), str(release))  # a runner from the checkout moves over
+        out = subprocess.run([str(self.root / ".loop" / "bin" / "loop"), "list"], capture_output=True, text=True,
+                             timeout=30)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        # Running from the release, installing again keeps the release instead of snapshotting it.
+        probe = ("import loop_engineering.install as i, pathlib; print(i.snapshot())")
+        out = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, timeout=30,
+                             env={**os.environ, "PYTHONPATH": str(release)}, cwd=str(release))
+        self.assertEqual(out.stdout.strip(), str(release), out.stderr)
+
+    def test_framework_defaults_are_not_part_of_the_approved_contract(self):
+        from unittest import mock
+        from loop_engineering import model
+        store = self.goal(policy={"max_iterations": 10})
+        store.mutate("approve", lambda g, s: engine.approve(g, s, "me"))
+        approved = store.state()["approved_digest"]
+        # A framework upgrade adds a policy default: the stored goal now carries it, the approval still holds.
+        with mock.patch.dict(model.DEFAULT_POLICY, {"new_knob": 3}):
+            upgraded = model.goal({k: v for k, v in store.goal().items() if k != "policy"}
+                                  | {"policy": {"max_iterations": 10}})
+            self.assertTrue(model.contract_matches(upgraded, approved))
+        self.assertFalse(model.contract_matches({**store.goal(), "policy": {**store.goal()["policy"],
+                                                                            "max_iterations": 11}}, approved))
+        legacy = model.digest(model._contract(store.goal()))       # approvals from before digest 2 still count
+        self.assertTrue(model.contract_matches(store.goal(), legacy))
 
     def test_remove_toml_table_keeps_other_tables(self):
         text = "[a]\nx=1\n[a.b]\ny=2\n[ab]\nz=3\n"

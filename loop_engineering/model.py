@@ -302,11 +302,36 @@ def approval_problems(goal_data: dict) -> list[str]:
     return problems
 
 
-def contract_digest(goal_data: dict) -> str:
+CHECK_DEFAULTS = {"cwd": ".", "expect_exit": 0}
+REVIEW_DEFAULTS = {"by": "agent"}
+
+
+def _contract(goal_data: dict) -> dict:
     keys = ["id", "kind", "objective", "acceptance", "reviews", "policy", "schedule", "constraints", "agent"]
     if goal_data.get("pipeline"):  # absent for older goals, so their approvals stay valid
         keys.append("pipeline")
-    return digest({k: goal_data[k] for k in keys})
+    return {k: goal_data[k] for k in keys}
+
+
+def _explicit(values: dict, defaults: dict) -> dict:
+    return {k: v for k, v in values.items() if k not in defaults or defaults[k] != v}
+
+
+def contract_digest(goal_data: dict) -> str:
+    """Digest of what the user approved. Values equal to a framework default are left out, so a framework
+    upgrade that adds or changes a default does not invalidate approved goals."""
+    data = _contract(goal_data)
+    data["policy"] = _explicit(data["policy"], DEFAULT_POLICY)
+    data["agent"] = _explicit(data["agent"], DEFAULT_AGENT)
+    data["acceptance"] = [_explicit(c, CHECK_DEFAULTS) for c in data["acceptance"]]
+    data["reviews"] = [_explicit(r, REVIEW_DEFAULTS) for r in data["reviews"]]
+    return digest({"digest": 2, **data})
+
+
+def contract_matches(goal_data: dict, approved: str | None) -> bool:
+    """True when ``approved`` is this goal's digest. Approvals recorded before digest 2 (all values included)
+    stay valid while the defaults they saw are unchanged."""
+    return bool(approved) and approved in {contract_digest(goal_data), digest(_contract(goal_data))}
 
 
 def _strings(values, field: str) -> list[str]:

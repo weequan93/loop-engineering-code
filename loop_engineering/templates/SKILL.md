@@ -84,6 +84,9 @@ Don't guess. Show the user the CLI commands they can run:
 ## Rules
 
 - Never edit `.loop/` files by hand. Never weaken, skip or delete checks to get green.
+- Checks prove required behaviour only. Never pin hashes or contents of framework-managed files
+  (`.loop/`, this skill file), of earlier runs' artifacts, or of the whole source tree. Removing such a
+  guard is not weakening a check; record the decision.
 - A model's claim is not evidence; only controller-run checks are.
 - Stay inside the goal's constraints. Scope changes go through `loop_goal_draft` and need
   the user's re-approval.

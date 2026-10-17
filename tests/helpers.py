@@ -41,6 +41,7 @@ class ProjectCase(unittest.TestCase):
         # Never read the developer's real ~/.config/loop (it may hold a Telegram bot).
         os.environ["XDG_CONFIG_HOME"] = str(base / "config")
         os.environ.pop("LOOP_TELEGRAM_BOT_TOKEN", None)
+        os.environ["LOOP_RELEASES"] = str(base / "releases")  # framework snapshots from `install` go here
 
     def tearDown(self):
         os.environ.clear()

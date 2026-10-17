@@ -242,7 +242,7 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
         return action("approve_goal", "human", "Goal is a draft. " + (" ".join(problems) if problems else
                       "Review goal.json and approve it (`loop approve` or loop_goal_approve after the user confirms)."),
                       problems=problems)
-    if state["approved_digest"] != model.contract_digest(goal):
+    if not model.contract_matches(goal, state["approved_digest"]):
         return action("approve_goal", "human", "goal.json changed after approval; review and approve the new contract.")
     if state["status"] in model.TERMINAL:
         return action("finished", "none", state["status_reason"])

@@ -9,7 +9,9 @@
 - Tests must stay offline: use `tests/fixtures/fake_agent.py` (real MCP, scripted behaviour) and local
   commands. Run `python -m unittest discover -s tests -t .` before handing off. Live Claude or Codex turns
   are for explicit, user-requested evaluations only.
-- Don't edit the framework checkout while a runner is driving a real project from it. Pause the runner first.
+- Projects run from a pinned snapshot (`install` → `.releases/r-…`, `.loop/framework.json`), so editing the
+  checkout does not touch them. Upgrade one project at a time by re-running `install` for it; a project still
+  wired to the live checkout (installed before pinning) needs its runner paused before you edit.
 - `legacy/v1/` is the frozen previous version, kept for migration (`legacy/v1/scripts/export_v1.py`)
   and reference. Don't develop it further.
 - Document real platform and host limits (sandboxing comes from the host; cost only where reported).

@@ -22,6 +22,7 @@ from pathlib import Path
 import shutil
 import sys
 
+from .store import loop_dir_for
 from .util import LoopError, read_json, write_json
 
 
@@ -313,7 +314,7 @@ BUILTIN = {"claude": ClaudeAdapter, "codex": CodexAdapter}
 def configured(project: Path) -> dict:
     merged = {}
     for path in (Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "loop" / "adapters.json",
-                 project / ".loop" / "adapters.json"):
+                 loop_dir_for(project) / "adapters.json"):
         if path.is_file():
             data = read_json(path)
             if not isinstance(data, dict):

@@ -31,7 +31,8 @@ from .util import LoopError, atomic_write, digest, now, read_json, slug, write_j
 
 LOOP_DIR = ".loop"
 GITIGNORE = ("# Loop runtime files (logs, locks, heartbeats) and local notification secrets\n"
-             "goals/*/runs/\ngoals/*/runner.json\ngoals/*/.lock\ngoals/*/notified.json\n*.lock\nnotify.json\n")
+             "goals/*/runs/\ngoals/*/runner.json\ngoals/*/.lock\ngoals/*/notified.json\n*.lock\nnotify.json\nsnapshots/\n"
+             "worktrees/\n")
 
 if os.name == "posix":
     import fcntl
@@ -80,12 +81,31 @@ def try_lock(path: Path):
     return handle
 
 
+def loop_dir_for(root: Path | str) -> Path:
+    """The state directory for a working tree: its own `.loop`, or, for a goal's worktree
+    (`<project>/.loop/worktrees/<goal>`), the main project's `.loop`."""
+    root = Path(root).expanduser().resolve()
+    if root.parent.name == "worktrees" and root.parent.parent.name == LOOP_DIR:
+        return root.parent.parent
+    return root / LOOP_DIR
+
+
 class Project:
-    def __init__(self, root: Path | str):
+    def __init__(self, root: Path | str, loop_dir: Path | str | None = None):
+        """``root`` is the working tree agents and checks use; ``loop_dir`` (default ``root/.loop``) holds the
+        state. A goal running in its own git worktree has the worktree as root and the main project's state."""
         self.root = Path(root).expanduser().resolve()
         if not self.root.is_dir():
             raise LoopError(f"Project directory does not exist: {self.root}")
-        self.loop = self.root / LOOP_DIR
+        self.loop = Path(loop_dir).expanduser().resolve() if loop_dir else loop_dir_for(self.root)
+        self.separate_state = self.loop != self.root / LOOP_DIR
+
+    def args(self) -> list[str]:
+        """CLI arguments that reopen this project in a child process (runner, check job, MCP server)."""
+        return ["--project", str(self.root), *self.state_args()]
+
+    def state_args(self) -> list[str]:
+        return ["--loop-dir", str(self.loop)] if self.separate_state else []
 
     @classmethod
     def find(cls, start: Path | str | None = None) -> "Project":

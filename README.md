@@ -185,6 +185,12 @@ runner 在后台运行，关掉终端或聊天后也会继续。只有关机或�
 
 单次工具输出有硬上限：Codex 用 `tool_output_token_limit`（adapters.json 里 codex 的 `tool_output_token_limit`，默认 6000），Claude Code 用 `BASH_MAX_OUTPUT_LENGTH`（claude 的 `bash_output_max_chars`，默认 20000）。
 
+### 并行、安静窗口和长检查
+
+- **并行目标**：`.loop/bin/loop start --goal <id> --worktree` 让这个目标在自己的 git worktree（`.loop/worktrees/<id>`）里和主 runner 同时跑。worktree 从主目录当前的状态开始（包括未提交和未跟踪的文件）。`node_modules` 这类被忽略的依赖在 APFS 上用写时复制克隆过去。目标完成后，控制器把它的改动打成补丁应用到主目录，不提交。补丁冲突时保存在 `.loop/goals/<id>/worktree.patch`，等你手动合并。
+- **安静窗口**：在 `.loop/settings.json` 里设 `"quiet_window": {"start": "01:00", "end": "06:00", "max_load": 2.0}`。标了 `needs: ["exclusive-machine"]` 的任务会在窗口内、机器负载低于 `max_load` 时自动恢复并单独运行，同时占用一个全机锁，其他项目的 runner 在回合之间等待。窗口结束时任务没做完会重新暂缓。不设窗口时，这类任务只能你手动恢复。
+- **长检查**：任务检查在工作区的 APFS 克隆（`.loop/snapshots/`）里运行，agent 同时可以继续做别的任务。不支持克隆的文件系统，或设置 `"frozen_checks": false` 时，回到原来的等待方式。
+
 ## 6. 收到提醒后怎么做
 
 **不需要敲命令**，下面两种方式都可以：

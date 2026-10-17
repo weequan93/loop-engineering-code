@@ -348,7 +348,7 @@ def serve(project: Project, port: int = 8765, host: str = "127.0.0.1", reload: b
         server.server_close()
     if updated.is_set():
         print("framework code changed; restarting the dashboard", flush=True)
-        os.execv(sys.executable, [sys.executable, "-m", "loop_engineering", "--project", str(project.root),
+        os.execv(sys.executable, [sys.executable, "-m", "loop_engineering", *project.args(),
                                   "dashboard", "--port", str(actual)])
 
 

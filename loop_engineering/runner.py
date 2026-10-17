@@ -18,6 +18,7 @@ import socket
 import sys
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 from . import adapters as adapters_mod
@@ -28,6 +29,7 @@ from .store import Project, try_lock
 from .util import LoopError, code_stamp, digest, now, write_json
 
 POLL_SECONDS = 5
+WINDOW_POLL_SECONDS = 60  # waiting for a quiet window or for another project's machine lock
 HEARTBEAT_SECONDS = 15
 SUBSTANTIVE = ("plan.", "task.", "review.", "check.result", "job.started", "goal.", "question.", "note.evidence", "note.hypothesis",
                "note.root_cause", "job.finished")
@@ -35,11 +37,21 @@ SUBSTANTIVE = ("plan.", "task.", "review.", "check.result", "job.started", "goal
 
 class Runner:
     def __init__(self, project: Project, goal_id: str | None = None, *, adapter: str | None = None,
-                 max_turns: int | None = None, sleep=time.sleep, clock=time.time, log=None, reload: bool = False):
+                 max_turns: int | None = None, sleep=time.sleep, clock=time.time, log=None, reload: bool = False,
+                 worktree: bool = False):
+        self.main = None
+        if worktree:  # a parallel goal: its own git worktree, the main project's state (see worktree.py)
+            from . import worktree as worktree_mod
+            goal_id = project.goal(goal_id).id
+            record = worktree_mod.prepare(project, goal_id)
+            project.goal(goal_id).mutate("goal.worktree", lambda g, s: engine.set_worktree(
+                g, s, {**record, "status": "running"}))
+            self.main, project = project, Project(record["path"], project.loop)
         self.project = project
         self.reload = reload  # re-exec between turns when the framework code changes (the CLI runner)
         self.code = code_stamp()
         self.reload_requested = False
+        self.machine = None  # the machine lock while this runner has a quiet-window task
         self.store = project.goal(goal_id)
         self.adapter_name = adapter
         self.max_turns = max_turns
@@ -53,17 +65,23 @@ class Runner:
     # ------------------------------------------------------------------ lifecycle
 
     def run(self) -> dict:
-        """Drive the goal, then each approved goal queued after it (one working tree, one runner)."""
-        project_lock = try_lock(self.project.loop / "runner.lock")
-        if project_lock is None:
-            raise LoopError("Another runner already drives this project (one goal at a time per working tree)")
+        """Drive the goal, then each approved goal queued after it (one working tree, one runner).
+
+        A worktree goal runs beside the main runner: it holds only its goal's lock, follows no queue, and
+        applies its changes to the main tree when done."""
+        project_lock = try_lock(self.project.loop / "runner.lock") if not self.main else None
+        if project_lock is None and not self.main:
+            raise LoopError("Another runner already drives this project's working tree; start this goal in its "
+                            "own worktree with `loop start --goal <id> --worktree`")
         try:
             self._install_signals()
             completed = []
             while True:
                 result = self._run_goal()
                 completed.append(result)
-                if result["status"] != "done" or self.stop_requested:
+                if self.main and result["status"] == "done":
+                    result["worktree"] = self._integrate()
+                if result["status"] != "done" or self.stop_requested or self.main:
                     break
                 if self.max_turns is not None and self.turns_here >= self.max_turns:
                     break
@@ -86,12 +104,24 @@ class Runner:
             if len(completed) > 1:
                 final["goals"] = [{"goal": r["goal"], "status": r["status"]} for r in completed]
         finally:
-            project_lock.close()
+            if project_lock is not None:
+                project_lock.close()
         if self.reload_requested:  # locks are released; continue the same goal with the new code
-            os.execv(sys.executable, [sys.executable, "-m", "loop_engineering", "run", "--project",
-                                      str(self.project.root), "--goal", self.store.id,
+            os.execv(sys.executable, [sys.executable, "-m", "loop_engineering", "run",
+                                      *(self.main or self.project).args(), "--goal", self.store.id,
+                                      *(["--worktree"] if self.main else []),
                                       *(["--adapter", self.adapter_name] if self.adapter_name else [])])
         return final
+
+    def _integrate(self) -> dict:
+        from . import worktree as worktree_mod
+        record = self.store.state().get("worktree") or {}
+        if record.get("status") in {"merged", "empty"} or not record.get("path"):
+            return record
+        result = worktree_mod.integrate(self.main, self.store.id, record, self.store.dir / "worktree.patch")
+        self.store.mutate("goal.worktree_merged", lambda g, s: engine.worktree_merged(g, s, result))
+        self.log(f"worktree: {result['status']} ({len(result.get('files', []))} files)")
+        return result
 
     def _propose_next(self):
         """Queue ran dry: let the planning agent draft the next goals (once per finished goal)."""
@@ -225,6 +255,9 @@ class Runner:
                 return self._exit("Paused.")
             if state.get("control") == "stop" or state["status"] == "stopped":
                 return self._exit("Stopped.")
+            if self._machine_step(state):
+                continue
+            state = self.store.state()
             act = engine.next_action(goal, state, stamp)
             self.log(f"next: {act['kind']} ({act['actor']}) — {act['summary'][:160]}")
             if act["actor"] == "none":
@@ -242,6 +275,12 @@ class Runner:
                     continue
                 return self._exit("Needs a human: " + act["summary"])
             if act["actor"] == "controller":
+                if act["kind"] == "wait_window":
+                    if not quiet_window(self.project):
+                        return self._exit("Needs a person or a quiet window: " + act["summary"] + " Resume them "
+                                          "with `loop task resume <id>`, or set quiet_window in .loop/settings.json.")
+                    self._sleep_watching(WINDOW_POLL_SECONDS)
+                    continue
                 if act["kind"] == "wait_job":
                     self._wait_job(act["job"])
                 else:
@@ -255,6 +294,79 @@ class Runner:
             if self.max_turns is not None and self.turns_here >= self.max_turns:
                 return self._exit(f"Stopped after {self.turns_here} turn(s) as requested.")
             self._agent_turn(goal, state, act, stamp)
+
+    def _machine_step(self, state) -> bool:
+        """Quiet-window work and the machine lock. True: the runner waited, so start the loop over."""
+        exclusive = [t for t in state["tasks"] if "exclusive-machine" in (t.get("needs") or [])]
+        running = [t for t in exclusive if t["status"] in {"pending", "active"}]
+        waiting = [t for t in exclusive if engine.waits_for_window(t)]
+        window = quiet_window(self.project)
+        inside = bool(window) and in_window(window, datetime.fromtimestamp(self.clock()))
+        if running and window and not inside and any(t.get("window_run") for t in running):
+            for task in [t for t in running if t.get("window_run")]:
+                self.store.mutate("task.window_closed", lambda g, s, t=task["id"]: engine.window_closed(g, s, t),
+                                  task=task["id"])
+            self._release_machine()
+            return True
+        if not running and self.machine is not None:
+            self._release_machine()
+        if running and self.machine is None and not self._take_machine():
+            return self._wait_for_machine()
+        if not running and self.machine is None:
+            holder = self._machine_holder()
+            if holder is not None:  # another project runs a quiet-window task: keep the machine quiet
+                return self._wait_for_machine(holder)
+        if waiting and inside and machine_idle(window) and not running and self._take_machine():
+            task_id = waiting[0]["id"]
+            self.log(f"quiet window: running {task_id} alone")
+            self.store.mutate("task.window_open", lambda g, s: engine.window_open(g, s, task_id), task=task_id)
+            return True
+        return False
+
+    def _take_machine(self) -> bool:
+        from .store import try_lock
+        if self.machine is None:
+            self.machine = try_lock(machine_lock_path())
+            if self.machine is not None:
+                self.machine.seek(0)
+                self.machine.truncate()
+                self.machine.write(json.dumps({"project": str(self.project.root), "goal": self.store.id,
+                                               "pid": os.getpid(), "at": now()}))
+                self.machine.flush()
+        return self.machine is not None
+
+    def _release_machine(self) -> None:
+        if self.machine is not None:
+            self.machine.close()
+            self.machine = None
+
+    def _machine_holder(self) -> str | None:
+        from .store import try_lock
+        handle = try_lock(machine_lock_path())
+        if handle is not None:
+            handle.close()
+            return None
+        try:
+            return json.loads(machine_lock_path().read_text() or "{}").get("project") or "another project"
+        except (OSError, ValueError):
+            return "another project"
+
+    def _wait_for_machine(self, holder: str | None = None) -> bool:
+        holder = holder or self._machine_holder() or "another project"
+        reason = f"Waiting: {Path(holder).name} has the machine for a quiet-window task."
+        if self.store.state()["status_reason"] != reason:
+            self.store.mutate("goal.waiting_machine", lambda g, s: s.update(status_reason=reason))
+        self._sleep_watching(WINDOW_POLL_SECONDS)
+        return True
+
+    def _sleep_watching(self, seconds: float) -> None:
+        """Sleep in short steps; a stop, a pause or a person's action ends it early."""
+        end = self.clock() + seconds
+        seq = (self.store.last_event() or {}).get("seq")
+        while not self.stop_requested and self.clock() < end:
+            self.sleep(min(POLL_SECONDS, max(0.1, end - self.clock())))
+            if self.store.state().get("control") or self._changed_since(seq):
+                return
 
     def _changed_since(self, seq) -> bool:
         return (self.store.last_event() or {}).get("seq") != seq
@@ -304,6 +416,7 @@ class Runner:
                 return
 
     def _exit(self, reason: str) -> dict:
+        self._release_machine()
         self.log("exit: " + reason)
         return {"goal": self.store.id, "status": self.store.state()["status"], "reason": reason,
                 "turns": self.turns_here}
@@ -332,17 +445,23 @@ class Runner:
             sections = [("continuation", prompts.continuation_prompt(goal, state, act, n, self.project.root))]
         else:
             sections = prompts.turn_sections(goal, state, act, n, self.project.root)
+            if self.main:
+                sections.insert(1, ("worktree", (
+                    f"This goal runs in its own git worktree ({self.project.root}), beside other work in the main "
+                    f"tree. Change files only here. Its Loop files (STATUS.md, goals/{goal['id']}/GOAL.md, "
+                    f"REQUIREMENTS.md) are in {self.project.loop}/, not ./.loop/. When the goal is done the "
+                    "controller applies your changes to the main tree.")))
         prompt = "\n\n".join(text for _, text in sections)
         (workdir / "prompt.md").write_text(prompt, encoding="utf-8")
         turn_goal = {**goal, "agent": {**goal["agent"], "model": chosen["model"], "effort": chosen["effort"]}}
         if goal["policy"]["max_cost_usd"]:
             remaining = max(0.01, goal["policy"]["max_cost_usd"] - state["usage"]["cost_usd"])
             turn_goal = {**turn_goal, "policy": {**goal["policy"], "max_cost_usd": remaining}}
-        mcp_args, token = None, None
+        mcp_args, token = self.project.state_args() or None, None
         if gate:
             # A one-time token lets only this read-only reviewer session record the verdict.
             token = secrets.token_hex(16)
-            mcp_args = ["--review-token", token]
+            mcp_args = [*self.project.state_args(), "--review-token", token]
             session = None
         turn = adapter.build(prompt, self.project.root, workdir, turn_goal, session, mcp_args=mcp_args,
                              readonly=bool(gate))
@@ -425,7 +544,7 @@ class Runner:
                                    "context": {k: v for k, v in bill.items() if k != "top_reads"}
                                    | {"top_reads": (bill.get("top_reads") or [])[:3]},
                                    "summary": (report.error or report.summary or "")[:2000],
-                                   "log": str(workdir.relative_to(self.project.root))})
+                                   "log": str(workdir.relative_to(self.project.loop.parent))})
             state["turns"] = state["turns"][-50:]
             if refused:  # the model service refused the turn: not the agent's stagnation or drift
                 kind, message = refused
@@ -539,6 +658,32 @@ def concrete_progress(state: dict) -> tuple:
             bool((state.get("verification") or {}).get("passed")), len(state.get("incidents", [])))
 
 
+def machine_lock_path() -> Path:
+    """One lock per machine: the project running a quiet-window task holds it; other runners wait."""
+    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "loop" / "machine.lock"
+
+
+def quiet_window(project) -> dict | None:
+    """`"quiet_window": {"start": "01:00", "end": "06:00", "max_load": 2.0}` in .loop/settings.json."""
+    from .planner import settings
+    window = settings(project).get("quiet_window")
+    return window if isinstance(window, dict) and window.get("start") and window.get("end") else None
+
+
+def in_window(window: dict, moment: datetime) -> bool:
+    start, end = (tuple(int(x) for x in str(window[k]).split(":")[:2]) for k in ("start", "end"))
+    now_ = (moment.hour, moment.minute)
+    return start <= now_ < end if start < end else (now_ >= start or now_ < end)
+
+
+def machine_idle(window: dict) -> bool:
+    limit = window.get("max_load", round((os.cpu_count() or 4) * 0.25, 2))
+    try:
+        return os.getloadavg()[0] <= float(limit)
+    except OSError:
+        return True
+
+
 def pinned_release(project) -> str | None:
     """The pinned release path when it is not the code running now (see install.pin), else None."""
     from .install import pinned
@@ -582,16 +727,19 @@ def goal_to_run(project: Project, wanted: str | None) -> str | None:
     return current
 
 
-def start_background(project: Project, goal_id: str | None, adapter: str | None) -> dict:
+def start_background(project: Project, goal_id: str | None, adapter: str | None, worktree: bool = False) -> dict:
     store = project.goal(goal_id)
     runner = store.runner()
     if runner and not runner.get("exited_at") and procs.alive(runner.get("pid"), runner.get("identity")):
         return {"already_running": True, "pid": runner["pid"]}
-    probe = try_lock(project.loop / "runner.lock")
-    if probe is None:
-        return {"already_running": True, "note": "A runner is driving another goal of this project"}
-    probe.close()
-    argv = [sys.executable, "-m", "loop_engineering", "run", "--project", str(project.root), "--goal", store.id]
+    if not worktree:
+        probe = try_lock(project.loop / "runner.lock")
+        if probe is None:
+            return {"already_running": True, "note": "A runner is driving another goal of this project. Run "
+                    f"this one beside it in its own worktree: loop start --goal {store.id} --worktree"}
+        probe.close()
+    argv = [sys.executable, "-m", "loop_engineering", "run", *project.args(), "--goal", store.id,
+            *(["--worktree"] if worktree else [])]
     if adapter:
         argv += ["--adapter", adapter]
     env = procs.user_env({"PYTHONPATH": str(Path(__file__).resolve().parent.parent) + os.pathsep +

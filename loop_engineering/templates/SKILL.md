@@ -87,7 +87,8 @@ When the user asks for progress, call `loop_status` (or read `.loop/STATUS.md`).
 status, next action, tasks done/total, acceptance results, open questions and budget used.
 Don't guess. Show the user the CLI commands they can run:
 `loop status --watch`, `loop dashboard`, `loop answer <id> "..."`, `loop pause`, `loop resume`,
-`loop stop`.
+`loop stop`. Another goal can run beside the current one in its own worktree:
+`loop start --goal <id> --worktree`.
 
 ## Rules
 

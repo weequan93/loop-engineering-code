@@ -4,6 +4,7 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
 from loop_engineering import engine
 from loop_engineering.api import Service
@@ -837,3 +838,119 @@ class ContextDietTests(ProjectCase):
         self.assertEqual(bill["prompt_chars"], turn["context"]["prompt_chars"])
         from loop_engineering import dashboard
         self.assertIn("context", dashboard.turns(store)["turns"][-1])
+
+
+class QuietWindowTests(ProjectCase):
+    def setUp(self):
+        super().setUp()
+        self.store = self.goal()
+        approve(self.store)
+        Service(self.project, actor="agent", interactive=False).plan(
+            [{"id": "perf", "title": "Measure", "needs": ["exclusive-machine"],
+              "checks": [{"id": "c", "run": "test -d ."}]}])
+
+    def at(self, hour):
+        from datetime import datetime
+        return datetime(2026, 10, 18, hour, 30).timestamp()
+
+    def test_without_a_window_the_runner_stops_for_a_person(self):
+        self.assertEqual(engine.next_action(self.store.goal(), self.store.state())["kind"], "wait_window")
+        self.assertIsNone(self.store.state()["blocker"])        # waiting for a window is not a blocker
+        result = Runner(self.project, self.store.id, log=lambda m: None).run()
+        self.assertIn("quiet window", result["reason"])
+
+    def test_the_window_runs_the_task_alone_and_holds_the_machine(self):
+        settings = json.loads((self.root / ".loop" / "settings.json").read_text())
+        settings["quiet_window"] = {"start": "01:00", "end": "06:00", "max_load": 999}
+        (self.root / ".loop" / "settings.json").write_text(json.dumps(settings))
+        clock = {"t": self.at(2)}
+        runner = Runner(self.project, self.store.id, log=lambda m: None, clock=lambda: clock["t"],
+                        sleep=lambda s: None)
+        self.assertTrue(runner._machine_step(self.store.state()))
+        task = engine.task_by_id(self.store.state(), "perf")
+        self.assertEqual((task["status"], task["window_run"]), ("pending", True))
+        self.assertIsNotNone(runner.machine)
+        act = engine.next_action(self.store.goal(), self.store.state())
+        self.assertEqual((act["task"], act["batch"]), ("perf", []))
+        # Another project's runner sees the machine is taken and waits.
+        other = Runner(self.project, self.store.id, log=lambda m: None, sleep=lambda s: None)
+        self.assertEqual(other._machine_holder(), str(self.project.root))
+        clock["t"] = self.at(7)                                  # the window ends before the task is done
+        runner._machine_step(self.store.state())
+        self.assertEqual(engine.task_by_id(self.store.state(), "perf")["status"], "deferred")
+        self.assertIsNone(runner.machine)
+        self.assertIsNone(other._machine_holder())
+
+
+class FrozenCheckTests(ProjectCase):
+    def test_task_checks_run_on_a_frozen_copy_while_other_work_goes_on(self):
+        import sys as _sys
+        import unittest
+        if _sys.platform != "darwin":
+            raise unittest.SkipTest("frozen copies use APFS clonefile")
+        from loop_engineering import checks
+        store = self.goal()
+        approve(store)
+        agent = Service(self.project, actor="agent", interactive=False)
+        agent.plan([{"id": "a", "title": "A", "checks": [{"id": "c", "run": "sleep 2 && test -f a.txt"}]},
+                    {"id": "b", "title": "B", "checks": [{"id": "c", "run": "test -d ."}]}])
+        (self.root / "a.txt").write_text("done")
+        claim = agent.task("done", "a", "made a.txt", wait_seconds=0)
+        job = store.state()["jobs"][claim["job_id"]]
+        self.assertTrue(job.get("snapshot"))
+        act = engine.next_action(store.goal(), store.state())
+        self.assertEqual((act["kind"], act["task"]), ("work", "b"))      # not wait_job
+        (self.root / "a.txt").unlink()                                   # live edits do not reach the check
+        checks.wait_job(store, job["id"], 60)
+        self.assertEqual(engine.task_by_id(store.state(), "a")["status"], "done")
+        self.assertFalse(Path(job["snapshot"]).exists())                 # the copy is removed afterwards
+
+
+class WorktreeGoalTests(ProjectCase):
+    def side_goal(self):
+        store = self.project.create_goal({"id": "side", "kind": "develop", "title": "Side", "objective": "add() must add",
+                                          "acceptance": [{"id": "tests", "run": "python3 test_calc.py"}],
+                                          "agent": {"adapter": "fake"}}, make_current=False)
+        approve(store)
+        return store
+
+    def test_a_worktree_goal_runs_beside_the_main_tree_and_merges_when_done(self):
+        from loop_engineering.store import try_lock
+        store = self.side_goal()
+        before = (self.root / "calc.py").read_text()
+        main_lock = try_lock(self.project.loop / "runner.lock")      # the main runner is busy with another goal
+        try:
+            result = Runner(self.project, "side", log=lambda m: None, worktree=True).run()
+        finally:
+            main_lock.close()
+        state = store.state()
+        self.assertEqual(state["status"], "done", state["status_reason"])
+        self.assertEqual(result["worktree"]["status"], "merged")
+        self.assertIn("calc.py", result["worktree"]["files"])
+        self.assertNotEqual((self.root / "calc.py").read_text(), before)   # applied to the main tree, uncommitted
+        self.assertIn("return a + b", (self.root / "calc.py").read_text())
+        self.assertFalse(Path(state["worktree"]["path"]).exists())        # the worktree is cleaned up
+        prompt = next((store.runs).glob("turn-*/prompt.md")).read_text()
+        self.assertIn("its own git worktree", prompt)
+        out = subprocess.run(["git", "status", "--porcelain"], cwd=self.root, capture_output=True, text=True)
+        self.assertNotIn("worktrees", out.stdout)
+
+    def test_snapshot_carries_uncommitted_work_and_conflicts_wait_for_a_person(self):
+        from loop_engineering import worktree
+        (self.root / "notes.txt").write_text("untracked work in the main tree\n")
+        (self.root / ".gitignore").write_text("deps/\n")
+        (self.root / "deps").mkdir()
+        (self.root / "deps" / "lib.txt").write_text("dependency\n")
+        self.side_goal()
+        record = worktree.prepare(self.project, "side")
+        side = Path(record["path"])
+        self.assertTrue((side / "notes.txt").is_file())                  # uncommitted files come along
+        if sys.platform == "darwin":
+            self.assertTrue((side / "deps" / "lib.txt").is_file())     # ignored dependencies are cloned
+        (side / "calc.py").write_text("def add(a, b):\n    return a + b  # side\n")
+        (self.root / "calc.py").write_text("def add(a, b):\n    return b + a  # main\n")
+        result = worktree.integrate(self.project, "side", record, self.project.loop / "side.patch")
+        self.assertEqual(result["status"], "conflict")
+        self.assertTrue(Path(result["patch"]).is_file())
+        self.assertIn("# main", (self.root / "calc.py").read_text())   # the main tree is left untouched
+        self.assertTrue(side.exists())                                   # kept until a person resolves it

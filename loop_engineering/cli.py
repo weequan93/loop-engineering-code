@@ -25,6 +25,7 @@ def parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--project", default=argparse.SUPPRESS, help="Project root (default: search upward from cwd)")
     common.add_argument("--goal", default=argparse.SUPPRESS, help="Goal id (default: current goal)")
+    common.add_argument("--loop-dir", default=argparse.SUPPRESS, help=argparse.SUPPRESS)  # worktree goals
     common.add_argument("--json", action="store_true", default=argparse.SUPPRESS, help="Print JSON")
 
     p = argparse.ArgumentParser(prog="loop", description="Loop Engineering 2: autonomous goal loops with verified "
@@ -125,8 +126,11 @@ def parser() -> argparse.ArgumentParser:
         add(name, f"{name.capitalize()} the goal")
     x = add("start", "Start the autonomous runner in the background")
     x.add_argument("--adapter")
+    x.add_argument("--worktree", action="store_true", help="Run this goal beside the main runner, in its own git "
+                   "worktree; its changes are applied to the main tree when it is done")
     x = add("run", "Run the autonomous runner in the foreground")
     x.add_argument("--adapter")
+    x.add_argument("--worktree", action="store_true", help=argparse.SUPPRESS)
     x.add_argument("--max-turns", type=int)
     x = add("dashboard", "Serve a read-only local status page")
     x.add_argument("--port", type=int, default=8765)
@@ -182,22 +186,26 @@ def main(argv: list[str] | None = None) -> int:
     project_arg = getattr(args, "project", None)
     goal_id = getattr(args, "goal", None)
     as_json = getattr(args, "json", False)
+    loop_dir = getattr(args, "loop_dir", None)
     from .store import Project
+
+    def Project_(root):  # noqa: N802 - the project, with its state directory when it is a goal's worktree
+        return Project(root, loop_dir)
     try:
         if args.command == "mcp":
             from .mcp_server import serve
-            serve(Project(project_arg) if project_arg else Project.find(), args.autonomous,
+            serve(Project_(project_arg) if project_arg else Project.find(), args.autonomous,
                   review_token=args.review_token, planner_token=args.planner_token)
             return 0
         if args.command == "statusline":
             from .install import statusline_from_stdin
             if project_arg:
                 from .status import line
-                print(line(Project(project_arg).goal(goal_id)))
+                print(line(Project_(project_arg).goal(goal_id)))
             else:
                 print(statusline_from_stdin(sys.stdin))
             return 0
-        project = Project(project_arg) if project_arg else Project.find()
+        project = Project_(project_arg) if project_arg else Project.find()
         result = dispatch(args, project, goal_id)
     except LoopError as exc:
         _print({"error": str(exc)}, True) if as_json else print(f"loop: {exc}", file=sys.stderr)
@@ -338,12 +346,12 @@ def dispatch(args, project, goal_id):
     if c == "start":
         from .runner import start_background
         _require_runnable(project, goal_id, None if autonomous else service)
-        return start_background(project, goal_id, args.adapter)
+        return start_background(project, goal_id, args.adapter, worktree=args.worktree)
     if c == "run":
         from .runner import Runner
         _require_runnable(project, goal_id, None if autonomous else service)
         return Runner(project, goal_id, adapter=args.adapter, max_turns=args.max_turns,
-                      reload=args.max_turns is None).run()
+                      reload=args.max_turns is None, worktree=args.worktree).run()
     if c == "dashboard":
         from .dashboard import serve
         serve(project, args.port, reload=True)

@@ -30,6 +30,7 @@ import time
 import urllib.parse
 import urllib.request
 
+from .store import loop_dir_for
 from .util import read_json, write_json
 
 ATTENTION_STATUSES = {"blocked": "Blocked", "limit": "Budget limit reached", "done": "Done", "failed": "Failed"}
@@ -110,7 +111,7 @@ def set_progress(enabled: bool) -> Path:
 def config(project_root: Path) -> dict:
     merged = {"desktop": True, "command": None}
     for path in (Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "loop" / "notify.json",
-                 project_root / ".loop" / "notify.json"):
+                 loop_dir_for(project_root) / "notify.json"):
         if path.is_file():
             try:
                 data = read_json(path)

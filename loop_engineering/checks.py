@@ -7,9 +7,11 @@ exit codes and log tails; a model's claim never substitutes for a check.
 
 from __future__ import annotations
 
+import ctypes
 import hashlib
 import os
 from pathlib import Path
+import shutil
 import signal
 import subprocess
 import sys
@@ -149,12 +151,60 @@ def select(goal: dict, state: dict, scope: str | None, ids: list[str] | None) ->
     return chosen
 
 
+# ---------------------------------------------------------------- frozen copies (task checks)
+
+
+def _clonefile():
+    """macOS clonefile(2): copy-on-write clone of a file or a whole directory tree in one call (APFS)."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        function = ctypes.CDLL("libc.dylib", use_errno=True).clonefile
+    except (OSError, AttributeError):
+        return None
+    function.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
+    return function
+
+
+def snapshot(project) -> Path | None:
+    """Freeze the working tree for a check job: clone every top-level entry except `.loop` into
+    `.loop/snapshots/<id>/`. Agents may then keep working while the checks run on the frozen copy.
+    Returns None where cloning is unsupported or switched off (`"frozen_checks": false` in settings)."""
+    from .planner import settings
+    clone = _clonefile()
+    if clone is None or settings(project).get("frozen_checks", True) is False:
+        return None
+    base = project.loop / "snapshots"
+    base.mkdir(parents=True, exist_ok=True)
+    target = base / new_id("snap")
+    target.mkdir()
+    try:
+        for entry in sorted(project.root.iterdir()):
+            if entry.name == ".loop":
+                continue
+            if clone(os.fsencode(entry), os.fsencode(target / entry.name), 0x0001) != 0:  # CLONE_NOFOLLOW
+                raise OSError(ctypes.get_errno(), os.strerror(ctypes.get_errno()), str(entry))
+    except OSError:
+        shutil.rmtree(target, ignore_errors=True)
+        return None
+    return target
+
+
+def drop_snapshots(project, keep: set[str] = frozenset()) -> None:
+    base = project.loop / "snapshots"
+    if base.is_dir():
+        for entry in base.iterdir():
+            if str(entry) not in keep:
+                shutil.rmtree(entry, ignore_errors=True)
+
+
 def execute(store, qualified: list[str], *, actor: str, job_id: str | None = None,
             cancelled=lambda: False) -> dict:
     """Run checks now (in this process) and record each result. Returns {id: result}."""
     goal, state = store.goal(), store.state()
     index = check_index(goal, state)
-    root = store.project.root
+    frozen = ((state["jobs"].get(job_id) or {}).get("snapshot")) if job_id else None
+    root = Path(frozen) if frozen and Path(frozen).is_dir() else store.project.root
     stamp = fingerprint(root)
     results = {}
     batch = job_id or new_id("checks")
@@ -200,6 +250,8 @@ def start_job(store, qualified: list[str], actor: str, purpose: dict | None = No
     finalizes a task-done claim; {"type": "acceptance"} applies final verification.
     """
     job_id = new_id("job")
+    # Task checks run on a frozen copy, so the agent can work on other tasks meanwhile (engine.next_action).
+    frozen = snapshot(store.project) if (purpose or {}).get("type") == "task" else None
 
     def reserve(_goal, state):
         running = [j for j in state["jobs"].values() if j["status"] == "running"]
@@ -209,13 +261,19 @@ def start_job(store, qualified: list[str], actor: str, purpose: dict | None = No
         if any(j["status"] == "running" for j in state["jobs"].values()):
             raise LoopError("Another check job is running; poll it with loop_check(job_id=...) first")
         state["jobs"][job_id] = {"id": job_id, "checks": qualified, "status": "running", "actor": actor,
-                                 "started_at": now(), "pid": None, "identity": None, "purpose": purpose}
+                                 "started_at": now(), "pid": None, "identity": None, "purpose": purpose,
+                                 **({"snapshot": str(frozen)} if frozen else {})}
         # Keep the job table bounded.
         for old in sorted(state["jobs"], key=lambda k: state["jobs"][k]["started_at"])[:-20]:
             if state["jobs"][old]["status"] != "running":
                 del state["jobs"][old]
-    store.mutate("job.started", reserve, job=job_id, checks=qualified)
-    argv = [sys.executable, "-m", "loop_engineering", "_job", "--project", str(store.project.root),
+    try:
+        store.mutate("job.started", reserve, job=job_id, checks=qualified)
+    except LoopError:
+        if frozen:
+            shutil.rmtree(frozen, ignore_errors=True)
+        raise
+    argv = [sys.executable, "-m", "loop_engineering", "_job", *store.project.args(),
             "--goal", store.id, "--job", job_id]
     env = procs.user_env({"PYTHONPATH": str(Path(__file__).resolve().parent.parent) + os.pathsep +
                                          os.environ.get("PYTHONPATH", "")})
@@ -274,6 +332,9 @@ def run_job(store, job_id: str) -> None:
             state["jobs"][job_id].update(status="error", finished_at=now(), error=f"{type(exc).__name__}: {exc}")
         store.mutate("job.error", fail, job=job_id)
         raise
+    finally:
+        if job.get("snapshot"):
+            shutil.rmtree(job["snapshot"], ignore_errors=True)
 
 
 def wait_job(store, job_id: str, seconds: float) -> dict:

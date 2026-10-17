@@ -186,6 +186,9 @@ def markdown(store) -> str:
            f"- Turns {turns(state['iteration'], s['budget_used'], goal['policy']['max_iterations'])} · agent time "
            f"{state['usage']['agent_seconds'] / 60:.1f} min · reported cost ${state['usage']['cost_usd']:.2f}"
            + ("" if state["usage"].get("cost_complete", True) else " (partial: some turns reported no cost)"),
+           *([f"- Worktree: `{state['worktree']['path']}` · {state['worktree'].get('status', 'running')}"
+              + (f" · patch `{state['worktree']['patch']}`" if state['worktree'].get('status') == 'conflict' else "")]
+             if state.get("worktree") else []),
            ""]
     w = s["working_on"]
     if w["tasks"] or w["job"]:

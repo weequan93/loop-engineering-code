@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 from loop_engineering import checks, engine, model
 from loop_engineering.api import Service
@@ -360,6 +360,8 @@ class AmendmentTests(ProjectCase):
 class ParallelWorkTests(ProjectCase):
     def test_independent_tasks_share_a_turn_and_claims_queue_behind_the_running_job(self):
         from loop_engineering.runner import Runner
+        # Checks in place (no frozen copy): later claims queue behind the running job.
+        (self.root / ".loop" / "settings.json").write_text(json.dumps({"propose_next": False, "frozen_checks": False}))
         store = self.goal()
         Service(self.project, actor="chat").goal_approve(True)
         Service(self.project, actor="chat").plan([

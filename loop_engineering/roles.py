@@ -11,7 +11,10 @@ or any project-defined name) selects:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+
+from .store import loop_dir_for
 
 BUILTIN = Path(__file__).parent / "roles"
 LIMIT = 12000
@@ -34,7 +37,7 @@ def workflow(project_root: Path, kind: str) -> dict:
     import json
     base = WORKFLOWS.get(kind, WORKFLOWS["develop"])
     roles = {stage: role for stage, role in base["stages"]}
-    custom = project_root / ".loop" / "workflows" / f"{kind}.json"
+    custom = loop_dir_for(project_root) / "workflows" / f"{kind}.json"
     if custom.is_file():
         try:
             data = json.loads(custom.read_text(encoding="utf-8"))
@@ -53,9 +56,9 @@ def stage_role(project_root: Path | None, goal: dict, stage: str | None) -> str 
 def available(project_root: Path) -> dict[str, str]:
     """Role name → where its guide comes from."""
     roles = {p.stem: "built-in" for p in BUILTIN.glob("*.md")}
-    custom = project_root / ".loop" / "roles"
+    custom = loop_dir_for(project_root) / "roles"
     if custom.is_dir():
-        roles.update({p.stem: str(p.relative_to(project_root)) for p in custom.glob("*.md")})
+        roles.update({p.stem: os.path.relpath(p.resolve(), Path(project_root).resolve()) for p in custom.glob("*.md")})
     return dict(sorted(roles.items()))
 
 
@@ -68,7 +71,7 @@ def guide(project_root: Path, role: str | None, profile: dict | None = None) -> 
     if not role:
         return ""
     parts = []
-    custom = project_root / ".loop" / "roles" / f"{role}.md"
+    custom = loop_dir_for(project_root) / "roles" / f"{role}.md"
     builtin = BUILTIN / f"{role}.md"
     if custom.is_file():
         parts.append(_read(custom))

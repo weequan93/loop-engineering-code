@@ -267,6 +267,11 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
             return action("review", "agent", f"Early independent review {requested} (requested by a human).",
                           review=requested, early=True)
     running = [j for j in state.get("jobs", {}).values() if j["status"] == "running"]
+    job_running = bool(running)
+    checking = {(j.get("purpose") or {}).get("task") for j in running}
+    if running and all(j.get("snapshot") for j in running) and any(
+            t["id"] not in checking and not (t.get("claim") or {}).get("queued") for t in workable_tasks(state)):
+        running = []  # task checks run on a frozen copy: keep working on other tasks meanwhile
     if running:
         # A long controller check is in flight: wait for it instead of spending agent
         # turns polling it (v2 lesson: polling turns looked like stagnation).
@@ -275,7 +280,7 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
                       f"({', '.join(job['checks'])}), started {job['started_at']}.", job=job["id"])
     # Parallel work claims several tasks in one turn; checks run one job at a time, so claims queue.
     queued = [t for t in state["tasks"] if t["status"] == "active" and (t.get("claim") or {}).get("queued")]
-    if queued:
+    if queued and not job_running:
         return action("verify_task", "controller", f"Run the checks of claimed task {queued[0]['id']}.",
                       task=queued[0]["id"])
 
@@ -300,9 +305,14 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
     finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
     # An active task whose dependencies were added later must wait for them (no starvation).
     active = [t for t in state["tasks"] if t["status"] == "active" and set(t["depends_on"]) <= finished
-              and not (t.get("claim") or {}).get("queued")]
+              and not (t.get("claim") or {}).get("queued") and t["id"] not in checking]
     ready = ready_tasks(state)
     workable = active + [t for t in ready if t not in active]
+    alone = next((t for t in workable if "exclusive-machine" in (t.get("needs") or [])), None)
+    if alone:  # resumed for a quiet window (or by a person): it runs alone, nothing in parallel
+        return action("work", "agent", f"Task {alone['id']} needs the machine to itself: {alone['title']}. "
+                      "Run nothing else meanwhile and confirm the machine is quiet before measuring.",
+                      task=alone["id"], batch=[])
     if workable:
         # Independent ready tasks run in the same turn, one sub-agent each (agent.parallel_tasks, default 3).
         first, batch = workable[0], [t["id"] for t in workable[1:goal["agent"].get("parallel_tasks", PARALLEL_TASKS)]]
@@ -311,6 +321,10 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
                       + (f" (+ {len(batch)} in parallel: {', '.join(batch)})" if batch else ""),
                       task=first["id"], batch=batch)
     pending = [t for t in state["tasks"] if t["status"] not in {"done", "dropped"}]
+    if pending and all(waits_for_window(t) for t in pending):
+        return action("wait_window", "controller", "Remaining tasks need the machine to themselves: "
+                      + ", ".join(t["id"] for t in pending) + ". They run in the project's quiet window.",
+                      tasks=[t["id"] for t in pending])
     if pending:
         return action("unblock", "human", "Remaining tasks wait on blocked or missing dependencies: " +
                       ", ".join(f"{t['id']}<-{t['depends_on']}" for t in pending))
@@ -796,6 +810,42 @@ def resume_task(goal: dict, state: dict, task_id: str, note: str, by: str) -> di
     return {"_event": {"task": task_id, "by": by}}
 
 
+def set_worktree(goal: dict, state: dict, record: dict) -> dict:
+    """The goal runs in its own git worktree (see worktree.py)."""
+    state["worktree"] = {**(state.get("worktree") or {}), **record}
+    return {"_event": {k: record.get(k) for k in ("path", "status")}}
+
+
+def worktree_merged(goal: dict, state: dict, result: dict) -> dict:
+    state["worktree"] = {**(state.get("worktree") or {}), **result}
+    files = ", ".join(result.get("files", [])[:12]) or "no files"
+    if result["status"] == "conflict":
+        state["notes"].append({"at": now(), "kind": "risk", "by": "controller", "text": (
+            f"The worktree changes do not apply cleanly to the main tree ({files}). The patch is saved at "
+            f"{result['patch']}; apply it by hand (`git apply --3way`), then start the goal with --worktree again "
+            "to clean up.")})
+        state["status_reason"] = "Done in its worktree; merging into the main tree needs a person."
+    else:
+        state["status_reason"] = (f"Done; worktree changes applied to the main tree ({files})."
+                                  if result["status"] == "merged" else "Done; the worktree had no changes.")
+    return {"_event": {"status": result["status"], "files": result.get("files", [])[:50]}}
+
+
+def window_open(goal: dict, state: dict, task_id: str) -> dict:
+    """The project's quiet window began and the machine is idle: run this task now, alone."""
+    task = task_by_id(state, task_id)
+    resume_task(goal, state, task_id, "quiet window open and the machine is idle", "controller (quiet window)")
+    task["window_run"] = True
+    return {"_event": {"task": task_id}}
+
+
+def window_closed(goal: dict, state: dict, task_id: str) -> dict:
+    task = task_by_id(state, task_id)
+    task.pop("window_run", None)
+    return hold_task(goal, state, task_id, "needs exclusive-machine; the quiet window ended, it resumes in the next "
+                     "one", "", "controller", "deferred")
+
+
 def _release(task: dict) -> None:
     begun = task.get("started_at") or task.get("last_failure")
     task.update(status="active" if begun else "pending", attempts=0, stall_turns=0,
@@ -803,8 +853,16 @@ def _release(task: dict) -> None:
     task.pop("hold", None)
 
 
+def waits_for_window(task: dict) -> bool:
+    """Deferred by the controller only because it needs the machine to itself (see runner quiet window)."""
+    return (task["status"] == "deferred" and task.get("needs") == ["exclusive-machine"]
+            and (task.get("hold") or {}).get("by") == "controller")
+
+
 def _block_if_all_held(state: dict) -> None:
     held = [t for t in state["tasks"] if t["status"] in model.HELD]
+    if all(waits_for_window(t) for t in held):  # those wait for the quiet window, not for a person
+        return
     if not held or state.get("blocker") or workable_tasks(state) or any(
             j["status"] == "running" for j in state.get("jobs", {}).values()):
         return

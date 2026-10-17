@@ -79,8 +79,8 @@ def parser() -> argparse.ArgumentParser:
     x.add_argument("--drop", nargs=2, metavar=("ID", "REASON"))
     x.add_argument("--covers", action="append", default=[], help="requirement id the --add task delivers")
     x.add_argument("--final", action="store_true", help="Full pipeline: submit the plan for review")
-    x = add("stage-done", "Full pipeline: record the document of a stage (intake, solution, test_design, resources)")
-    x.add_argument("stage", choices=["intake", "solution", "test_design", "resources"])
+    x = add("stage-done", "Full pipeline: record the document of a stage (brief or design)")
+    x.add_argument("stage", choices=["brief", "design"])
     x.add_argument("path")
     x.add_argument("--summary", default="")
     x = add("requirements", "Full pipeline: record requirements from a JSON list, or show them")
@@ -243,8 +243,8 @@ def dispatch(args, project, goal_id):
         text_ = _text_arg(args.text)
         docs = "".join(f"\n- {d}" for d in args.doc)
         guidance = ("A NEW REQUEST from the user. Draft goal(s) that deliver exactly this request, and nothing else. "
-                    "Use the full pipeline, so a product manager writes the brief first and the requirements are "
-                    "extracted from the request and the documents. Choose acceptance checks the project can really "
+                    "Use the full pipeline, so the brief and this goal's requirements come first, extracted from "
+                    "the request and the documents. Choose acceptance checks the project can really "
                     "run (existing test/build commands plus a behavior check the goal creates).\n\nRequest:\n"
                     + text_ + (f"\n\nDocuments for this request:{docs}" if docs else ""))
         entry = propose(project, count=2, instructions=guidance, adapter=args.adapter,

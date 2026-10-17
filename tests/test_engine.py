@@ -20,7 +20,7 @@ class GoalLifecycleTests(ProjectCase):
             service.goal_approve(False)
         status = service.goal_approve(True)
         self.assertEqual(status["status"], "ready")
-        self.assertEqual(status["next"]["kind"], "intake")  # new drafts use the full pipeline (product brief first)
+        self.assertEqual(status["next"]["kind"], "brief")  # new drafts use the full pipeline (brief first)
 
     def test_contract_edit_requires_reapproval(self):
         store = self.goal()

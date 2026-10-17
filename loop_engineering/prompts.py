@@ -15,8 +15,9 @@ PROTOCOL = """\
 Use the `loop` MCP tools. If they are unavailable, use the `loop` CLI with the same names, for
 example `loop task done <id> --summary ...`.
 - Your assignment is in this prompt; `loop_next` only says whether it changed. `loop_status` shows everything.
-- Full pipeline: `loop_stage_done` records a stage document; `loop_requirements` records requirements;
-  `loop_plan` adds or updates tasks (with checks, `covers`, `role`, `team`, and `final=true` to submit the plan).
+- Full pipeline (brief → design → design review → develop → final review): `loop_stage_done` records the brief
+  or design document; `loop_requirements` records requirements; `loop_plan` adds or updates tasks (with checks,
+  `covers`, `role`, `team`, and `final=true` to submit the plan).
 - `loop_task` starts or finishes a task.
 - `loop_check` asks the controller to run checks; only controller-run checks count as evidence.
 - `loop_note` records progress, decisions and findings. Before you stop, write one
@@ -107,8 +108,8 @@ def coordination(goal: dict, task: dict, project_root: Path) -> str:
 def _assignment(goal: dict, state: dict, act: dict) -> str:
     kind = act["kind"]
     lines = [f"**Assignment: {kind}** — {act['summary']}"]
-    from .engine import (FINAL_GATE, GATE_STAGE_IDS, STAGE_BY_ID, artifact_path, find_gate, pipeline,
-                         pre_stages, uncovered)
+    from .engine import (FINAL_REVIEW, GATE_ROUNDS, GATE_STAGE_IDS, find_gate, pipeline, review_facets,
+                         uncovered)
     full = pipeline(goal)
     documents = _stage_documents(goal, state)
     revise = act.get("revise_after")
@@ -117,45 +118,36 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
         lines.append(f"**{revise} sent this stage back.** Address these findings:\n{tail(record.get('findings', ''), 6000)}")
     if documents and kind not in {"work", "repair"}:
         lines.append("Documents produced by earlier stages (read them):\n" + documents)
-    if kind in STAGE_BY_ID and STAGE_BY_ID[kind]["type"] == "artifact":
-        lines.append(f"Write the {kind.replace('_', ' ')} document at `{act['output']}` (create the folder), following "
-                     "your role guide below. When it is complete, call "
-                     f"`loop_stage_done(stage=\"{kind}\", path=\"{act['output']}\", summary=...)`. Do not write production "
-                     "code in this stage.")
-        if kind == "resources":
-            lines.append("Plan to check (tasks and teams):\n" + "\n".join(
-                f"- `{t['id']}` [{t.get('role') or '-'}] {t['title']} team "
-                f"{[(x['role'], x['count']) for x in t.get('team', [])]}" for t in state["tasks"] if t["status"] != "dropped"))
-    elif kind == "requirements":
+    if kind == "brief":
         lines.append(
-            "Stage 1 of the full pipeline. Read every document listed under context, and any specification, plan, "
-            "roadmap or ledger they point to. Record each requirement as an atomic, testable item with "
-            "`loop_requirements`: `id` (reuse the document's own ID, otherwise R-001…), `text` (what must be true), "
-            "`source` (doc path and section or line), `verify` (the test type and how it will be proven: unit, "
-            "integration, e2e, performance, security, review or human). Include functional and non-functional "
-            "requirements, constraints and explicit out-of-scope notes. Do not invent requirements the documents do "
-            "not state; ask with loop_ask when the documents are ambiguous. Call loop_requirements(final=true) when "
-            "the list is complete. Do not write code in this stage.")
+            f"Stage 1 of 3: brief. Write `{act['output']}` (create the folder): the problem, who the users are, their "
+            "main journeys, what success looks like, and the scope, with an explicit out-of-scope list. Then record "
+            "this goal's requirements with `loop_requirements`: `id` (reuse the document's own ID, otherwise R-001…), "
+            "`text` (what must be true), `source` (doc path and section), `verify` (how it will be proven). Record only "
+            "what THIS goal must deliver; later milestones go to the out-of-scope list. Aim for at most about 20 "
+            "requirements: if the goal needs far more, propose splitting it with loop_ask instead of recording them "
+            "all. Do not invent requirements; ask when the documents are ambiguous or a business decision is open. "
+            f"Finish with `loop_stage_done(stage=\"brief\", path=\"{act['output']}\", summary=...)` and "
+            "`loop_requirements(final=true)`. No production code in this stage.")
         if state.get("requirements"):
             lines.append(f"Already recorded: {len(state['requirements'])} requirements "
                          f"({', '.join(r['id'] for r in state['requirements'][:40])}).")
-    elif kind == "plan" and full:
-        requirements = requirement_index(goal, state)
+    elif kind == "design":
         lines.append(
-            "Stage 2: plan. Break the work into tasks with `loop_plan`. Each task needs `covers` (the requirement IDs "
-            "it delivers), `depends_on`, a `detail` with the expected outcome, a `role` (the specialist who does it: "
-            "architect, backend, frontend, mobile, data, tester, security, devops, or a project role in "
-            ".loop/roles/), and real `checks` (tests that prove it). Split work so each task has one lead role. "
-            "Work runs in parallel by default: independent ready tasks share a turn, one sub-agent each, so "
-            "only add `depends_on` that is real. When a task splits into slices with separate files, add `team`, for example "
-            "[{\"role\": \"backend\", \"count\": 2, \"focus\": \"API and persistence\"}, {\"role\": \"tester\", \"count\": 1}] "
-            f"(at most {goal['agent'].get('team_limit', 4)} seats). The turn's agent then coordinates them as "
-            "sub-agents. Keep work serial only where it must be (e.g. performance measurements on an idle machine). "
-            "Every requirement must be covered by at "
-            "least one task. Order the work: architecture and contracts first, then implementation, then the test "
-            "suites (unit, integration, e2e, performance, security). When the plan is complete, call "
-            "loop_plan(final=true); an independent reviewer checks it before development starts.\n\n"
-            f"Requirements:\n{requirements}\n\nGoal acceptance checks (staged):\n" + _checks_text(goal["acceptance"]))
+            f"Stage 2 of 3: design and plan. Write `{act['output']}`, short and concrete: the chosen approach and the "
+            "trade-offs that decided it, contracts between parts, risks, and the resources the work needs (tools, "
+            "services, accounts), checked to be really available. Prove feasibility first: for any requirement you "
+            "are not sure the platform or budget allows, run a small spike now; if one is infeasible, say so and ask "
+            "with loop_ask instead of planning around it. Then record the tasks with `loop_plan`: each task has "
+            "`covers` (requirement IDs), `depends_on` (only real ones; independent tasks run in parallel), a `detail`, "
+            "a `role` (architect, backend, frontend, mobile, data, tester, security, devops, or a project role), and "
+            "real `checks` that prove its requirements. These checks are the test design: no separate test plan. "
+            "Size each task to finish in a few turns; at most about 20 tasks. Use `team` only when a task really "
+            f"splits into slices with separate files (at most {goal['agent'].get('team_limit', 4)} seats). Finish with "
+            f"`loop_stage_done(stage=\"design\", path=\"{act['output']}\", summary=...)` and `loop_plan(final=true)`. "
+            "An independent reviewer then checks the brief, requirements, design and plan once before development.\n\n"
+            f"Requirements:\n{requirement_index(goal, state)}\n\nGoal acceptance checks (staged):\n"
+            + _checks_text(goal["acceptance"]))
         missing = uncovered(state)
         if state["tasks"] and missing:
             lines.append(f"Not covered yet: {', '.join(missing[:60])}")
@@ -188,30 +180,23 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
                 f"`{task['id']}`.\n\n" + "\n\n".join(
                     f"### `{t['id']}`: {t['title']}\n{(t.get('detail') or '')[:1500]}\nRole: {t.get('role') or '-'}"
                     f"\nChecks:\n{_checks_text(t['checks'])}" for t in batch))
-    elif kind == "review" and act["review"] == "requirements_review":
-        requirements = "\n".join(f"- `{r['id']}` {r['text'][:300]} — source {r['source'][:120]}; verify: "
-                                  f"{r['verify'][:150]}" for r in state.get("requirements", []))
-        lines += ["Review the product brief and the recorded requirements before any design work: is every "
-                  "requirement faithful to the documents and the brief, is anything missing or invented, are "
-                  "priorities and non-scope respected, and is each requirement verifiable?",
-                  f"Requirements:\n{requirements}",
-                  "Do NOT modify files. Finish with loop_review(review_id='requirements_review', verdict='pass'|'fail', "
-                  "findings=..., back_to='intake' or 'requirements') with concrete gaps."]
     elif kind == "review" and act["review"] in GATE_STAGE_IDS:
-        requirements = requirement_index(goal, state)
+        record = state.get("stages", {}).get(act["review"]) or {}
+        rounds = record.get("rounds", 0)
         tasks = "\n".join(f"- `{t['id']}` [{t.get('role') or '-'}] {t['title']} ← {t['depends_on']} covers "
-                           f"{t.get('covers', [])} team {[(x['role'], x['count']) for x in t.get('team', [])]} "
-                           f"checks {[c['id'] for c in t['checks']]}"
+                           f"{t.get('covers', [])} checks {[c['id'] for c in t['checks']]}"
                            for t in state["tasks"] if t["status"] != "dropped")
-        lines += ["You are the independent plan reviewer. Read the source documents and the stage documents yourself "
-                  "and judge, before any code is written: does the solution satisfy the requirements with sound "
-                  "trade-offs? Does the test plan prove every requirement? Do the tasks cover the requirements in a "
-                  "sensible order, with the right roles and team sizes, and checks that would really prove them "
-                  "(not `echo ok`)? Does the readiness report show that every needed resource is really available?",
-                  f"Requirements:\n{requirements}", f"Tasks:\n{tasks}",
-                  "Do NOT modify files. Finish with loop_review(review_id='plan_review', verdict='pass'|'fail', "
-                  "findings=..., back_to='solution'|'test_design'|'plan'|'resources') listing concrete gaps."]
-    elif kind == "review" and act["review"] == FINAL_GATE["id"]:
+        lines += ["You are the independent design reviewer. Before any code is written, read the brief and the design "
+                  "yourself and judge once: are the requirements faithful to the documents, in scope and verifiable? "
+                  "Is the design feasible on this platform and within its budgets? Do the tasks cover every "
+                  "requirement with checks that would really prove it (not `echo ok`), in a sensible order and size? "
+                  "Are the needed resources really available? Fail only for problems that would make the goal wrong "
+                  "or undeliverable; list smaller points as advice in the findings of a pass.",
+                  f"This is round {rounds + 1} of {GATE_ROUNDS}; after {GATE_ROUNDS} failed rounds a person decides.",
+                  f"Requirements:\n{requirement_index(goal, state)}", f"Tasks:\n{tasks}",
+                  "Do NOT modify files. Finish with loop_review(review_id='design_review', verdict='pass'|'fail', "
+                  "findings=..., back_to='brief'|'design') with concrete gaps."]
+    elif kind == "review" and act["review"] == FINAL_REVIEW["id"]:
         matrix = []
         for r in state.get("requirements", []):
             covering = [t for t in state["tasks"] if r["id"] in t.get("covers", [])]
@@ -224,14 +209,20 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
         staged = "\n".join(f"- [{c.get('stage', 'acceptance')}] `{c['id']}`: "
                             f"{state['checks'].get('acceptance.' + c['id'], {}).get('status', 'not run')}"
                             for c in goal["acceptance"])
-        reviews = "\n".join(f"- {k}: {v['verdict']}" for k, v in state["reviews"].items())
-        lines += ["You are the final acceptance reviewer. Decide whether the goal is really done: every requirement "
-                  "must be proven by real evidence on the current candidate. Open the code and the tests to confirm "
-                  "the evidence is meaningful; run read-only commands if needed.",
-                  "Traceability matrix (requirement → tasks → task checks):\n" + "\n".join(matrix),
-                  "Staged acceptance results:\n" + staged, "Other reviews:\n" + (reviews or "- none"),
-                  "Do NOT modify files. Finish with loop_review(review_id='final-acceptance', verdict='pass'|'fail', "
-                  "findings=...) naming every requirement that is not proven and why."]
+        rounds = (state["reviews"].get(FINAL_REVIEW["id"]) or {}).get("rounds", 0)
+        base = state.get("base_ref")
+        lines += ["You are the final reviewer. You did not write this work. Judge the finished goal once, from every "
+                  "angle below; with your host's sub-agents you may review the angles in parallel, read-only. Open the "
+                  "code and tests to confirm the evidence is meaningful; run read-only commands if needed.",
+                  "Angles:\n" + "\n".join(f"- **{name}**: {what}" for name, what in review_facets(goal)),
+                  (f"The work since approval is `git diff {base}` plus uncommitted changes." if base else
+                   "Inspect the current working tree and recent history."),
+                  "Traceability (requirement → tasks → task checks):\n" + ("\n".join(matrix) or "- (no requirements)"),
+                  "Staged acceptance results:\n" + staged,
+                  f"This is round {rounds + 1} of {GATE_ROUNDS}; after {GATE_ROUNDS} failed rounds a person decides. "
+                  "Fail only for real defects or unproven requirements; list minor points as advice in a pass.",
+                  f"Do NOT modify files. Finish with loop_review(review_id='{FINAL_REVIEW['id']}', verdict='pass'|'fail', "
+                  "findings=...) with findings grouped by angle: file:line, what is wrong, and why it matters."]
     elif kind == "review":
         gate = find_gate(goal, act["review"])
         base = state.get("base_ref")

@@ -48,21 +48,22 @@ class MCPTests(ProjectCase):
         error, value = call(server, "loop_goal_approve", confirmed_by_user=True)
         self.assertEqual(value["status"], "ready")
         error, value = call(server, "loop_next")
-        self.assertEqual(value["action"]["kind"], "intake")
-        self.assertIn("Role: product manager", value["assignment"])
-        error, value = call(server, "loop_stage_done", stage="intake", path=value["action"]["output"])
+        self.assertEqual(value["action"]["kind"], "brief")
+        self.assertIn("Role: requirements analyst", value["assignment"])
+        error, value = call(server, "loop_stage_done", stage="brief", path=value["action"]["output"])
         self.assertTrue(error)  # the document must exist first
         target = self.root / call(server, "loop_next")[1]["action"]["output"]
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text("# Product brief\n\nProblem, users, journeys, success metrics and scope for the test.\n")
-        error, value = call(server, "loop_stage_done", stage="intake", path=str(target.relative_to(self.root)))
+        target.write_text("# Brief\n\nProblem, users, journeys, success metrics and scope for the test.\n")
+        error, value = call(server, "loop_stage_done", stage="brief", path=str(target.relative_to(self.root)))
         self.assertFalse(error, value)
-        self.assertEqual(value["action"]["kind"], "requirements")
+        self.assertEqual(value["action"]["kind"], "brief")  # the brief also needs its final requirements
         error, value = call(server, "loop_requirements", requirements=[
             {"id": "R1", "text": "t", "source": "README", "verify": "unit"}], final=True)
         self.assertFalse(error, value)
         error, value = call(server, "loop_next")
-        self.assertEqual((value["action"]["kind"], value["action"]["review"]), ("review", "requirements_review"))
+        self.assertEqual(value["action"]["kind"], "design")
+        self.assertIn("Role: tech lead", value["assignment"])
         error, value = call(server, "loop_plan", tasks=[{"id": "BAD ID", "title": "x"}])
         self.assertTrue(error)
 
@@ -691,7 +692,7 @@ class LightContextTests(ProjectCase):
         from loop_engineering import prompts
         from loop_engineering.status import render_files
         goal, state = self.store.goal(), self.store.state()
-        text = prompts.assignment(goal, state, {"kind": "review", "review": "plan_review", "summary": "s"}, self.root)
+        text = prompts.assignment(goal, state, {"kind": "review", "review": "design_review", "summary": "s"}, self.root)
         self.assertIn("`R-001`", text)
         self.assertNotIn("docs/spec.md:1", text)              # sources and verify plans live in the file
         self.assertLess(len(text.split("`R-001` ")[1].splitlines()[0]), 115)

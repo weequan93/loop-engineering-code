@@ -500,12 +500,14 @@ def service_problem(text: str) -> tuple[str, str] | None:
 
 
 def concrete_progress(state: dict) -> tuple:
-    """What counts as a real result: finished tasks, passing checks, recorded reviews/stages, verification."""
+    """What counts as a real result: finished tasks, passing checks, passed reviews, completed stages, verification.
+
+    A failed review or a re-submitted document is not progress: otherwise review/rework cycles look busy forever."""
     return (sum(t["status"] in {"done", "dropped"} for t in state["tasks"]),
             sum(1 for c in state["checks"].values() if c.get("status") == "pass"),
-            tuple(sorted((k, v.get("at")) for k, v in state.get("reviews", {}).items())),  # each verdict counts
-            tuple(sorted((k, (v or {}).get("verdict"), (v or {}).get("done"), (v or {}).get("at"))
-                         for k, v in (state.get("stages") or {}).items())),
+            tuple(sorted(k for k, v in state.get("reviews", {}).items() if v.get("verdict") == "pass")),
+            tuple(sorted(k for k, v in (state.get("stages") or {}).items()
+                         if (v or {}).get("done") or (v or {}).get("verdict") == "pass")),
             bool(state.get("requirements_final")), bool(state.get("plan_final")),
             bool((state.get("verification") or {}).get("passed")), len(state.get("incidents", [])))
 

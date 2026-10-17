@@ -24,8 +24,7 @@ BLOCK_CATEGORIES = ("decision", "permission", "external", "environment", "scope"
 
 TEST_STAGES = ("unit", "integration", "e2e", "performance", "security", "regression", "acceptance")
 PIPELINES = (None, "full")
-SKIPPABLE_STAGES = ("intake", "requirements_review", "solution", "test_design", "resources", "plan_review",
-                    "code-review", "security-review", "performance-review", "final-acceptance", "product-acceptance")
+SKIPPABLE_STAGES = ("design_review", "final-review")
 
 DEFAULT_APPROVALS = [
     "deploy or release to a shared or production environment",
@@ -173,8 +172,7 @@ def policy(values) -> dict:
 
 
 EFFORTS = ("minimal", "low", "medium", "high", "xhigh", "max")
-STAGE_PROFILES = ("intake", "requirements", "requirements_review", "solution", "test_design", "plan", "resources",
-                  "plan_review", "develop", "repair", "review", "final_acceptance", "product_acceptance",
+STAGE_PROFILES = ("brief", "design", "design_review", "plan", "develop", "repair", "review", "final_review",
                   "planner", "remediate", "report")
 
 

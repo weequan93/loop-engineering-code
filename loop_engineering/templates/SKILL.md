@@ -31,12 +31,14 @@ tool has a CLI equivalent, so use the CLI if the MCP tools are not loaded.
    autonomous runs, the user runs `loop start`, or you run it after they agree. It keeps
    working after this chat ends.
 
-New develop goals use the **full pipeline** by default: requirements → plan → plan review →
-develop → staged tests → reviews → final acceptance. Give acceptance checks a `stage`
+New develop goals use the **full pipeline** by default: brief (requirements) → design (with the
+task plan and its checks) → one design review → develop → staged tests → one final review.
+Each review runs at most two rounds; then a person decides. Keep a goal small: at most about 20
+requirements and 20 tasks; split bigger work into several goals. Give acceptance checks a `stage`
 (unit, integration, e2e, performance, security, regression, acceptance). To give stages or
-roles their own model, use `agent.stages` (requirements, plan, plan_review, develop, repair,
-review, final_acceptance, planner) and `agent.roles` (architect, backend, tester, ...). Each
-one takes `{adapter, model, effort}`.
+roles their own model, use `agent.stages` (brief, design, design_review, develop, repair,
+final_review, planner) and `agent.roles` (architect, backend, tester, ...). Each one takes
+`{adapter, model, effort}`.
 
 ## 2. Working a turn (in chat or autonomous)
 
@@ -44,10 +46,11 @@ one takes `{adapter, model, effort}`.
   `loop_next`.
 - Keep context small: read state with `loop_status` or `.loop/STATUS.md` (never `.loop/` JSON files), and
   read large documents by section (search, then read the lines you need), not end to end.
-- Requirements stage: record every requirement from the documents with `loop_requirements`
-  (id, text, source, verify), then call `final=true`. Don't write code in this stage.
-- Plan stage: every task lists the requirements it `covers` and has real checks. Call
-  `loop_plan(final=true)` to submit the plan for independent review.
+- Brief stage: write the brief, then record this goal's requirements with `loop_requirements`
+  (id, text, source, verify) and call `final=true`. No code in this stage.
+- Design stage: write the design (approach, feasibility spikes for anything uncertain, resources), then
+  record tasks with `loop_plan`: each `covers` requirements and has real checks. `final=true` submits the
+  design and plan for the design review.
 - Plan: use `loop_plan` to create tasks, each with real, fast `checks`.
 - Work: implement, run the tests yourself, then call `loop_task(action="done", summary=...)`.
   The controller runs that task's checks. If they fail, fix the cause and claim done

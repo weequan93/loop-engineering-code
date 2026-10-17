@@ -309,7 +309,7 @@ class Service:
         return self.status(store.id)
 
     def stage_done(self, stage: str, path: str, summary: str = "", goal_id=None) -> dict:
-        """A document stage (intake, solution, test_design, resources) delivered its file."""
+        """A document stage (brief or design) delivered its file."""
         from .util import file_digest
         store = self._store(goal_id)
         target = (self.project.root / path).resolve()

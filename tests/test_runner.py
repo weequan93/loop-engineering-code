@@ -283,7 +283,7 @@ class PlannerTests(ProjectCase):
 class PipelineTests(ProjectCase):
     def make(self, **extra):
         values = {"id": "full", "kind": "develop", "title": "Full", "objective": "add() must add",
-                  "pipeline": {"skip": ["intake", "requirements_review", "solution", "test_design", "resources"]},
+                  "pipeline": "full",
                   "acceptance": [{"id": "tests", "run": "python3 test_calc.py", "stage": "unit"},
                                  {"id": "lint", "run": "python3 -m py_compile calc.py", "stage": "integration"}],
                   "agent": {"adapter": "fake"}, "policy": {"max_iterations": 20, "stagnation_limit": 2}}
@@ -292,55 +292,74 @@ class PipelineTests(ProjectCase):
         approve(store)
         return store
 
-    def test_full_pipeline_end_to_end_with_plan_review_rework(self):
-        os.environ["FAKE_PLAN_REVIEW"] = "fail-once"
-        store = self.make(pipeline="full", policy={"max_iterations": 40, "stagnation_limit": 2})
+    def test_full_pipeline_end_to_end_with_design_review_rework(self):
+        os.environ["FAKE_DESIGN_REVIEW"] = "fail-once"
+        store = self.make(policy={"max_iterations": 40, "stagnation_limit": 2})
         Runner(self.project, store.id, log=lambda m: None).run()
         state = store.state()
         self.assertEqual(state["status"], "done", state["status_reason"])
-        self.assertEqual(self.calls(), ["intake", "requirements", "review", "solution", "test_design", "plan",
-                                        "resources", "review",            # plan review fails → back to plan
-                                        "plan", "resources", "review",    # re-plan, re-check readiness, pass
-                                        "work", "review", "review", "review", "review"])
+        self.assertEqual(self.calls(), ["brief", "design", "review",   # design review fails → back to design
+                                        "design", "review",              # revised design passes
+                                        "work", "review"])               # one combined final review
         roles = [(t.get("stage"), t.get("role")) for t in state["turns"]]
-        self.assertEqual(roles[:8], [("intake", "product"), ("requirements", "analyst"),
-                                     ("requirements_review", "product"), ("solution", "architect"),
-                                     ("test_design", "test-designer"), ("plan", "tech-lead"),
-                                     ("resources", "resource-planner"), ("plan_review", "plan-reviewer")])
-        self.assertEqual(roles[-5:], [("develop", "backend"), ("review", "reviewer"), ("review", "security"),
-                                      ("final_acceptance", "acceptance-lead"), ("product_acceptance", "product")])
-        self.assertEqual({k: v["verdict"] for k, v in state["reviews"].items()},
-                         {"code-review": "pass", "security-review": "pass", "final-acceptance": "pass",
-                          "product-acceptance": "pass"})
-        self.assertTrue((self.root / "docs" / "loop" / store.id / "product-brief.md").is_file())
-        plan_prompt = (store.runs / "turn-0009" / "prompt.md").read_text()
-        self.assertIn("plan_review sent this stage back", plan_prompt)
-        self.assertIn("R2 has no real test", plan_prompt)
-        final_prompt = (store.runs / "turn-0015" / "prompt.md").read_text()
-        self.assertIn("Traceability matrix", final_prompt)
+        self.assertEqual(roles, [("brief", "analyst"), ("design", "tech-lead"), ("design_review", "plan-reviewer"),
+                                 ("design", "tech-lead"), ("design_review", "plan-reviewer"),
+                                 ("develop", "backend"), ("final_review", "acceptance-lead")])
+        self.assertEqual({k: v["verdict"] for k, v in state["reviews"].items()}, {"final-review": "pass"})
+        self.assertTrue((self.root / "docs" / "loop" / store.id / "brief.md").is_file())
+        self.assertTrue((self.root / "docs" / "loop" / store.id / "design.md").is_file())
+        design_prompt = (store.runs / "turn-0004" / "prompt.md").read_text()
+        self.assertIn("design_review sent this stage back", design_prompt)
+        self.assertIn("R2 has no real test", design_prompt)
+        final_prompt = (store.runs / "turn-0007" / "prompt.md").read_text()
+        self.assertIn("Traceability", final_prompt)
+        for angle in ("**requirements**", "**code**", "**security**", "**feature**"):
+            self.assertIn(angle, final_prompt)
+        self.assertNotIn("**performance**", final_prompt)          # only when the goal is about performance
         status = (self.root / ".loop" / "STATUS.md").read_text()
         self.assertIn("## Pipeline", status)
         from loop_engineering import status as status_mod
         view = status_mod.summary(store)["pipeline"]
+        self.assertEqual([p["stage"] for p in view], ["brief", "design", "design_review", "develop", "test",
+                                                      "final-review", "done"])
         self.assertTrue(all(p["state"] == "done" for p in view))
+
+    def test_design_review_goes_to_a_person_after_two_rounds(self):
+        os.environ["FAKE_DESIGN_REVIEW"] = "fail-always"
+        store = self.make(policy={"max_iterations": 40, "stagnation_limit": 3})
+        Runner(self.project, store.id, log=lambda m: None).run()
+        state = store.state()
+        self.assertEqual(self.calls(), ["brief", "design", "review", "design", "review"])
+        self.assertEqual(state["status"], "blocked")
+        self.assertEqual(state["blocker"]["category"], "decision")
+        self.assertIn("loop review design_review pass", state["blocker"]["reason"])
+        # The person accepts the design as it is: the blocker clears and development starts.
+        Service(self.project, actor="human").review("design_review", "pass", "accepted by the owner")
+        state = store.state()
+        self.assertIsNone(state["blocker"])
+        self.assertEqual(engine.next_action(store.goal(), state)["kind"], "design")  # the last fail reset the design
+        Runner(self.project, store.id, log=lambda m: None).run()
+        self.assertEqual(store.state()["status"], "done", store.state()["status_reason"])
+        self.assertEqual(self.calls()[5:], ["design", "work", "review"])  # no third design review
 
     def test_pipeline_view_marks_completed_stages_while_waiting_for_a_human(self):
         from loop_engineering import status as status_mod
         store = self.make(id="waiting")
+        store.mutate("b", lambda g, s: s.setdefault("stages", {}).update(
+            brief={"done": True, "path": "docs/loop/waiting/brief.md", "digest": "x"}))
         store.mutate("r", lambda g, s: engine.set_requirements(g, s, [
             {"id": "R1", "text": "a", "source": "doc", "verify": "unit"}], None, True))
         Service(self.project, actor="chat").ask("Need a decision", ["a", "b"])
         view = {p["stage"]: p["state"] for p in status_mod.summary(store)["pipeline"]}
-        self.assertEqual(view["requirements"], "done")
-        self.assertEqual(view["plan"], "current")
+        self.assertEqual(view["brief"], "done")
+        self.assertEqual(view["design"], "current")
         self.assertEqual(view["develop"], "pending")
 
     def test_pipeline_skip_runs_a_lighter_workflow(self):
-        store = self.make(id="light", pipeline={"skip": ["intake", "requirements_review", "solution", "test_design",
-                                                        "resources", "product-acceptance", "security-review"]})
+        store = self.make(id="light", pipeline={"skip": ["design_review", "final-review"]})
         Runner(self.project, store.id, log=lambda m: None).run()
         self.assertEqual(store.state()["status"], "done", store.state()["status_reason"])
-        self.assertEqual(self.calls(), ["requirements", "plan", "review", "work", "review", "review"])
+        self.assertEqual(self.calls(), ["brief", "design", "work"])
 
     def test_plan_cannot_finalize_with_uncovered_requirements_or_unchecked_tasks(self):
         store = self.make()
@@ -358,12 +377,47 @@ class PipelineTests(ProjectCase):
         store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R1", "R2"],
                                                           "checks": [{"id": "c", "run": "true"}]}], None, True))
         self.assertTrue(store.state()["plan_final"])
+        for sid in ("brief", "design"):
+            store.mutate("d", lambda g, s, sid=sid: s.setdefault("stages", {}).update({sid: {"done": True}}))
         act = engine.next_action(store.goal(), store.state())
-        self.assertEqual((act["kind"], act["review"]), ("review", "plan_review"))
-        # Changing requirements after the plan forces re-planning and a new plan review.
+        self.assertEqual((act["kind"], act["review"]), ("review", "design_review"))
+        # Before the design review, any change re-opens the plan for review.
         store.mutate("r", lambda g, s: engine.set_requirements(g, s, [
             {"id": "R3", "text": "c", "source": "doc", "verify": "e2e"}], None, True))
-        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "plan")
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "design")
+
+    def test_an_accepted_design_stays_accepted_unless_coverage_breaks(self):
+        store = self.make(id="accepted")
+        store.mutate("r", lambda g, s: engine.set_requirements(g, s, [
+            {"id": "R1", "text": "a", "source": "doc", "verify": "unit"}], None, True))
+        store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R1"],
+                                                          "checks": [{"id": "c", "run": "true"}]}], None, True))
+        for sid in ("brief", "design"):
+            store.mutate("d", lambda g, s, sid=sid: s.setdefault("stages", {}).update({sid: {"done": True}}))
+        Service(self.project, actor="human").review("design_review", "pass", "")
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "work")
+        # A task edit during development keeps the design accepted: no new plan stage, no new review.
+        store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T v2", "covers": ["R1"],
+                                                          "checks": [{"id": "c", "run": "true"}]}], None))
+        self.assertTrue(store.state()["plan_final"])
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "work")
+        # A new requirement nobody covers sends the design back, but the review is not repeated.
+        store.mutate("r", lambda g, s: engine.set_requirements(g, s, [
+            {"id": "R2", "text": "b", "source": "doc", "verify": "unit"}], None, True))
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "design")
+        store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "u", "title": "U", "covers": ["R2"],
+                                                          "checks": [{"id": "c", "run": "true"}]}], None, True))
+        self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "work")
+
+    def test_failed_reviews_and_resubmissions_are_not_progress(self):
+        from loop_engineering.runner import progress_mark
+        state = {"tasks": [], "checks": {}, "reviews": {}, "stages": {}, "incidents": []}
+        before = progress_mark(state)
+        state["stages"]["design_review"] = {"verdict": "fail", "rounds": 1, "at": "t1"}
+        state["reviews"]["final-review"] = {"verdict": "fail", "at": "t2"}
+        self.assertEqual(progress_mark(state), before)
+        state["reviews"]["final-review"] = {"verdict": "pass", "at": "t3"}
+        self.assertNotEqual(progress_mark(state), before)
 
     def test_acceptance_runs_in_stage_order_and_profiles_pick_models(self):
         from loop_engineering import checks
@@ -371,15 +425,15 @@ class PipelineTests(ProjectCase):
                                       {"id": "unit", "run": "true", "stage": "unit"},
                                       {"id": "perf", "run": "true", "stage": "performance"}],
                           agent={"adapter": "codex", "model": "cheap-coder",
-                                 "stages": {"requirements": {"model": "thinker", "effort": "high"},
-                                            "plan_review": {"adapter": "claude", "effort": "xhigh"}},
+                                 "stages": {"brief": {"model": "thinker", "effort": "high"},
+                                            "design_review": {"adapter": "claude", "effort": "xhigh"}},
                                  "roles": {"architect": {"model": "thinker", "effort": "xhigh"}}})
         order = checks.select(store.goal(), store.state(), "acceptance", None)
         self.assertEqual(order, ["acceptance.unit", "acceptance.e2e", "acceptance.perf"])
         goal, state = store.goal(), store.state()
-        req = engine.profile_for(goal, state, {"kind": "requirements"})
+        req = engine.profile_for(goal, state, {"kind": "brief"})
         self.assertEqual((req["adapter"], req["model"], req["effort"]), ("codex", "thinker", "high"))
-        review = engine.profile_for(goal, state, {"kind": "review", "review": "plan_review"})
+        review = engine.profile_for(goal, state, {"kind": "review", "review": "design_review"})
         self.assertEqual((review["adapter"], review["model"], review["effort"]), ("claude", "cheap-coder", "xhigh"))
         state["tasks"] = [{"id": "a", "role": "architect"}, {"id": "b", "role": "backend"}]
         arch = engine.profile_for(goal, state, {"kind": "work", "task": "a"})
@@ -454,19 +508,20 @@ class WorkflowTeamTests(ProjectCase):
                                           "acceptance": [{"id": "t", "run": "true"}], "agent": {"adapter": "fake"}})
         goal, state = store.goal(), store.state()
         roles = {kind: engine.profile_for(goal, state, act, self.root)["role"] for kind, act in {
-            "requirements": {"kind": "requirements"}, "plan": {"kind": "plan"},
-            "plan_review": {"kind": "review", "review": "plan_review"},
-            "final": {"kind": "review", "review": "final-acceptance"}}.items()}
-        self.assertEqual(roles, {"requirements": "analyst", "plan": "tech-lead", "plan_review": "plan-reviewer",
+            "brief": {"kind": "brief"}, "design": {"kind": "design"},
+            "design_review": {"kind": "review", "review": "design_review"},
+            "final": {"kind": "review", "review": "final-review"}}.items()}
+        self.assertEqual(roles, {"brief": "analyst", "design": "tech-lead", "design_review": "plan-reviewer",
                                  "final": "acceptance-lead"})
-        text = prompts.assignment(goal, state, {"kind": "requirements", "summary": "s"}, self.root)
+        text = prompts.assignment(goal, state, {"kind": "brief", "summary": "s", "output": "docs/loop/wf/brief.md"},
+                                  self.root)
         self.assertIn("## Workflow: Development", text)
-        self.assertIn("**requirements**", text)
+        self.assertIn("**brief**", text)
         self.assertIn("Role: requirements analyst", text)
         self.assertIn("**Produce:**", text)
         (self.root / ".loop" / "workflows").mkdir()
-        (self.root / ".loop" / "workflows" / "develop.json").write_text(_json.dumps({"roles": {"plan": "architect"}}))
-        self.assertEqual(engine.profile_for(goal, state, {"kind": "plan"}, self.root)["role"], "architect")
+        (self.root / ".loop" / "workflows" / "develop.json").write_text(_json.dumps({"roles": {"design": "architect"}}))
+        self.assertEqual(engine.profile_for(goal, state, {"kind": "design"}, self.root)["role"], "architect")
         operate = self.project.create_goal({"id": "ops", "kind": "operate", "title": "Ops", "objective": "o",
                                             "schedule": {"interval_minutes": 5},
                                             "acceptance": [{"id": "h", "run": "true"}], "agent": {"adapter": "fake"}})

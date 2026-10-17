@@ -30,33 +30,34 @@ def pipeline_view(goal: dict, state: dict, act: dict) -> list[dict] | None:
     if not engine.pipeline(goal):
         return None
     current = engine.stage(goal, state, act)
-    gates = engine.review_gates(goal)
-    names = ([s["id"] for s in engine.pre_stages(goal)] + ["develop", "test", "reviews"] +
-             [g["id"] for g in gates if g["id"] in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]}] + ["done"])
+    final = [g["id"] for g in engine.review_gates(goal) if g["id"] == engine.FINAL_REVIEW["id"]]
+    humans = [g for g in engine.review_gates(goal) if g["by"] != "agent"]
+    names = [s["id"] for s in engine.pre_stages(goal)] + ["develop", "test"] + final + (
+        ["human review"] if humans else []) + ["done"]
     stages_ = state.get("stages", {})
 
     def detail(name: str) -> str:
-        if name in engine.STAGE_BY_ID:
-            kind = engine.STAGE_BY_ID[name]["type"]
-            record = stages_.get(name) or {}
-            if kind == "artifact":
-                return record.get("path", "") if record.get("done") else "pending"
-            if kind == "gate":
-                return record.get("verdict", "pending") + (f" (round {record['rounds']})" if record.get("rounds") else "")
-            if kind == "requirements":
-                return f"{len(state.get('requirements', []))} recorded" + (" · final" if state.get("requirements_final") else "")
-            return (f"{len(state['tasks'])} tasks · {len(engine.uncovered(state))} uncovered"
-                    + (" · final" if state.get("plan_final") else ""))
+        record = stages_.get(name) or {}
+        if name == "brief":
+            return ((record.get("path", "") if record.get("done") else "pending") +
+                    f" · {len(state.get('requirements', []))} requirements" +
+                    (" · final" if state.get("requirements_final") else ""))
+        if name == "design":
+            return ((record.get("path", "") if record.get("done") else "pending") +
+                    f" · {len(state['tasks'])} tasks · {len(engine.uncovered(state))} uncovered" +
+                    (" · final" if state.get("plan_final") else ""))
+        if name in engine.GATE_STAGE_IDS:
+            return record.get("verdict", "pending") + (f" (round {record['rounds']})" if record.get("rounds") else "")
         if name == "develop":
             return f"{sum(t['status'] == 'done' for t in state['tasks'])}/{len(state['tasks'])} tasks"
         if name == "test":
             return ", ".join(f"{c.get('stage', 'acceptance')}:{state['checks'].get('acceptance.' + c['id'], {}).get('status', '-')}"
                              for c in goal["acceptance"])
-        if name == "reviews":
-            return ", ".join(f"{g['id']}:{(state['reviews'].get(g['id']) or {}).get('verdict', '-')}" for g in gates
-                             if g["id"] not in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]}) or "none"
-        if name in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]}:
-            return (state["reviews"].get(name) or {}).get("verdict", "pending")
+        if name == engine.FINAL_REVIEW["id"]:
+            review = state["reviews"].get(name) or {}
+            return review.get("verdict", "pending") + (f" (round {review['rounds']})" if review.get("rounds") else "")
+        if name == "human review":
+            return ", ".join(f"{g['id']}:{(state['reviews'].get(g['id']) or {}).get('verdict', '-')}" for g in humans)
         return ""
     def complete(name: str) -> bool:
         if current == "done":
@@ -67,11 +68,10 @@ def pipeline_view(goal: dict, state: dict, act: dict) -> list[dict] | None:
             return bool(state["tasks"]) and all(t["status"] in {"done", "dropped"} for t in state["tasks"])
         if name == "test":
             return bool((state.get("verification") or {}).get("passed"))
-        if name == "reviews":
-            return all((state["reviews"].get(g["id"]) or {}).get("verdict") == "pass" for g in gates
-                       if g["by"] == "agent" and g["id"] not in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]})
-        if name in {engine.FINAL_GATE["id"], engine.PRODUCT_GATE["id"]}:
+        if name == engine.FINAL_REVIEW["id"]:
             return (state["reviews"].get(name) or {}).get("verdict") == "pass"
+        if name == "human review":
+            return all((state["reviews"].get(g["id"]) or {}).get("verdict") == "pass" for g in humans)
         return False
     done = [complete(name) for name in names]
     first_open = next((i for i, d in enumerate(done) if not d), None)

@@ -62,20 +62,20 @@ TOOLS = [
           "agent": {"type": "object", "properties": {"adapter": S, "model": S, "permission_mode": S,
                                                       "extra_args": {"type": "array", "items": S}}},
           "pipeline": {"type": ["string", "null"], "enum": ["full", None],
-                       "description": "full (default for develop): requirements → plan → plan review → develop → "
-                                      "staged tests → reviews → final acceptance"},
+                       "description": "full (default for develop): brief → design → design review → develop → "
+                                      "staged tests → final review"},
           "id": S, "enqueue": {"type": "boolean", "description": "Append to the project goal queue and keep the "
                                                                  "current goal (draft follow-up increments)"}},
          human=True),
     tool("loop_goal_approve", "Freeze the goal contract after the user explicitly confirmed it in this conversation.",
          {"confirmed_by_user": {"type": "boolean"}}, ["confirmed_by_user"], human=True),
-    tool("loop_requirements", "Full pipeline, stage 1: record requirements extracted from the documents (id, text, "
-         "source, verify). Reuse the documents' own IDs. final=true when every requirement is recorded.",
+    tool("loop_requirements", "Full pipeline, brief stage: record this goal's requirements (id, text, source, verify). Reuse "
+         "the documents' own IDs; at most about 20. final=true when the list is complete.",
          {"requirements": {"type": "array", "items": REQUIREMENT}, "drop": {"type": "array", "items": S},
           "final": {"type": "boolean"}}),
     tool("loop_plan", "Add or update tasks (id, title, detail, depends_on, covers, checks, role) and drop tasks with a "
          "reason. Each task should have fast real checks. Full pipeline: every requirement must be covered; "
-         "final=true submits the plan for independent review.",
+         "final=true submits the plan with the design for the design review.",
          {"tasks": {"type": "array", "items": TASK},
           "drop": {"type": "array", "items": {"type": "object", "properties": {"id": S, "reason": S},
                                               "required": ["id", "reason"]}},
@@ -116,11 +116,11 @@ TOOLS = [
          "pre-development gates, back_to may name the earlier stage that must be redone.",
          {"review_id": S, "verdict": {"type": "string", "enum": ["pass", "fail"]},
           "findings": {"type": "string", "description": "Concrete findings (file:line, problem, impact)"},
-          "back_to": {"type": "string", "description": "e.g. requirements, solution, test_design, plan, resources"}},
+          "back_to": {"type": "string", "description": "design_review only: brief or design"}},
          ["review_id", "verdict"]),
-    tool("loop_stage_done", "Full pipeline: the document for your stage (intake, solution, test_design, resources) "
+    tool("loop_stage_done", "Full pipeline: the document for your stage (brief or design) "
          "is written at path; the controller records it and moves on.",
-         {"stage": {"type": "string", "enum": ["intake", "solution", "test_design", "resources"]}, "path": S,
+         {"stage": {"type": "string", "enum": ["brief", "design"]}, "path": S,
           "summary": S}, ["stage", "path"]),
     tool("loop_control", "pause | resume | stop the goal (the user's request only).",
          {"command": {"type": "string", "enum": ["pause", "resume", "stop"]}}, ["command"], human=True),

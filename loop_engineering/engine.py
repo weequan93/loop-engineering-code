@@ -54,41 +54,20 @@ def open_incident(state: dict) -> dict | None:
 # → product acceptance → human reviews. Each stage has a role (roles.WORKFLOWS) and a controller gate.
 
 PRE_STAGES = [
-    {"id": "intake", "type": "artifact", "file": "product-brief.md",
-     "summary": "Write the product brief: problem, users, journeys, goals, success metrics, scope and non-scope."},
-    {"id": "requirements", "type": "requirements",
-     "summary": "Read the documents and record every requirement with its source and how it will be verified."},
-    {"id": "requirements_review", "type": "gate", "subject": ["intake", "requirements"], "back_to": "requirements",
-     "summary": "Independent product review of the brief and the recorded requirements."},
-    {"id": "solution", "type": "artifact", "file": "solution.md",
-     "summary": "Design the solution: options and trade-offs, chosen architecture, contracts, risks."},
-    {"id": "test_design", "type": "artifact", "file": "test-plan.md",
-     "summary": "Design the test cases that will prove every requirement, before development."},
-    {"id": "plan", "type": "plan",
-     "summary": "Plan tasks that cover every requirement, with roles, teams and real checks, then finalize."},
-    {"id": "resources", "type": "artifact", "file": "readiness.md",
-     "summary": "Probe and confirm every tool, service, environment and account the plan needs."},
-    {"id": "plan_review", "type": "gate", "subject": ["solution", "test_design", "plan", "resources"],
-     "back_to": "plan", "summary": "Independent review of the solution, test plan, task plan and readiness."},
+    {"id": "brief", "type": "brief", "file": "brief.md",
+     "summary": "Write the brief (problem, users, journeys, scope and non-scope) and record this goal's requirements."},
+    {"id": "design", "type": "design", "file": "design.md",
+     "summary": "Design the solution, prove what is uncertain, say how each requirement is checked, confirm the "
+                "resources, and record the task plan."},
+    {"id": "design_review", "type": "gate", "subject": ["brief", "design"], "back_to": "design",
+     "summary": "Independent review of the brief, requirements, design and task plan."},
 ]
 STAGE_BY_ID = {s["id"]: s for s in PRE_STAGES}
 GATE_STAGE_IDS = {s["id"] for s in PRE_STAGES if s["type"] == "gate"}
-FINAL_GATE = {"id": "final-acceptance", "by": "agent", "role": "acceptance-lead", "timeout_minutes": 30,
-              "instructions": "Final acceptance: verify, requirement by requirement, that real evidence (task "
-                              "checks, staged test results, reviews) proves each one on the current candidate."}
-PRODUCT_GATE = {"id": "product-acceptance", "by": "agent", "role": "product", "timeout_minutes": 30,
-                "instructions": "Product acceptance: use the product as a user would and judge it against the "
-                                "product brief, the journeys and the success metrics."}
-SPECIALIST_GATES = [
-    {"id": "code-review", "by": "agent", "role": "reviewer", "timeout_minutes": 30,
-     "instructions": "Code review of the whole change against the requirements, solution and test plan."},
-    {"id": "security-review", "by": "agent", "role": "security", "timeout_minutes": 30,
-     "instructions": "Security review: threat-model the change; authorization, input handling, secrets, data "
-                     "exposure and dependencies."},
-    {"id": "performance-review", "by": "agent", "role": "performance", "timeout_minutes": 30,
-     "instructions": "Performance review against the performance requirements and budgets, with reproducible "
-                     "measurements."},
-]
+GATE_ROUNDS = 2  # a review that fails this often goes to a human instead of another rework round
+FINAL_REVIEW = {"id": "final-review", "by": "agent", "role": "acceptance-lead", "timeout_minutes": 45,
+                "instructions": "One independent review of the finished goal from every angle: requirements, code, "
+                                "security, performance where relevant, and the feature as its users would use it."}
 PERFORMANCE_WORDS = ("performance", "latency", "throughput", "p95", "p99", "load", "性能", "延迟", "吞吐")
 
 
@@ -117,28 +96,23 @@ def _needs_performance(goal: dict) -> bool:
 
 
 def review_gates(goal: dict) -> list[dict]:
-    """Post-development gates: the goal's agent reviews, built-in specialist reviews (code, security,
-    performance when relevant), final acceptance, product acceptance, then human reviews."""
+    """Post-development gates. Full pipeline: one combined final review (the goal's own agent reviews become
+    facets of it), then human reviews. Otherwise the goal's reviews as listed."""
     gates_ = list(goal["reviews"])
-    if not pipeline(goal):
+    if not pipeline(goal) or FINAL_REVIEW["id"] in skipped(goal):
         return gates_
-    skip = skipped(goal)
-    agent_gates = [g for g in gates_ if g["by"] == "agent"]
-    human_gates = [g for g in gates_ if g["by"] != "agent"]
-    ids = {g["id"] for g in gates_}
+    return [FINAL_REVIEW] + [g for g in gates_ if g["by"] != "agent"]
 
-    def covered(role: str, word: str) -> bool:
-        return any(g.get("role") == role or word in g["id"] for g in agent_gates)
-    specialists = []
-    for gate in SPECIALIST_GATES:
-        role, word = gate["role"], gate["id"].split("-")[0]
-        if gate["id"] in skip or gate["id"] in ids or covered(role, word):
-            continue
-        if gate["id"] == "performance-review" and not _needs_performance(goal):
-            continue
-        specialists.append(gate)
-    closing = [g for g in (FINAL_GATE, PRODUCT_GATE) if g["id"] not in skip and g["id"] not in ids]
-    return agent_gates + specialists + closing + human_gates
+
+def review_facets(goal: dict) -> list[tuple[str, str]]:
+    """The angles one final review covers: built-in ones plus each agent review the goal defines."""
+    facets = [("requirements", "Every requirement is proven by real evidence on the current candidate."),
+              ("code", "Correctness, clarity and tests that really test, against the design and the plan."),
+              ("security", "Threats, authorization, input handling, secrets, data exposure and dependencies.")]
+    if _needs_performance(goal):
+        facets.append(("performance", "The performance requirements and budgets, with reproducible measurements."))
+    facets.append(("feature", "Use the feature as its users would and judge it against the brief's journeys."))
+    return facets + [(g["id"], g["instructions"]) for g in goal["reviews"] if g["by"] == "agent"]
 
 
 def find_gate(goal: dict, review_id: str | None) -> dict | None:
@@ -165,27 +139,18 @@ def subject_digest(goal: dict, state: dict, gate_def: dict) -> str:
     from .util import digest
     parts = {}
     for sid in gate_def["subject"]:
-        if sid in skipped(goal):
-            continue
-        kind = STAGE_BY_ID[sid]["type"]
-        if kind == "artifact":
-            parts[sid] = (state.get("stages", {}).get(sid) or {}).get("digest")
-        elif kind == "requirements":
-            parts[sid] = requirements_digest(state)
-        elif kind == "plan":
-            parts[sid] = plan_digest(state)
+        document = (state.get("stages", {}).get(sid) or {}).get("digest")
+        parts[sid] = (document, requirements_digest(state) if sid == "brief" else plan_digest(state))
     return digest(parts)
 
 
 def stage_complete(goal: dict, state: dict, stage_def: dict) -> bool:
     kind, record = stage_def["type"], state.get("stages", {}).get(stage_def["id"]) or {}
-    if kind == "artifact":
-        return bool(record.get("done"))
-    if kind == "requirements":
-        return bool(state.get("requirements_final"))
-    if kind == "plan":
-        return bool(state.get("plan_final"))
-    return record.get("verdict") == "pass" and record.get("digest") == subject_digest(goal, state, stage_def)
+    if kind == "brief":
+        return bool(record.get("done")) and bool(state.get("requirements_final"))
+    if kind == "design":
+        return bool(record.get("done")) and bool(state.get("plan_final"))
+    return record.get("verdict") == "pass"  # a passed review stays passed: later edits do not reopen it
 
 
 def reset_stages(goal: dict, state: dict, first: str, gate_id: str) -> list[str]:
@@ -195,13 +160,8 @@ def reset_stages(goal: dict, state: dict, first: str, gate_id: str) -> list[str]
     end = ids.index(gate_id) if gate_id in ids else len(ids)
     reset = ids[ids.index(first):end]
     for sid in reset:
-        kind = STAGE_BY_ID[sid]["type"]
-        if kind == "artifact":
-            state.setdefault("stages", {}).setdefault(sid, {})["done"] = False
-        elif kind == "requirements":
-            state["requirements_final"] = False
-        elif kind == "plan":
-            state["plan_final"] = False
+        state.setdefault("stages", {}).setdefault(sid, {})["done"] = False
+        state["requirements_final" if sid == "brief" else "plan_final"] = False
     return reset
 
 
@@ -227,12 +187,10 @@ def stage(goal: dict, state: dict, act: dict) -> str:
     if kind in STAGE_BY_ID:
         return kind
     if kind == "review":
-        if review in GATE_STAGE_IDS:
-            return review
-        if review in {FINAL_GATE["id"], PRODUCT_GATE["id"]}:
-            return review
-        return "reviews"
-    return {"work": "develop", "verify": "test", "repair": "reviews" if review else "test"}.get(kind, kind)
+        return review if review in GATE_STAGE_IDS or review == FINAL_REVIEW["id"] else "reviews"
+    if kind == "repair" and review:
+        return FINAL_REVIEW["id"] if review == FINAL_REVIEW["id"] else "reviews"
+    return {"work": "develop", "verify": "test", "repair": "test"}.get(kind, kind)
 
 
 def profile_for(goal: dict, state: dict, act: dict, project_root=None) -> dict:
@@ -245,13 +203,11 @@ def profile_for(goal: dict, state: dict, act: dict, project_root=None) -> dict:
     chosen = {"adapter": agent["adapter"], "model": agent.get("model"), "effort": agent.get("effort"),
               "stage": None, "role": None}
     kind, review = act["kind"], act.get("review")
-    stage_key = {"requirements": "requirements", "plan": "plan", "work": "develop", "remediate": "remediate",
-                 "report": "report", "planner": "planner", "repair": "repair", "intake": "intake",
-                 "solution": "solution", "test_design": "test_design", "resources": "resources"}.get(kind)
+    stage_key = {"brief": "brief", "design": "design", "plan": "plan", "work": "develop", "remediate": "remediate",
+                 "report": "report", "planner": "planner", "repair": "repair"}.get(kind)
     if kind == "review":
         stage_key = (review if review in GATE_STAGE_IDS else
-                     "final_acceptance" if review == FINAL_GATE["id"] else
-                     "product_acceptance" if review == PRODUCT_GATE["id"] else "review")
+                     "final_review" if review == FINAL_REVIEW["id"] else "review")
     chosen["stage"] = stage_key
     layers = [(agent.get("stages") or {}).get(stage_key) or {}]
     role = None
@@ -330,10 +286,9 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
             sid, failed = stage_def["id"], failed_gate_for(goal, state, stage_def["id"])
             extra = {"review": failed} if failed else {}
             summary = (f"{stage_def['summary']} (revise after {failed} findings)" if failed else stage_def["summary"])
-            if stage_def["type"] == "artifact":
-                return action(sid, "agent", summary, output=artifact_path(goal, stage_def), revise_after=failed)
-            if stage_def["type"] in {"requirements", "plan"}:
-                return action(sid, "agent", summary, revise_after=failed, **extra)
+            if stage_def["type"] in {"brief", "design"}:
+                return action(sid, "agent", summary, output=artifact_path(goal, stage_def), revise_after=failed,
+                              **extra)
             return action("review", "agent", stage_def["summary"], review=sid)
     finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
     # An active task whose dependencies were added later must wait for them (no starvation).
@@ -449,19 +404,23 @@ def record_review(goal: dict, state: dict, review_id: str, verdict: str, finding
             record["rounds"] += 1
             record["back_to"] = target
             record["reset"] = reset_stages(goal, state, target, review_id)
-            if record["rounds"] > goal["policy"]["max_repair_rounds"]:
-                state["blocker"] = {"category": "scope", "reason": f"{review_id} failed {record['rounds']} times; "
-                                    "the goal or the documents may need a human decision.", "evidence": findings[:6000],
-                                    "attempted": "Revisions", "at": now(), "by": "controller"}
-                state["status"], state["status_reason"] = "blocked", state["blocker"]["reason"]
+            if record["rounds"] >= GATE_ROUNDS:
+                _escalate_review(state, review_id, record["rounds"], findings)
             else:
-                state["status_reason"] = f"{review_id} failed; back to {target}."
+                state["status_reason"] = f"{review_id} failed; back to {target} (round {record['rounds']} of {GATE_ROUNDS})."
         else:
+            state["design_accepted"] = True
+            _release_review_blocker(state, review_id)
             state["status_reason"] = f"{review_id} passed."
         return {"_event": {"review": review_id, "verdict": verdict, "by": by, "back_to": record.get("back_to")}}
+    rounds = (state["reviews"].get(review_id) or {}).get("rounds", 0) + (verdict == "fail")
     state["reviews"][review_id] = {"verdict": verdict, "findings": findings, "fingerprint": fingerprint,
-                                   "at": now(), "by": by}
-    if verdict == "fail":
+                                   "at": now(), "by": by, "rounds": rounds}
+    if verdict == "pass":
+        _release_review_blocker(state, review_id)
+    if verdict == "fail" and review_id == FINAL_REVIEW["id"] and rounds >= GATE_ROUNDS:
+        _escalate_review(state, review_id, rounds, findings)
+    elif verdict == "fail":
         state["repair_rounds"] = state.get("repair_rounds", 0) + 1
         if state["repair_rounds"] > goal["policy"]["max_repair_rounds"]:
             state["blocker"] = {"category": "other", "reason": f"Review {review_id} still fails after "
@@ -475,6 +434,22 @@ def record_review(goal: dict, state: dict, review_id: str, verdict: str, finding
         if not goal["acceptance"] or (verification.get("passed") and verification.get("fingerprint") == fingerprint):
             gates(goal, state, fingerprint, f"Review {review_id} passed.")
     return {"_event": {"review": review_id, "verdict": verdict, "by": by}}
+
+
+def _escalate_review(state: dict, review_id: str, rounds: int, findings: str) -> None:
+    """A review that keeps failing is a decision for a person, not another rework round."""
+    state["blocker"] = {"category": "decision", "review": review_id, "evidence": findings[:6000],
+                        "reason": f"{review_id} failed {rounds} times. A person decides: accept it as it is with "
+                                  f"`loop review {review_id} pass`, or change the goal or documents and `loop unblock` "
+                                  "for one more round.",
+                        "attempted": "Rework after each review", "at": now(), "by": "controller"}
+    state["status"], state["status_reason"] = "blocked", state["blocker"]["reason"]
+
+
+def _release_review_blocker(state: dict, review_id: str) -> None:
+    if (state.get("blocker") or {}).get("review") == review_id:
+        state["blocker"] = None
+        state["status"] = "ready"
 
 
 CONTRACT_KEYS = ("objective", "constraints", "acceptance", "reviews", "policy", "schedule", "agent", "pipeline")
@@ -525,8 +500,8 @@ def approve(goal: dict, state: dict, by: str) -> dict:
 
 def complete_artifact(goal: dict, state: dict, stage_id: str, path: str, file_hash: str, summary: str) -> dict:
     stage_def = STAGE_BY_ID.get(stage_id)
-    if not pipeline(goal) or not stage_def or stage_def["type"] != "artifact" or stage_id in skipped(goal):
-        raise LoopError(f"{stage_id} is not a document stage of this goal's pipeline")
+    if not pipeline(goal) or not stage_def or stage_def["type"] not in {"brief", "design"}:
+        raise LoopError(f"{stage_id} is not a document stage of this goal's pipeline (brief or design)")
     state.setdefault("stages", {})[stage_id] = {"done": True, "path": path, "digest": file_hash, "at": now(),
                                                 "summary": text(summary, "summary", 4000, required=False)}
     _resume_status(state, f"{stage_id} written: {path}.")
@@ -548,9 +523,10 @@ def set_requirements(goal: dict, state: dict, items: list[dict] | None, drop: li
         raise LoopError("Requirements are limited to 500 per goal; split the goal")
     changed = bool(items or drop)
     state["requirements"] = list(current.values())
-    if changed and state.get("plan_final"):
-        state["plan_final"] = False  # requirements changed: plan and plan review must be redone
-        state["status_reason"] = "Requirements changed; the plan needs to be finalized and reviewed again."
+    if changed and state.get("plan_final") and (not state.get("design_accepted") or uncovered(state)):
+        # Before the design is accepted the plan is redone and reviewed; after it, only coverage gaps reopen it.
+        state["plan_final"] = False
+        state["status_reason"] = "Requirements changed; the plan must cover them before work continues."
     if final:
         if not state["requirements"]:
             raise LoopError("Record at least one requirement before finalizing")
@@ -607,8 +583,11 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
             unknown = set(task.get("covers", [])) - known
             if unknown:
                 raise LoopError(f"Task {task['id']} covers unknown requirements {sorted(unknown)}")
-        if changed:
-            state["plan_final"] = False
+        if changed and not state.get("design_accepted"):
+            state["plan_final"] = False  # before the design review, every edit is re-submitted for review
+        elif changed and (uncovered(state) or any(t["status"] not in {"done", "dropped"} and not t["checks"]
+                                                  for t in state["tasks"])):
+            state["plan_final"] = False  # after it, edits stay accepted unless they leave a gap
         if final:
             missing = uncovered(state)
             if missing:
@@ -617,7 +596,9 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
             if unchecked:
                 raise LoopError(f"Plan cannot be final: tasks without checks: {unchecked}")
             state["plan_final"] = True
-    _resume_status(state, "Plan finalized; waiting for plan review." if final else "Plan updated.")
+            if "design_review" in skipped(goal):
+                state["design_accepted"] = True
+    _resume_status(state, "Plan finalized." if final else "Plan updated.")
     return {"_event": {"tasks": changed, "final": final}}
 
 

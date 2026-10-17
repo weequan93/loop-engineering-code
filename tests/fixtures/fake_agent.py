@@ -86,30 +86,32 @@ def main():
         if mode == "idle":
             print("did nothing")
             return
-        full = client.call("loop_status").get("pipeline") is not None
-        if kind in {"intake", "solution", "test_design", "resources"}:
+        if kind in {"brief", "design"}:
             out = Path(nxt["action"]["output"])
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(f"# {kind}\n\nDocument written by the fake {kind} specialist for the test goal.\n")
             client.call("loop_stage_done", stage=kind, path=str(out), summary=f"{kind} written")
-        elif kind == "requirements":
-            client.call("loop_requirements", requirements=[
-                {"id": "R1", "text": "add(a, b) returns the sum", "source": "README#add", "verify": "unit test"},
-                {"id": "R2", "text": "the test suite passes", "source": "README#quality", "verify": "acceptance"}],
-                final=True)
-        elif kind == "plan" and full:
-            revised = bool(nxt["action"].get("revise_after"))
-            client.call("loop_plan", final=True, tasks=[
-                {"id": "fix", "title": "Fix add", "role": "backend", "covers": ["R1", "R2"],
-                 "detail": "add must add" + (" (revised after plan review)" if revised else ""),
-                 "checks": [{"id": "unit", "run": "python3 test_calc.py"}]}])
-        elif kind == "review" and nxt["action"]["review"] == "plan_review":
-            flag = Path(os.environ["FAKE_STATE"]) / "plan-review-failed"
-            if os.environ.get("FAKE_PLAN_REVIEW") == "fail-once" and not flag.exists():
-                flag.write_text("x")
-                client.call("loop_review", review_id="plan_review", verdict="fail", findings="R2 has no real test")
+            if kind == "brief":
+                client.call("loop_requirements", requirements=[
+                    {"id": "R1", "text": "add(a, b) returns the sum", "source": "README#add", "verify": "unit test"},
+                    {"id": "R2", "text": "the test suite passes", "source": "README#quality", "verify": "acceptance"}],
+                    final=True)
             else:
-                client.call("loop_review", review_id="plan_review", verdict="pass", findings="")
+                revised = bool(nxt["action"].get("revise_after"))
+                client.call("loop_plan", final=True, tasks=[
+                    {"id": "fix", "title": "Fix add", "role": "backend", "covers": ["R1", "R2"],
+                     "detail": "add must add" + (" (revised after design review)" if revised else ""),
+                     "checks": [{"id": "unit", "run": "python3 test_calc.py"}]}])
+        elif kind == "review" and nxt["action"]["review"] == "design_review":
+            flag = Path(os.environ["FAKE_STATE"]) / "design-review-failed"
+            fails = {"fail-once": 1, "fail-always": 99}.get(os.environ.get("FAKE_DESIGN_REVIEW", ""), 0)
+            count = int(flag.read_text()) if flag.exists() else 0
+            if count < fails:
+                flag.write_text(str(count + 1))
+                client.call("loop_review", review_id="design_review", verdict="fail", findings="R2 has no real test",
+                            back_to="design")
+            else:
+                client.call("loop_review", review_id="design_review", verdict="pass", findings="")
         elif kind == "plan":
             client.call("loop_plan", tasks=[{"id": "fix", "title": "Fix add", "detail": "add must add",
                                               "checks": [{"id": "unit", "run": "python3 test_calc.py"}]}])

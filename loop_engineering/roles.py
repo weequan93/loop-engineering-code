@@ -20,11 +20,8 @@ LIMIT = 12000
 # Override per project in .loop/workflows/<workflow>.json: {"roles": {"requirements": "my-analyst"}}.
 WORKFLOWS = {
     "develop": {"label": "Development", "stages": [
-        ("intake", "product"), ("requirements", "analyst"), ("requirements_review", "product"),
-        ("solution", "architect"), ("test_design", "test-designer"), ("plan", "tech-lead"),
-        ("resources", "resource-planner"), ("plan_review", "plan-reviewer"), ("develop", None),
-        ("repair", "tester"), ("review", "reviewer"), ("final_acceptance", "acceptance-lead"),
-        ("product_acceptance", "product")]},
+        ("brief", "analyst"), ("design", "tech-lead"), ("design_review", "plan-reviewer"), ("plan", "tech-lead"),
+        ("develop", None), ("repair", "tester"), ("review", "reviewer"), ("final_review", "acceptance-lead")]},
     "operate": {"label": "Operations", "stages": [
         ("remediate", "sre"), ("develop", None), ("repair", "sre"), ("review", "reviewer")]},
     "investigate": {"label": "Investigation", "stages": [

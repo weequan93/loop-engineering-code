@@ -113,17 +113,21 @@ agent 会起草目标，展示给你看。你确认后，它会批准目标。
 ### 完整开发流水线（develop 目标默认开启）
 
 ```
-产品简报(产品) → 需求提取(需求分析师) → 需求审核(产品) → 方案设计(架构师) → 测试设计(测试设计师)
-→ 计划+配人(技术负责人) → 资源就绪(资源规划) → 计划审核(计划审核员) → 开发(按角色组队)
-→ 分类测试(控制器) → 代码/安全/性能评审 → 最终验收(验收负责人) → 产品验收(产品) → 人工评审
+① 简报 brief（需求分析师）：简报 + 本目标的需求
+② 设计 design（技术负责人）：方案、可行性验证、资源、任务计划（任务的检查就是测试设计）
+③ 设计评审 design_review（独立评审，最多 2 轮）
+→ 开发（按角色，任务检查由控制器运行）→ 分类测试（控制器）
+→ 综合评审 final-review（一个只读回合，覆盖需求 / 代码 / 安全 / 性能(按需) / 功能，最多 2 轮）→ 人工评审（如有）
 ```
 
-每个阶段都有自己的角色说明，写清楚"专注什么 / 先读什么 / 产出什么 / 做到什么算完成"，并且由控制器把关。审核不通过会退回到具体的某一步。完整说明和审核结论见 [docs/workflow-audit.md](docs/workflow-audit.md)。
+写代码前只有 3 个回合，开发后只有 1 个评审回合。评审连续 2 轮不通过就交给人决定：`loop review <id> pass` 接受，
+或者修改目标/文档后 `loop unblock` 再来一轮。设计评审通过后，开发中修改任务不会再触发评审，只有出现未覆盖的需求才回到设计阶段。
+一个目标建议不超过约 20 条需求、20 个任务，更大的工作拆成多个目标。
 
 - **新需求入口**：`loop request "需求描述" --doc docs/xxx.md`，规划 agent 会把它起草成目标，等你批准。
 - **团队配置**：技术负责人给任务配 `team`，例如 `[{"role":"backend","count":2},{"role":"tester","count":1}]`。开发这个任务时，调度 agent 会按配置派出子 agent，每个子 agent 拿到自己角色的说明。人数上限用 `agent.team_limit` 设置，默认 4。
 - **角色**：`loop roles` 列出全部角色。用 `.loop/roles/<角色>.md` 覆盖或新增角色，用 `.loop/workflows/develop.json` 修改每个阶段由哪个角色负责。
-- **跳过阶段**：`"pipeline": {"skip": ["intake", "resources"]}`。不用流水线：`"pipeline": null`。之前已经批准的目标保持原来的流程。
+- **跳过评审**：`"pipeline": {"skip": ["design_review", "final-review"]}`。不用流水线：`"pipeline": null`（计划 → 开发 → 验收检查 → 目标自己定义的评审）。
 
 ### 不同阶段和角色使用不同的模型
 
@@ -131,12 +135,11 @@ agent 会起草目标，展示给你看。你确认后，它会批准目标。
 "agent": {
   "adapter": "codex", "model": "gpt-5.1-codex-mini",
   "stages": {
-    "requirements":     {"model": "gpt-5.1", "effort": "high"},
-    "plan":             {"model": "gpt-5.1", "effort": "high"},
-    "plan_review":      {"adapter": "claude", "model": "opus", "effort": "high"},
-    "review":           {"adapter": "claude", "model": "opus"},
-    "final_acceptance": {"adapter": "claude", "model": "opus", "effort": "xhigh"},
-    "planner":          {"model": "gpt-5.1", "effort": "high"}
+    "brief":         {"model": "gpt-5.1", "effort": "high"},
+    "design":        {"model": "gpt-5.1", "effort": "high"},
+    "design_review": {"adapter": "claude", "model": "opus", "effort": "high"},
+    "final_review":  {"adapter": "claude", "model": "opus", "effort": "xhigh"},
+    "planner":       {"model": "gpt-5.1", "effort": "high"}
   },
   "roles": {
     "architect": {"model": "gpt-5.1", "effort": "xhigh"},
@@ -145,7 +148,7 @@ agent 会起草目标，展示给你看。你确认后，它会批准目标。
 }
 ```
 
-- 可配置的阶段：`requirements`、`plan`、`plan_review`、`develop`、`repair`、`review`、`final_acceptance`、`planner`、`remediate`、`report`。
+- 可配置的阶段：`brief`、`design`、`design_review`、`plan`、`develop`、`repair`、`review`、`final_review`、`planner`、`remediate`、`report`。
 - 角色对应任务上的 `role` 字段：architect、backend、frontend、tester 等，可以自己起名。
 - 优先级从高到低：评审自己指定的 → 任务角色 → 阶段 → 目标默认。
 - `effort` 可选 minimal / low / medium / high / xhigh / max。Codex 会映射为 `model_reasoning_effort`，Claude 会映射为 `--effort`。

@@ -563,3 +563,18 @@ class ScopeLimitTests(ProjectCase):
         self.assertEqual(engine.task_by_id(store.state(), "perf")["status"], "pending")
         with self.assertRaises(LoopError):
             agent.plan([{"id": "x", "title": "X", "needs": ["telepathy"]}])
+
+
+class SizeLimitGrowthTests(ProjectCase):
+    def test_a_goal_over_the_limit_can_still_be_edited_and_shrunk(self):
+        store = self.goal()
+        human = Service(self.project, actor="human")
+        human.goal_approve(True)
+        human.plan([{"id": f"t{i}", "title": f"T{i}", "checks": [{"id": "c", "run": f"test -f f{i}"}]} for i in range(20)])
+        # A goal from before the limit (or migrated) holds more open tasks than allowed.
+        store.mutate("seed", lambda g, s: s["tasks"].append(model.task(
+            {"id": "extra", "title": "Extra", "checks": [{"id": "c", "run": "test -f x"}]})))
+        human.plan([{"id": "t1", "detail": "clarified"}])               # edits still work
+        with self.assertRaisesRegex(LoopError, "loop_ask"):
+            human.plan([{"id": "more", "title": "More", "checks": [{"id": "c", "run": "test -f m"}]}])
+        human.plan(None, [{"id": "extra", "reason": "out of scope"}])  # and it can shrink

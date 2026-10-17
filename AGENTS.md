@@ -1,6 +1,6 @@
 # Maintaining Loop Engineering 2
 
-- Keep the core small: stdlib-only Python ≥ 3.10, 13 MCP tools, a short skill and short playbooks. Fix a root cause
+- Keep the core small: stdlib-only Python ≥ 3.10, 16 MCP tools, a short skill and short playbooks. Fix a root cause
   instead of adding a new route or tool per incident. Read the lessons table in `docs/design.md` before
   adding surface area.
 - Every state change goes through `engine.py` operations inside `GoalStore.mutate`. Never write `state.json`

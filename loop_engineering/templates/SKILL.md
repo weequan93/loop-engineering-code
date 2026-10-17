@@ -39,8 +39,9 @@ tool has a CLI equivalent, so use the CLI if the MCP tools are not loaded.
 
 New develop goals use the **full pipeline** by default: brief (requirements) → design (with the
 task plan and its checks) → one design review → develop → staged tests → one final review.
-Each review runs at most two rounds; then a person decides. Keep a goal small: at most about 20
-requirements and 20 tasks; split bigger work into several goals. Give acceptance checks a `stage`
+Each review runs at most two rounds; then a person decides. Keep a goal small: at most 20
+requirements and 20 open tasks (the controller refuses more); split bigger work into several goals.
+Give acceptance checks a `stage`
 (unit, integration, e2e, performance, security, regression, acceptance). To give stages or
 roles their own model, use `agent.stages` (brief, design, design_review, develop, repair,
 final_review, planner) and `agent.roles` (architect, backend, tester, ...). Each one takes
@@ -57,7 +58,7 @@ final_review, planner) and `agent.roles` (architect, backend, tester, ...). Each
 - Design stage: write the design (approach, feasibility spikes for anything uncertain, resources), then
   record tasks with `loop_plan`: each `covers` requirements and has real checks. `final=true` submits the
   design and plan for the design review.
-- Plan: use `loop_plan` to create tasks, each with real, fast `checks`.
+- Plan (goals without the pipeline): use `loop_plan` to create tasks, each with real, fast `checks`.
 - Work: implement, run the tests yourself, then call `loop_task(action="done", summary=...)`.
   The controller runs that task's checks. If they fail, fix the cause and claim done
   again.
@@ -72,9 +73,10 @@ final_review, planner) and `agent.roles` (architect, backend, tester, ...). Each
   (deploys, data deletion, spending, messages, credentials, history rewrites). Wait for the
   answer.
 - In chat, relay the user's answers with `loop_answer`. Record only what they actually said.
-- One task can't go on (needs a person, or waits for a condition such as a quiet machine)? Hold just that
-  task: `loop_task(action="block"|"defer", reason=...)`. Other tasks keep running; a person resumes it with
-  `loop task resume <id>`.
+- One task can't go on? Hold just that task; other tasks keep running and the user is notified:
+  `loop_task(action="block", reason=...)` when it needs a person (only a person resumes it, with
+  `loop task resume <id>`), or `action="defer"` when it waits for a condition (you may resume it when the
+  condition holds, unless the task has `needs`).
 - Use `loop_block` only when no progress is possible on the whole goal. permission, environment and external
   blockers need the exact reproduction and what you already tried. "Permission denied" is
   often a fixable tooling problem, so investigate it first.

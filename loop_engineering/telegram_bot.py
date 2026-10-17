@@ -107,6 +107,9 @@ def markup_for(payload: dict) -> tuple[dict | None, str | None]:
         key = remember({**base, "action": "approve"})
         label = "✅ Approve new goal" if payload.get("title", "").startswith("New goal") else "✅ Approve change"
         return {"inline_keyboard": [[{"text": label, "callback_data": f"v:{key}"}], tools(key)]}, key
+    if kind == "held":
+        key = remember({**base, "action": "resume_task", "task": payload["task"]})
+        return {"inline_keyboard": [[{"text": "▶️ Resume task", "callback_data": f"t:{key}"}], tools(key)]}, key
     if kind == "limit":
         key = remember({**base, "action": "resume"})
         return {"inline_keyboard": [[{"text": "▶️ Add budget & continue", "callback_data": f"r:{key}"}], tools(key)]}, key
@@ -174,6 +177,9 @@ def perform(entry: dict, choice: str | None, text: str | None) -> str:
     if action == "unblock":
         service.unblock(text or "Continue approved from Telegram", goal, by="human (telegram)")
         return f"▶️ Unblocked · {_ensure_runner(project, goal)}"
+    if action == "resume_task":
+        service.task("resume", entry["task"], goal_id=goal, reason=text or "Resumed from Telegram")
+        return f"▶️ Task {entry['task']} resumed · {_ensure_runner(project, goal)}"
     if action == "approve":
         service.goal_approve(True, goal, by="human (telegram)")
         return f"✅ Contract approved · {_ensure_runner(project, goal)}"
@@ -199,7 +205,7 @@ def resend_pending(settings: dict) -> int:
             continue
         context = notify.card_context(store, goal, state)
         for item in notify.attention(goal, state):
-            if item.get("type") in {"question", "blocked", "limit", "approve"}:
+            if item.get("type") in {"question", "blocked", "limit", "approve", "held"}:
                 notify.send({"desktop": False, "telegram": settings},
                             {**item, "goal": goal["id"], "project": str(project.root), "context": context})
                 count += 1
@@ -276,7 +282,8 @@ def handle(update: dict, settings: dict, api) -> None:
             api("sendMessage", {"chat_id": chat, "text": status_text(Path(entry["project"]))[:4000], "parse_mode": "HTML",
                                 "reply_to_message_id": message.get("message_id")})
             return
-        action = {"a": entry["action"], "u": "unblock", "p": "pause", "r": "resume", "v": "approve"}.get(kind)
+        action = {"a": entry["action"], "u": "unblock", "p": "pause", "r": "resume", "v": "approve",
+                  "t": "resume_task"}.get(kind)
         choice = None
         if kind == "a":
             options = entry.get("options") or []

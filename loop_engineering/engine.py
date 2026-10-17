@@ -41,6 +41,9 @@ def task_by_id(state: dict, task_id: str) -> dict:
 
 MAX_TASK_COVERS, MAX_TASK_CHECKS = 6, 8  # task size limits checked by loop_plan
 MAX_REQUIREMENTS, MAX_OPEN_TASKS = 20, 20  # goal size: more than this is several goals
+SPLIT_ADVICE = ("in a chat, draft the follow-up goals with loop_goal_draft (enqueue); in an autonomous turn, ask "
+                "with loop_ask(blocking=false) to split, and the planner drafts follow-up goals from the out-of-scope "
+                "list when this goal is done.")
 
 
 def ready_tasks(state: dict) -> list[dict]:
@@ -53,9 +56,9 @@ def open_incident(state: dict) -> dict | None:
 
 
 # --------------------------------------------------------------------- the full pipeline
-# intake → requirements → requirements review → solution → test design → plan (+ staffing) → resources
-# → plan review → develop → staged tests → code / security / performance reviews → final acceptance
-# → product acceptance → human reviews. Each stage has a role (roles.WORKFLOWS) and a controller gate.
+# brief (requirements) → design (with the task plan and its checks) → design review (gate, at most two rounds)
+# → develop → staged acceptance → final review (one turn, every angle, at most two rounds) → human reviews.
+# Each stage has a role (roles.WORKFLOWS).
 
 PRE_STAGES = [
     {"id": "brief", "type": "brief", "file": "brief.md",
@@ -518,15 +521,15 @@ def set_requirements(goal: dict, state: dict, items: list[dict] | None, drop: li
     if not isinstance(items, list) or not isinstance(drop, list):
         raise LoopError("requirements and drop must be lists")
     current = {r["id"]: r for r in state.setdefault("requirements", [])}
+    before = len(current)
     for value in items:
         requirement = model.requirement(value)
         current[requirement["id"]] = requirement
     for rid in drop:
         current.pop(rid, None)
-    if len(current) > MAX_REQUIREMENTS:
+    if len(current) > MAX_REQUIREMENTS and len(current) > before:  # a goal already over the limit may still shrink
         raise LoopError(f"{len(current)} requirements; a goal delivers at most {MAX_REQUIREMENTS}. Keep what THIS goal "
-                        "ships, list the rest as out of scope in the brief, and draft follow-up goals for it "
-                        "(loop_goal_draft) instead of recording it here.")
+                        f"ships and list the rest as out of scope in the brief: {SPLIT_ADVICE}")
     changed = bool(items or drop)
     state["requirements"] = list(current.values())
     if changed and state.get("plan_final") and (not state.get("design_accepted") or uncovered(state)):
@@ -548,6 +551,7 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
     if not upsert and not drop and not final:
         raise LoopError("Give tasks to add/update, or tasks to drop")
     by_id = {t["id"]: t for t in state["tasks"]}
+    open_before = sum(t["status"] not in {"done", "dropped"} for t in state["tasks"])
     changed = []
     for values in upsert:
         task_id = slug(values.get("id", ""), "task id") if isinstance(values, dict) else None
@@ -601,9 +605,9 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
                             "Split it into tasks that each deliver one result; mark depends_on only where one "
                             "really needs another, so the rest run in parallel.")
     open_tasks = [t for t in state["tasks"] if t["status"] not in {"done", "dropped"}]
-    if len(open_tasks) > MAX_OPEN_TASKS:
+    if len(open_tasks) > MAX_OPEN_TASKS and len(open_tasks) > open_before:
         raise LoopError(f"{len(open_tasks)} open tasks; a goal has at most {MAX_OPEN_TASKS}. Merge small steps into "
-                        "one task, or move later work into a follow-up goal (loop_goal_draft).")
+                        f"one task, or leave later work out of this goal: {SPLIT_ADVICE}")
     if pipeline(goal):
         known = {r["id"] for r in state.get("requirements", [])}
         for task in state["tasks"]:

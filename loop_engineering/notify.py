@@ -58,6 +58,18 @@ def attention(goal: dict, state: dict) -> list[dict]:
         items.append({"key": f"v:{contract_digest(goal)}", "title": f"Approve contract change · {goal['title']}",
                       "message": "goal.json changed after approval:\n- " + "\n- ".join(changes),
                       "command": "loop approve", "type": "approve"})
+    # A task waiting for a person (blocked, or needing a quiet machine, a device or a person) is announced as
+    # soon as it is held: the other tasks keep the goal running, so the goal itself may not block for days.
+    blocker_tasks = set((state.get("blocker") or {}).get("held_tasks") or [])
+    for task in state["tasks"]:
+        hold = task.get("hold") or {}
+        if task["id"] in blocker_tasks or not (task["status"] == "blocked" or task.get("needs")) or not hold:
+            continue
+        if task["status"] not in {"blocked", "deferred"}:
+            continue
+        items.append({"key": f"h:{task['id']}:{hold.get('at')}", "title": f"Task waiting for you · {goal['title']}",
+                      "message": f"{task['id']}: {task.get('title', '')}\n{hold.get('reason', '')[:900]}",
+                      "command": f"loop task resume {task['id']} --reason \"...\"", "type": "held", "task": task["id"]})
     status = state["status"]
     if status in ATTENTION_STATUSES:
         reason = state["status_reason"]
@@ -152,7 +164,7 @@ def send(settings: dict, payload: dict) -> bool:
     telegram = settings.get("telegram")
     if isinstance(telegram, dict) and telegram.get("chat_id"):
         markup, key = None, None
-        if payload.get("type") in {"question", "blocked", "limit", "approve"} and payload.get("goal"):
+        if payload.get("type") in {"question", "blocked", "limit", "approve", "held"} and payload.get("goal"):
             from .telegram_bot import markup_for
             try:
                 markup, key = markup_for(payload)
@@ -175,11 +187,13 @@ def send(settings: dict, payload: dict) -> bool:
 
 
 CARD_HEADERS = {"question": ("❓", "QUESTION"), "approval": ("🔐", "APPROVAL NEEDED"), "blocked": ("⛔", "BLOCKED"),
-                "limit": ("⏳", "BUDGET LIMIT"), "done": ("🎉", "DONE"), "failed": ("❌", "FAILED")}
+                "limit": ("⏳", "BUDGET LIMIT"), "done": ("🎉", "DONE"), "failed": ("❌", "FAILED"),
+                "held": ("⏸", "TASK WAITING FOR YOU")}
 CARD_HINTS = {"question": "👇 Tap a button, or reply to this message with your answer",
               "blocked": "👇 Fix it, then tap Continue, or reply with what you did",
               "limit": "👇 Tap to add another budget window and continue",
-              "approve": "👇 Review the change, then tap Approve"}
+              "approve": "👇 Review the change, then tap Approve",
+              "held": "👇 Other tasks continue. When it can go on, tap Resume or reply with what changed"}
 RULE = "━━━━━━━━━━━━━━━"
 
 

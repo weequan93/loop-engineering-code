@@ -780,3 +780,36 @@ class LightContextTests(ProjectCase):
         self.assertEqual([t["id"] for t in reply["changed"]], ["t2"])
         self.assertEqual(reply["tasks"]["total"], 3)
         self.assertEqual(reply["uncovered_requirements"], [])
+
+
+class HeldTaskNoticeTests(ProjectCase):
+    def test_a_task_waiting_for_a_person_is_announced_and_resumable_from_telegram(self):
+        from unittest import mock
+        from loop_engineering import notify, telegram_bot
+        from loop_engineering.api import Service
+        store = self.goal()
+        Service(self.project, actor="human").goal_approve(True)
+        agent = Service(self.project, actor="agent", interactive=False)
+        agent.plan([{"id": "perf", "title": "Measure", "needs": ["exclusive-machine"],
+                     "checks": [{"id": "c", "run": "test -d ."}]},
+                    {"id": "api", "title": "API", "checks": [{"id": "c", "run": "test -d ."}]},
+                    {"id": "ui", "title": "UI", "checks": [{"id": "c", "run": "test -d ."}]}])
+        agent.task("defer", "ui", reason="waits for the API")          # the agent's own deferral: no notice
+        held = [i for i in notify.attention(store.goal(), store.state()) if i["type"] == "held"]
+        self.assertEqual([i["task"] for i in held], ["perf"])
+        self.assertIsNone(store.state()["blocker"])                     # announced while the goal still runs
+        markup, key = telegram_bot.markup_for({**held[0], "project": str(self.root), "goal": store.id})
+        self.assertEqual(markup["inline_keyboard"][0][0]["callback_data"], f"t:{key}")
+        with mock.patch.object(telegram_bot, "_ensure_runner", lambda r, g: "runner started"):
+            telegram_bot.handle({"callback_query": {"id": "c", "data": f"t:{key}",
+                                                    "message": {"chat": {"id": 42}, "message_id": 9}}},
+                                {"chat_id": "42", "bot_token": "t"}, lambda m, p: {"ok": True})
+        self.assertEqual(engine.task_by_id(store.state(), "perf")["status"], "pending")
+        self.assertFalse([i for i in notify.attention(store.goal(), store.state()) if i["type"] == "held"])
+
+    def test_planner_prompt_keeps_goals_small_and_lean(self):
+        from loop_engineering import planner
+        text = planner.prompt(self.project, 2, None)
+        self.assertIn("at most 20 requirements and 20 tasks", text)
+        self.assertIn("at most 10 delivery limits", text)
+        self.assertNotIn("plan review", text)

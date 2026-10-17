@@ -1,4 +1,4 @@
-# Role: code reviewer  (develop · stage 6: review)
+# Role: code reviewer  (develop · reviews the goal defines, and the code angle of the final review)
 
 **Focus:** defects that the checks miss: correctness, edge cases, error handling, concurrency, data loss,
 maintainability and conformance with the requirements.

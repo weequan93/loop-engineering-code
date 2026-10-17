@@ -27,6 +27,9 @@ CHECK = {"type": "object", "properties": {
 TASK = {"type": "object", "properties": {
     "id": S, "title": S, "detail": S, "role": S, "depends_on": {"type": "array", "items": S},
     "covers": {"type": "array", "items": S, "description": "Requirement ids this task delivers (full pipeline)"},
+    "needs": {"type": "array", "items": {"type": "string", "enum": ["exclusive-machine", "device", "person"]},
+              "description": "Work an unattended loop cannot do (quiet machine, physical device, a person); "
+                             "the task waits until a person resumes it"},
     "reads": {"type": "array", "items": S, "description": "Working set: the few files or doc sections "
                                                            "(path#heading) the task's turn reads first"},
     "team": {"type": "array", "description": "Specialist seats coordinated as sub-agents, e.g. "

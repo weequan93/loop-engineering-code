@@ -520,3 +520,46 @@ class TaskIsolationTests(ProjectCase):
         before = progress_mark(self.store.state())
         self.agent.plan(None, [{"id": "a", "reason": "too hard"}])
         self.assertEqual(progress_mark(self.store.state()), before)
+
+
+class ScopeLimitTests(ProjectCase):
+    """A goal is small, its constraints are delivery limits, and loop-unfit work waits for a person."""
+
+    def test_a_goal_holds_at_most_twenty_requirements_and_twenty_open_tasks(self):
+        store = self.goal(pipeline="full")
+        human = Service(self.project, actor="human")
+        human.goal_approve(True)
+        many = [{"id": f"R{i}", "text": f"r{i}", "source": "doc", "verify": "test"} for i in range(21)]
+        with self.assertRaisesRegex(LoopError, "out of scope"):
+            human.requirements(many)
+        human.requirements(many[:20])
+        tasks = [{"id": f"t{i}", "title": f"T{i}", "checks": [{"id": "c", "run": f"test -f f{i}"}]} for i in range(21)]
+        with self.assertRaisesRegex(LoopError, "follow-up goal"):
+            human.plan(tasks)
+        human.plan(tasks[:20])
+        human.plan(None, [{"id": "t0", "reason": "merged into t1"}])  # dropped tasks free a slot
+        human.plan([tasks[20]])
+        self.assertEqual(len(store.state()["tasks"]), 21)
+
+    def test_more_than_ten_constraints_block_approval(self):
+        self.goal(constraints=[f"rule {i}" for i in range(11)])
+        with self.assertRaisesRegex(LoopError, "constraints"):
+            Service(self.project, actor="human").goal_approve(True)
+
+    def test_tasks_that_need_a_quiet_machine_wait_for_a_person(self):
+        store = self.goal()
+        human = Service(self.project, actor="human")
+        agent = Service(self.project, actor="agent", interactive=False)
+        human.goal_approve(True)
+        agent.plan([{"id": "perf", "title": "Measure", "needs": ["exclusive-machine"],
+                     "checks": [{"id": "c", "run": "test -d ."}]},
+                    {"id": "api", "title": "API", "checks": [{"id": "c", "run": "test -d ."}]}])
+        perf = engine.task_by_id(store.state(), "perf")
+        self.assertEqual((perf["status"], perf["hold"]["by"]), ("deferred", "controller"))
+        self.assertEqual(engine.next_action(store.goal(), store.state())["task"], "api")
+        with self.assertRaisesRegex(LoopError, "a person resumes it"):
+            agent.task("resume", "perf", reason="looks quiet")
+        human.task("resume", "perf", reason="quiet window tonight")
+        self.assertEqual(engine.task_by_id(store.state(), "perf")["status"], "pending")
+        with self.assertRaises(LoopError):
+            agent.plan([{"id": "x", "title": "X", "needs": ["telepathy"]}])

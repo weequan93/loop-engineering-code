@@ -12,7 +12,7 @@ and the answers already recorded in the goal. Skim the repository only to learn 
 - `loop_requirements`, one atomic item per requirement: `id` (the document's own ID if it has one), `text`
   (what must be true), `source` (path plus section or line), `verify` (how it will be proven).
 
-Keep it to what this goal ships, at most about 20 requirements. When the documents describe far more, record
+Keep it to what this goal ships, at most 20 requirements (the controller refuses more). When the documents describe far more, record
 this goal's slice and propose splitting the rest with `loop_ask`; do not record everything. Ask about real
 ambiguities and open business decisions; don't guess. Finish with `loop_stage_done(stage="brief", ...)` and
 `loop_requirements(final=true)`.

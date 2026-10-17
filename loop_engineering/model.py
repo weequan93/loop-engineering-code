@@ -20,7 +20,9 @@ GOAL_STATUSES = ("draft", "ready", "running", "waiting", "blocked", "paused", "i
                  "done", "failed", "limit", "stopped")
 TERMINAL = {"done", "failed", "stopped"}
 TASK_STATUSES = ("pending", "active", "done", "blocked", "deferred", "dropped")
-HELD = ("blocked", "deferred")  # a held task waits for a person (or, deferred, a condition); other tasks go on
+HELD = ("blocked", "deferred")
+NEEDS = ("exclusive-machine", "device", "person")  # work an unattended loop cannot do; deferred until available
+MAX_CONSTRAINTS = 10  # a held task waits for a person (or, deferred, a condition); other tasks go on
 BLOCK_CATEGORIES = ("decision", "permission", "external", "environment", "scope", "other")
 
 TEST_STAGES = ("unit", "integration", "e2e", "performance", "security", "regression", "acceptance")
@@ -295,6 +297,10 @@ def _reviews(values) -> list[dict]:
 def approval_problems(goal_data: dict) -> list[str]:
     """What must be fixed before a goal can be approved."""
     problems = []
+    if len(goal_data["constraints"]) > MAX_CONSTRAINTS:
+        problems.append(f"{len(goal_data['constraints'])} constraints; keep at most {MAX_CONSTRAINTS}. Constraints are "
+                        "delivery limits (what must or must not happen). Process rules (evidence per turn, approval "
+                        "steps for test edits, time boxes, audits) are the framework's job: drop them.")
     if goal_data["kind"] in {"develop", "operate"} and not goal_data["acceptance"]:
         problems.append("Add at least one acceptance check (the controller, not the agent, decides completion)."
                         if goal_data["kind"] == "develop" else
@@ -343,7 +349,7 @@ def _strings(values, field: str) -> list[str]:
 def task(values: dict, existing: dict | None = None) -> dict:
     if not isinstance(values, dict):
         raise LoopError("A task must be an object")
-    allowed = {"id", "title", "detail", "depends_on", "checks", "role", "covers", "team", "reads"}
+    allowed = {"id", "title", "detail", "depends_on", "checks", "role", "covers", "team", "reads", "needs"}
     unknown = set(values) - allowed
     if unknown:
         raise LoopError(f"Unknown task fields {sorted(unknown)} (status changes use loop_task)")
@@ -371,6 +377,11 @@ def task(values: dict, existing: dict | None = None) -> dict:
         if not isinstance(covers, list) or not all(isinstance(c, str) and c for c in covers):
             raise LoopError("covers must be a list of requirement ids")
         base["covers"] = list(dict.fromkeys(covers))
+    if "needs" in values:
+        needs = values.get("needs") or []
+        if not isinstance(needs, list) or set(needs) - set(NEEDS):
+            raise LoopError(f"needs must be a list from {list(NEEDS)}")
+        base["needs"] = [n for n in NEEDS if n in needs]
     if "reads" in values:  # the task's working set: files or doc sections its turn reads first
         reads = values.get("reads") or []
         if not isinstance(reads, list) or len(reads) > 12 or not all(isinstance(r, str) and r.strip() for r in reads):

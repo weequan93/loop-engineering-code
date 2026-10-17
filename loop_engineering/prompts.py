@@ -41,7 +41,12 @@ Checks prove required behaviour (the feature works, the budget holds), nothing e
 contents of framework-managed files (`.loop/`, `.claude/skills/loop/`, `.agents/skills/loop/`, the managed
 AGENTS.md section), of earlier runs' artifacts, or of the whole source tree: such guards fail on unrelated
 changes and stop the loop. Removing a guard like that, or one an earlier turn added, is not weakening a check;
-record it with `loop_note(kind="decision")`.
+record it with `loop_note(kind="decision")`. Checks never pin run settings (model, effort, adapter): the
+controller records what each turn used.
+
+Process is the framework's: do not add your own process rules (evidence archives per turn, approval steps
+for test edits, time boxes, audit scripts) to project docs or checks. If you think one is needed, ask with
+`loop_ask`.
 
 Keep your context small; everything you read is re-sent on every later step of this turn.
 - Read state with `loop_status`, `.loop/STATUS.md`, the goal's `GOAL.md` or `REQUIREMENTS.md`, never `.loop/`
@@ -137,7 +142,7 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
             "main journeys, what success looks like, and the scope, with an explicit out-of-scope list. Then record "
             "this goal's requirements with `loop_requirements`: `id` (reuse the document's own ID, otherwise R-001…), "
             "`text` (what must be true), `source` (doc path and section), `verify` (how it will be proven). Record only "
-            "what THIS goal must deliver; later milestones go to the out-of-scope list. Aim for at most about 20 "
+            "what THIS goal must deliver; later milestones go to the out-of-scope list. Record at most 20 "
             "requirements: if the goal needs far more, propose splitting it with loop_ask instead of recording them "
             "all. Do not invent requirements; ask when the documents are ambiguous or a business decision is open. "
             f"Finish with `loop_stage_done(stage=\"brief\", path=\"{act['output']}\", summary=...)` and "
@@ -155,10 +160,12 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
             "`covers` (requirement IDs), `depends_on` (only real ones; independent tasks run in parallel), a `detail`, "
             "a `role` (architect, backend, frontend, mobile, data, tester, security, devops, or a project role), and "
             "real `checks` that prove its requirements. These checks are the test design: no separate test plan. "
-            "Each task is one result with its own pass/fail: at most 6 requirements and 8 checks. "
+            "Each task is one result with its own pass/fail: at most 6 requirements and 8 checks. Mark with "
+            "`needs` (exclusive-machine, device, person) any task an unattended loop cannot do; it waits for a "
+            "person. "
             "Give each task `reads`: the few files or doc sections (`path#heading`) it needs, so its turn starts "
             "there instead of searching the repository. "
-            "Size each task to finish in a few turns; at most about 20 tasks. Use `team` only when a task really "
+            "Size each task to finish in a few turns; at most 20 open tasks. Use `team` only when a task really "
             f"splits into slices with separate files (at most {goal['agent'].get('team_limit', 4)} seats). Finish with "
             f"`loop_stage_done(stage=\"design\", path=\"{act['output']}\", summary=...)` and `loop_plan(final=true)`. "
             "An independent reviewer then checks the brief, requirements, design and plan once before development.\n\n"

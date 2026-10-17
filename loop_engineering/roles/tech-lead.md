@@ -17,7 +17,7 @@ scripts, the goal's acceptance checks, and the design review findings if a revie
   the few files or doc sections (`path#heading`) the task needs, so its turn starts there.
 
 Contracts first, implementation next, test suites last (unit, integration, e2e, performance, security as the
-requirements demand). At most about 20 tasks, each finishing in a few turns. Finish with
+requirements demand). At most 20 open tasks (the controller refuses more), each finishing in a few turns. Finish with
 `loop_stage_done(stage="design", ...)` and `loop_plan(final=true)`.
 
 **Parallel by default:** keep tasks independent when their files are, and avoid `depends_on` that is not

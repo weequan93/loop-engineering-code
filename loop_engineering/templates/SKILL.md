@@ -16,13 +16,19 @@ tool has a CLI equivalent, so use the CLI if the MCP tools are not loaded.
 
 1. Read the project docs the user points to. Ask the user only about what changes scope,
    permissions, money, environments or acceptance. Ask everything together, once.
+   - Size: one goal delivers at most 20 requirements and 20 open tasks. Bigger work becomes
+     several goals in a queue (`loop_goal_draft` with enqueue), smallest useful one first.
+   - Feasibility: name anything you are not sure the platform, hardware or budget allows, and
+     ask about it now rather than discovering it mid-development.
+   - Work an unattended loop cannot do (a quiet machine, a physical device, a person): say so;
+     those tasks get `needs` and wait until the user resumes them.
 2. Draft the goal with `loop_goal_draft`:
    - `kind`: `develop` (build or change software), `operate` (keep something healthy on a
      schedule) or `investigate` (find the root cause).
    - `objective`: the outcome in the user's words, plus the success criteria.
    - `acceptance`: real commands the controller can run. Examples: tests, build, lint, an
      end-to-end script, a health probe. `develop` and `operate` need at least one.
-   - `constraints`, `context` (doc paths), `policy` (limits, `approval_required`),
+   - `constraints` (at most 10 delivery limits, not process rules), `context` (doc paths), `policy` (limits, `approval_required`),
      `agent.adapter` (`claude` | `codex` | a configured command) and, for `operate`,
      `schedule.interval_minutes`.
 3. Show the user the goal, especially the acceptance checks and limits. Call
@@ -86,7 +92,9 @@ Don't guess. Show the user the CLI commands they can run:
 - Never edit `.loop/` files by hand. Never weaken, skip or delete checks to get green.
 - Checks prove required behaviour only. Never pin hashes or contents of framework-managed files
   (`.loop/`, this skill file), of earlier runs' artifacts, or of the whole source tree. Removing such a
-  guard is not weakening a check; record the decision.
+  guard is not weakening a check; record the decision. Checks never pin run settings (model, effort).
+- Process is the framework's. Don't add process rules (evidence archives, approval steps for test
+  edits, time boxes, audits) to project docs or checks; ask the user if you think one is needed.
 - A model's claim is not evidence; only controller-run checks are.
 - Stay inside the goal's constraints. Scope changes go through `loop_goal_draft` and need
   the user's re-approval.

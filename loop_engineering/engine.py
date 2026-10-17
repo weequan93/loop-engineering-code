@@ -40,6 +40,7 @@ def task_by_id(state: dict, task_id: str) -> dict:
 
 
 MAX_TASK_COVERS, MAX_TASK_CHECKS = 6, 8  # task size limits checked by loop_plan
+MAX_REQUIREMENTS, MAX_OPEN_TASKS = 20, 20  # goal size: more than this is several goals
 
 
 def ready_tasks(state: dict) -> list[dict]:
@@ -522,8 +523,10 @@ def set_requirements(goal: dict, state: dict, items: list[dict] | None, drop: li
         current[requirement["id"]] = requirement
     for rid in drop:
         current.pop(rid, None)
-    if len(current) > 500:
-        raise LoopError("Requirements are limited to 500 per goal; split the goal")
+    if len(current) > MAX_REQUIREMENTS:
+        raise LoopError(f"{len(current)} requirements; a goal delivers at most {MAX_REQUIREMENTS}. Keep what THIS goal "
+                        "ships, list the rest as out of scope in the brief, and draft follow-up goals for it "
+                        "(loop_goal_draft) instead of recording it here.")
     changed = bool(items or drop)
     state["requirements"] = list(current.values())
     if changed and state.get("plan_final") and (not state.get("design_accepted") or uncovered(state)):
@@ -552,6 +555,12 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
         if existing and existing["status"] in {"done", "dropped"} and set(values) - {"id", "detail"}:
             raise LoopError(f"Task {task_id} is {existing['status']}; add a new task instead of rewriting history")
         updated = model.task(values, existing)
+        if updated.get("needs") and updated["status"] in {"pending", "active"} and (
+                not existing or set(updated["needs"]) - set(existing.get("needs") or [])):
+            # Work an unattended loop cannot do waits for a person to say it is available.
+            updated.update(status="deferred", hold={
+                "reason": f"needs {', '.join(updated['needs'])}; resume it when that is available "
+                          f"(`loop task resume {updated['id']}`)", "at": now(), "by": "controller", "evidence": ""})
         if existing:
             state["tasks"][state["tasks"].index(existing)] = updated
         else:
@@ -591,8 +600,10 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
                             f"{len(task['checks'])} checks; at most {MAX_TASK_COVERS} and {MAX_TASK_CHECKS}). "
                             "Split it into tasks that each deliver one result; mark depends_on only where one "
                             "really needs another, so the rest run in parallel.")
-    if len(state["tasks"]) > 200:
-        raise LoopError("Plans are limited to 200 tasks; group work into larger tasks")
+    open_tasks = [t for t in state["tasks"] if t["status"] not in {"done", "dropped"}]
+    if len(open_tasks) > MAX_OPEN_TASKS:
+        raise LoopError(f"{len(open_tasks)} open tasks; a goal has at most {MAX_OPEN_TASKS}. Merge small steps into "
+                        "one task, or move later work into a follow-up goal (loop_goal_draft).")
     if pipeline(goal):
         known = {r["id"] for r in state.get("requirements", [])}
         for task in state["tasks"]:
@@ -766,6 +777,9 @@ def resume_task(goal: dict, state: dict, task_id: str, note: str, by: str) -> di
     task = task_by_id(state, task_id)
     if task["status"] not in model.HELD:
         raise LoopError(f"Task {task_id} is {task['status']}, not blocked or deferred")
+    if task.get("needs") and task["status"] == "deferred" and by.startswith("agent"):
+        raise LoopError(f"Task {task_id} needs {', '.join(task['needs'])}; a person resumes it when that is "
+                        f"available (`loop task resume {task_id}`).")
     if task["status"] == "blocked" and by.startswith("agent"):
         raise LoopError(f"Task {task_id} is blocked; a person resumes it (`loop task resume {task_id}`). You can "
                         "re-plan instead: drop it with loop_plan and add smaller tasks that cover its requirements.")

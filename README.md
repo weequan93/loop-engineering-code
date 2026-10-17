@@ -108,6 +108,9 @@ agent 会起草目标，展示给你看。你确认后，它会批准目标。
 | 字段 | 说明 |
 |---|---|
 | `acceptance` | **必填**（develop 和 operate）。控制器运行这些命令来判定完成，测试可以还没写。 |
+| `constraints` | 最多 10 条，只写交付上的限制（必须或不能发生什么）。过程规则（每回合存证据、改测试要审批、时间盒、审计脚本）由框架统一管，不要写进来，超过 10 条无法批准。 |
+| 规模 | 一个目标最多 20 条需求、20 个未完成任务，超过时控制器会拒绝。更大的工作拆成多个目标排队。 |
+| 任务 `needs` | `exclusive-machine`（需要安静、独占的机器）、`device`（实体设备）、`person`（需要人操作）。这类任务自动暂缓，等你确认条件具备后运行 `loop task resume <id>`。 |
 | `reviews` | `by: agent`：只读的独立评审会话，可以指定 `adapter`、`model`、`timeout_minutes`。`by: human`：由你按步骤检查后批准。 |
 | `policy` | `max_iterations`（agent 轮数）、`max_hours`、`max_cost_usd`（只对 Claude 生效）、`turn_timeout_minutes`、`approval_required`（必须先问你的操作）。 |
 | `agent.adapter` | `codex`、`claude`，或在 `.loop/adapters.json` 里配置的其他工具（见第 9 节）。 |

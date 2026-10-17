@@ -142,6 +142,21 @@ class AdapterTests(ProjectCase):
         report = adapter.parse(out, work / "none", work)
         self.assertEqual((report.session_id, report.cost_usd, report.input_tokens, report.output_tokens,
                           report.summary), ("s1", 0.42, 15, 7, "done it"))
+        self.assertEqual(turn.env["BASH_MAX_OUTPUT_LENGTH"], "20000")  # host-enforced cap on one shell output
+        self.assertEqual(adapters.ClaudeAdapter({"bash_output_max_chars": 5000}).build(
+            "hi", self.root, work, self.goal_data, None).env["BASH_MAX_OUTPUT_LENGTH"], "5000")
+        out.write_text("\n".join(json.dumps(x) for x in [
+            {"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "id": "u1", "name": "Read", "input": {"file_path": "docs/big.md"}},
+                {"type": "tool_use", "id": "u2", "name": "Bash", "input": {"command": "sed -n 1,9p src/app.py"}}]}},
+            {"type": "user", "message": {"content": [
+                {"type": "tool_result", "tool_use_id": "u1", "content": "x" * 3000},
+                {"type": "tool_result", "tool_use_id": "u2", "content": [{"type": "text", "text": "y" * 100}]}]}},
+            {"type": "result", "result": "ok"}]))
+        bill = adapter.parse(out, work / "none", work).context
+        self.assertEqual(bill["tool_calls"], 2)
+        self.assertEqual(bill["top_reads"][0], ["docs/big.md", 3000])
+        self.assertEqual(bill["top_reads"][1][0], "src/app.py")
 
     def test_codex_build_and_parse(self):
         adapter = adapters.CodexAdapter({})
@@ -165,10 +180,23 @@ class AdapterTests(ProjectCase):
         out.write_text("\n".join(json.dumps(x) for x in [
             {"type": "thread.started", "thread_id": "t1"},
             {"type": "item.completed", "item": {"type": "agent_message", "text": "hello"}},
-            {"type": "turn.completed", "usage": {"input_tokens": 100, "output_tokens": 20}}]))
+            {"type": "item.completed", "item": {"type": "command_execution",
+                                                "command": "/bin/zsh -lc 'cat docs/spec.md'",
+                                                "aggregated_output": "z" * 5000}},
+            {"type": "item.completed", "item": {"type": "command_execution", "command": "git status",
+                                                "aggregated_output": "clean"}},
+            {"type": "item.completed", "item": {"type": "mcp_tool_call", "tool": "loop_status",
+                                                "result": {"content": [{"type": "text", "text": "{}"}]}}},
+            {"type": "turn.completed", "usage": {"input_tokens": 100, "cached_input_tokens": 80,
+                                                 "output_tokens": 20}}]))
         report = adapter.parse(out, work / "none", work)
         self.assertEqual((report.session_id, report.input_tokens, report.output_tokens, report.cost_usd),
                          ("t1", 100, 20, None))
+        self.assertEqual(report.context["tool_calls"], 3)
+        self.assertEqual(report.context["cached_input_tokens"], 80)
+        self.assertEqual(report.context["top_reads"][0], ["docs/spec.md", 5000])
+        self.assertIn(["mcp loop_status", 2], report.context["top_reads"])
+        self.assertTrue(any(a.startswith("tool_output_token_limit=6000") for a in fresh.argv))  # host output cap
 
     def test_unknown_adapter_and_command_template(self):
         from loop_engineering.util import LoopError

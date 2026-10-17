@@ -83,6 +83,7 @@ actions. While it waits on a human, a schedule or a pause, it only polls files.
 | One host session accumulated 10–35M tokens. | A fresh session each turn by default, with handoff notes carrying the context. |
 | Long checks blocked the MCP request loop. | Checks run in detached jobs; tools wait a bounded time and then return a poll handle. |
 | Framework edited while live supervisors ran on it. | Runners are separate processes over stable files; the CLI wrapper pins one checkout. |
+| Fresh turns re-read the whole goal, old notes, and whole files and logs; agents wrote per-turn reports. Nobody could see what filled the context. | The prompt carries a short goal block (full text in the generated `GOAL.md`), the newest handoff and two decisions, and the task's `reads` working set. The protocol says locate, then read line ranges, and no report documents. The host caps each tool output (Codex `tool_output_token_limit`, Claude `BASH_MAX_OUTPUT_LENGTH`). Each turn records a context bill (`context.json`, dashboard). |
 
 ## Limits
 

@@ -35,10 +35,15 @@ Rules: the controller decides completion. Never edit `.loop/` files directly. Ne
 delete or bypass checks. Stay within the constraints. One meaningful step per turn is fine.
 Stop when your assignment is done or you are waiting on the controller or a human.
 
-Keep your context small; everything you read is re-sent on every later step of this turn. Read state
-with `loop_status`, `.loop/STATUS.md` or the goal's `REQUIREMENTS.md`, never `.loop/` JSON files. Read
-large documents by section (search, then read the lines you need), not end to end, and verify what this
-turn touched rather than re-auditing everything; the controller runs the full checks.
+Keep your context small; everything you read is re-sent on every later step of this turn.
+- Read state with `loop_status`, `.loop/STATUS.md`, the goal's `GOAL.md` or `REQUIREMENTS.md`, never `.loop/`
+  JSON files.
+- Locate, then read: find the place with `rg -n` (or `grep -n`), then read only those lines (`sed -n 'A,Bp'`).
+  Never print a whole large file, log or JSON; pipe long command output through `tail -n 40` or `head`.
+- Start from the task's working set (`Read first`) and widen only when it is not enough.
+- Verify what this turn touched rather than re-auditing everything; the controller runs the full checks.
+- Write no per-turn report or summary documents; the handoff note is the report. Write a document only when
+  the assignment names it.
 """
 
 
@@ -142,6 +147,8 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
             "`covers` (requirement IDs), `depends_on` (only real ones; independent tasks run in parallel), a `detail`, "
             "a `role` (architect, backend, frontend, mobile, data, tester, security, devops, or a project role), and "
             "real `checks` that prove its requirements. These checks are the test design: no separate test plan. "
+            "Give each task `reads`: the few files or doc sections (`path#heading`) it needs, so its turn starts "
+            "there instead of searching the repository. "
             "Size each task to finish in a few turns; at most about 20 tasks. Use `team` only when a task really "
             f"splits into slices with separate files (at most {goal['agent'].get('team_limit', 4)} seats). Finish with "
             f"`loop_stage_done(stage=\"design\", path=\"{act['output']}\", summary=...)` and `loop_plan(final=true)`. "
@@ -159,6 +166,9 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
         task = next(t for t in state["tasks"] if t["id"] == act["task"])
         lines += [f"Task `{task['id']}`: {task['title']}", task.get("detail") or "",
                   "Task checks (the controller runs them when you call loop_task done):\n" + _checks_text(task["checks"])]
+        if task.get("reads"):
+            lines.append("Read first (working set; widen only if it is not enough):\n"
+                         + "\n".join(f"- `{r}`" for r in task["reads"]))
         if task.get("role"):
             lines.append(f"Suggested specialist role: {task['role']}.")
         if task.get("last_failure"):
@@ -258,26 +268,80 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
     return "\n\n".join(x for x in lines if x)
 
 
+GOAL_BLOCK_CHARS = 2500  # objective, and constraints together, beyond this go by reference to GOAL.md
+
+
+def goal_path(goal: dict) -> str:
+    return f".loop/goals/{goal['id']}/GOAL.md"
+
+
+def first_sentence(text: str, limit: int = 220) -> str:
+    text = " ".join(str(text).split())
+    for stop in (". ", "。", "; "):
+        if stop in text:
+            text = text[:text.index(stop) + len(stop)].strip()
+            break
+    return short(text, limit)
+
+
 def context_block(goal: dict, state: dict) -> str:
-    parts = [f"# Goal: {goal['title']} ({goal['kind']})", "", goal["objective"]]
+    """The goal as every fresh turn sees it: short, with the full text one read away in GOAL.md."""
+    ref = goal_path(goal)
+    objective = goal["objective"]
+    if len(objective) > GOAL_BLOCK_CHARS:
+        objective = objective[:GOAL_BLOCK_CHARS].rstrip() + f"… (full objective: `{ref}`)"
+    parts = [f"# Goal: {goal['title']} ({goal['kind']})", "", objective]
     if goal["context"]:
         parts += ["", "Context to read (paths or references):", *[f"- {c}" for c in goal["context"]]]
-    if goal["constraints"]:
-        parts += ["", "Constraints:", *[f"- {c}" for c in goal["constraints"]]]
+    constraints = goal["constraints"]
+    if constraints and sum(len(c) for c in constraints) <= GOAL_BLOCK_CHARS:
+        parts += ["", "Constraints:", *[f"- {c}" for c in constraints]]
+    elif constraints:
+        parts += ["", f"Constraints (first sentence of each; they bind in full: read `{ref}` before work they "
+                      "touch):", *[f"{i}. {first_sentence(c)}" for i, c in enumerate(constraints, 1)]]
     parts += ["", "Needs approval first (`loop_ask kind=approval`):",
               *[f"- {a}" for a in goal["policy"]["approval_required"]],
               "Anything not listed here or reserved by the constraints is pre-approved: decide, record it, continue."]
-    decisions = [q for q in state["questions"] if q["answer"] is not None][-10:]
-    if decisions:
-        parts += ["", "Human answers so far:", *[f"- {q['text'][:200]} → **{q['answer'][:300]}**" for q in decisions]]
-    done = [t for t in state["tasks"] if t["status"] == "done"]
+    answered = [q for q in state["questions"] if q["answer"] is not None]
+    if answered:
+        more = f" (all {len(answered)}: `{ref}`)" if len(answered) > 3 else ""
+        parts += ["", f"Latest human answers{more}:",
+                  *[f"- {q['text'][:200]} → **{q['answer'][:300]}**" for q in answered[-3:]]]
     if state["tasks"]:
-        parts += ["", f"Plan: {len(done)}/{len(state['tasks'])} tasks done. " + ", ".join(
-            f"{t['id']}={t['status']}" for t in state["tasks"][:40])]
-    handoffs = [n for n in state["notes"] if n["kind"] in {"handoff", "decision", "risk"}][-4:]
-    if handoffs:
-        parts += ["", "Latest handoff notes (newest last):", *[f"- {n['at']}: {n['text'][:1200]}" for n in handoffs]]
+        counts = {}
+        for t in state["tasks"]:
+            counts[t["status"]] = counts.get(t["status"], 0) + 1
+        active = [t["id"] for t in state["tasks"] if t["status"] in {"active", "blocked"}][:12]
+        parts += ["", f"Plan: {counts.get('done', 0)}/{len(state['tasks'])} tasks done ("
+                  + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())) + ")"
+                  + (f"; active: {', '.join(active)}" if active else "") + ". `loop_status` lists every task."]
+    handoff = next((n for n in reversed(state["notes"]) if n["kind"] == "handoff"), None)
+    decisions = [n for n in state["notes"] if n["kind"] in {"decision", "risk"}][-2:]
+    if handoff or decisions:
+        parts += ["", "Latest notes:"]
+        parts += [f"- {n['at']} {n['kind']}: {short(n['text'], 800)}" for n in decisions]
+        if handoff:
+            parts.append(f"- {handoff['at']} handoff (newest): {short(handoff['text'], 1500)}")
     return "\n".join(parts)
+
+
+def goal_markdown(goal: dict, state: dict) -> str:
+    """Generated reference with the goal's full text; the turn prompt carries a short version (context_block)."""
+    lines = [f"# Goal · {goal['title']} ({goal['kind']})", "",
+             "Generated by the controller from the approved goal; do not edit.", "", "## Objective", "",
+             goal["objective"]]
+    if goal["context"]:
+        lines += ["", "## Context", "", *[f"- {c}" for c in goal["context"]]]
+    if goal["constraints"]:
+        lines += ["", "## Constraints", "", *[f"{i}. {c}" for i, c in enumerate(goal["constraints"], 1)]]
+    lines += ["", "## Needs approval first", "", *[f"- {a}" for a in goal["policy"]["approval_required"]]]
+    answered = [q for q in state["questions"] if q["answer"] is not None]
+    if answered:
+        lines += ["", "## Human answers", "", *[f"- `{q['id']}` {q['text']} → **{q['answer']}**" for q in answered]]
+    decisions = [n for n in state["notes"] if n["kind"] == "decision"][-30:]
+    if decisions:
+        lines += ["", "## Decisions (latest 30)", "", *[f"- {n['at']}: {n['text']}" for n in decisions]]
+    return "\n".join(lines) + "\n"
 
 
 REVIEW_PROTOCOL = """\
@@ -291,17 +355,20 @@ agents. Record exactly one verdict with `loop_review`, then stop. Read loop stat
 """
 
 
-def turn_prompt(goal: dict, state: dict, act: dict, iteration: int, project_root: Path | None = None) -> str:
+def turn_sections(goal: dict, state: dict, act: dict, iteration: int,
+                  project_root: Path | None = None) -> list[tuple[str, str]]:
+    """The prompt's parts by name, so the runner can bill each one (see the turn's context.json)."""
     if act["kind"] == "review":
-        return "\n\n".join([f"You are turn {iteration} of an autonomous Loop Engineering run: an independent review.",
-                             context_block(goal, state), assignment(goal, state, act, project_root), REVIEW_PROTOCOL])
-    return "\n\n".join([
-        f"You are turn {iteration} of an autonomous Loop Engineering run in this repository.",
-        context_block(goal, state),
-        assignment(goal, state, act, project_root),
-        playbook(goal["kind"]),
-        PROTOCOL,
-    ])
+        return [("intro", f"You are turn {iteration} of an autonomous Loop Engineering run: an independent review."),
+                ("goal", context_block(goal, state)), ("assignment", assignment(goal, state, act, project_root)),
+                ("protocol", REVIEW_PROTOCOL)]
+    return [("intro", f"You are turn {iteration} of an autonomous Loop Engineering run in this repository."),
+            ("goal", context_block(goal, state)), ("assignment", assignment(goal, state, act, project_root)),
+            ("playbook", playbook(goal["kind"])), ("protocol", PROTOCOL)]
+
+
+def turn_prompt(goal: dict, state: dict, act: dict, iteration: int, project_root: Path | None = None) -> str:
+    return "\n\n".join(text for _, text in turn_sections(goal, state, act, iteration, project_root))
 
 
 def requirement_index(goal: dict, state: dict) -> str:

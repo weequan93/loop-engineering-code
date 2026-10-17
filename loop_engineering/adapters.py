@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import sys
@@ -39,6 +40,38 @@ class Report:
     output_tokens: int | None = None
     summary: str = ""
     error: str | None = None
+    # What filled the turn's context: tool calls, their output, and the largest reads (see Bill).
+    context: dict = field(default_factory=dict)
+
+
+class Bill:
+    """Counts what a turn read into its context; every byte of it is re-sent on each later model call."""
+    PATH = re.compile(r"(?:^|[\s'\"=(])((?:\.{0,2}/)?[\w@.+-]+(?:/[\w@.+-]+)*\.[A-Za-z0-9]{1,8})(?=$|[\s'\":;),|<>])")
+
+    def __init__(self):
+        self.calls, self.output, self.reads = 0, 0, {}
+
+    def add(self, label: str, text: str) -> None:
+        size = len(text.encode("utf-8", errors="replace")) if text else 0
+        self.calls += 1
+        self.output += size
+        self.reads[label] = self.reads.get(label, 0) + size
+
+    @classmethod
+    def label(cls, command: str) -> str:
+        """The file a shell command reads, else the command's program: good enough to see what dominates."""
+        match = cls.PATH.search(command or "")
+        if match:
+            return match.group(1)[-80:]
+        words = (command or "").replace("/bin/zsh -lc", "").replace("bash -lc", "").strip(" '\"").split()
+        return f"$ {words[0][:40]}" if words else "(tool)"
+
+    def summary(self, cached: int | None = None, top: int = 8) -> dict:
+        reads = sorted(self.reads.items(), key=lambda kv: -kv[1])[:top]
+        result = {"tool_calls": self.calls, "tool_output_bytes": self.output, "top_reads": [list(r) for r in reads]}
+        if cached is not None:
+            result["cached_input_tokens"] = cached
+        return result
 
 
 def mcp_server_spec(project_root: Path, autonomous: bool = True, extra: list[str] | None = None) -> dict:
@@ -113,16 +146,28 @@ class ClaudeAdapter(Adapter):
         if session:
             argv += ["--resume", session]
         argv += list(agent.get("extra_args") or [])
-        return Turn(argv=argv, stdin=prompt)
+        # Hard cap on one shell output (characters); Claude Code truncates longer output itself.
+        return Turn(argv=argv, stdin=prompt,
+                    env={"BASH_MAX_OUTPUT_LENGTH": str(self.config.get("bash_output_max_chars", 20000))})
 
     def parse(self, stdout, stderr, workdir):
         report = Report()
-        texts = []
+        texts, bill, uses = [], Bill(), {}
         for line in _lines(stdout):
             if line.get("type") == "system" and line.get("session_id"):
                 report.session_id = line["session_id"]
+            elif line.get("type") == "user":
+                for block in (line.get("message") or {}).get("content", []) or []:
+                    if isinstance(block, dict) and block.get("type") == "tool_result":
+                        body = block.get("content")
+                        body = body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)
+                        bill.add(uses.get(block.get("tool_use_id"), "(tool)"), body)
             elif line.get("type") == "assistant":
                 for block in (line.get("message") or {}).get("content", []) or []:
+                    if isinstance(block, dict) and block.get("type") == "tool_use":
+                        args = block.get("input") or {}
+                        uses[block.get("id")] = (args.get("file_path") or args.get("path")
+                                                 or Bill.label(args.get("command", "")) or block.get("name") or "(tool)")
                     if isinstance(block, dict) and block.get("type") == "text":
                         texts.append(block.get("text", ""))
             elif line.get("type") == "result":
@@ -138,6 +183,7 @@ class ClaudeAdapter(Adapter):
                 if line.get("is_error"):
                     report.error = str(line.get("result") or line.get("subtype") or "error")[:2000]
         report.summary = (texts[-1] if texts else _tail_text(stderr))[-2000:]
+        report.context = bill.summary()
         return report
 
 
@@ -180,7 +226,9 @@ class CodexAdapter(Adapter):
                      # tools are pre-approved; the sandbox still governs shell commands.
                      "mcp_servers.loop.default_tools_approval_mode": "approve",
                      # Readable reasoning summaries in the event stream (raw reasoning stays encrypted).
-                     "model_reasoning_summary": self.config.get("reasoning_summary", "detailed")}
+                     "model_reasoning_summary": self.config.get("reasoning_summary", "detailed"),
+                     # Hard cap on what one tool output adds to the context; Codex truncates the rest.
+                     "tool_output_token_limit": int(self.config.get("tool_output_token_limit", 6000))}
         if goal["policy"].get("allow_network") and sandbox == "workspace-write":
             overrides["sandbox_workspace_write.network_access"] = True
         if agent.get("effort"):
@@ -195,9 +243,9 @@ class CodexAdapter(Adapter):
 
     def parse(self, stdout, stderr, workdir):
         report = Report()
-        inputs = outputs = 0
+        inputs = outputs = cached = 0
         seen_usage = False
-        texts = []
+        texts, bill = [], Bill()
         for line in _lines(stdout):
             kind = line.get("type")
             if kind == "thread.started":
@@ -207,6 +255,7 @@ class CodexAdapter(Adapter):
                 if isinstance(usage.get("input_tokens"), int) and isinstance(usage.get("output_tokens"), int):
                     inputs += usage["input_tokens"]
                     outputs += usage["output_tokens"]
+                    cached += usage.get("cached_input_tokens") or 0
                     seen_usage = True
             elif kind in {"turn.failed", "error"}:
                 report.error = json.dumps(line.get("error") or line.get("message") or line)[:2000]
@@ -214,11 +263,18 @@ class CodexAdapter(Adapter):
                 item = line.get("item") or {}
                 if item.get("type") in {"agent_message", "assistant_message"} and item.get("text"):
                     texts.append(item["text"])
+                elif item.get("type") == "command_execution":
+                    bill.add(Bill.label(item.get("command", "")), item.get("aggregated_output") or "")
+                elif item.get("type") == "mcp_tool_call":
+                    body = "".join(c.get("text", "") for c in ((item.get("result") or {}).get("content") or [])
+                                   if isinstance(c, dict))
+                    bill.add(f"mcp {item.get('tool', '')}", body)
         if seen_usage:
             report.input_tokens, report.output_tokens = inputs, outputs
         last = workdir / "last-message.txt"
         report.summary = (last.read_text(encoding="utf-8", errors="replace") if last.exists()
                           else (texts[-1] if texts else _tail_text(stderr)))[-2000:]
+        report.context = bill.summary(cached if seen_usage else None)
         return report
 
 

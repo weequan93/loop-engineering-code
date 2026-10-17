@@ -58,6 +58,9 @@ select,button{font:inherit;padding:4px 10px;border-radius:6px;border:1px solid v
 <div id="pane-md" hidden><pre id="md"></pre></div></div>
 </main><script>
 const TOKEN='__LOOP_TOKEN__',CODE='__LOOP_CODE__';const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const kb=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':n>=1024?Math.round(n/1024)+' KB':(n||0)+' B';
+// One line per turn: what the prompt sent, what the model read in, and what dominated it (runs/turn-N/context.json).
+const bill=(c,plain)=>{if(!c)return '';const t=[c.input_tokens!=null?Math.round(c.input_tokens/1000)+'k tok in'+(c.cached_input_tokens!=null?' ('+Math.round(100*c.cached_input_tokens/Math.max(1,c.input_tokens))+'% cached)':''):null,'prompt '+kb(c.prompt_chars)+(c.resumed?' (resumed)':''),c.tool_calls!=null?c.tool_calls+' tools · '+kb(c.tool_output_bytes)+' out':null,(c.top_reads||[])[0]?'top: '+c.top_reads[0][0]+' '+kb(c.top_reads[0][1]):null].filter(Boolean).join(' · ');return plain?t:`<div class="muted" style="font-size:11px">Σ ${esc(t)}</div>`};
 let goal=new URLSearchParams(location.search).get('goal')||'',tab='turns',selTurn=null,selCheck=null,lastTurnKey='',jump=true,lastRunner='',lastTurnCount=0,followLatest=true;
 const nearEnd=el=>el.scrollTop+el.clientHeight>=el.scrollHeight-60;const toEnd=el=>{el.scrollTop=el.scrollHeight};
 const q=()=>goal?'goal='+encodeURIComponent(goal):'';
@@ -92,13 +95,14 @@ async function activity(){
   if(newest!==null&&(selTurn===null||(followLatest&&newest!==selTurn))){selTurn=newest;lastTurnKey='';jump=true}
   followLatest=selTurn===newest;
   const tl=$('turnlist'),listAtEnd=nearEnd(tl)||list.length!==lastTurnCount;lastTurnCount=list.length;
-  tl.innerHTML=list.map(x=>`<div class="${x.n===selTurn?'sel':''}" data-n="${x.n}"><b>#${x.n}</b> ${esc(x.action)} <span class="${esc(x.outcome)}">${esc(x.outcome)}</span>${x.model||x.adapter?`<div class="muted" style="font-size:11px">${esc(x.adapter||'')}${x.model?' / '+esc(x.model):''}${x.effort?' @'+esc(x.effort):''}${x.role?' · '+esc(x.role):''}</div>`:''}<div class="muted">${x.seconds!=null?Math.round(x.seconds/60)+' min · ':''}${x.progress===false?'no progress · ':''}${esc((x.summary||'').slice(0,90))}</div></div>`).join('')||'<p class="muted">No turns yet.</p>';
+  tl.innerHTML=list.map(x=>`<div class="${x.n===selTurn?'sel':''}" data-n="${x.n}"><b>#${x.n}</b> ${esc(x.action)} <span class="${esc(x.outcome)}">${esc(x.outcome)}</span>${x.model||x.adapter?`<div class="muted" style="font-size:11px">${esc(x.adapter||'')}${x.model?' / '+esc(x.model):''}${x.effort?' @'+esc(x.effort):''}${x.role?' · '+esc(x.role):''}</div>`:''}<div class="muted">${x.seconds!=null?Math.round(x.seconds/60)+' min · ':''}${x.progress===false?'no progress · ':''}${esc((x.summary||'').slice(0,90))}</div>${bill(x.context)}</div>`).join('')||'<p class="muted">No turns yet.</p>';
   if(listAtEnd)toEnd(tl);
   if(selTurn!==null){const v=await get(`/api/turn?${q()}&n=${selTurn}`);const key=selTurn+':'+v.entries.length+':'+JSON.stringify(v.entries.slice(-1))+':'+(v.subagents||[]).map(a=>a.entries.length).join(',');
    if(key!==lastTurnKey){const view=$('turnview'),atEnd=jump||nearEnd(view);const open=new Set([...view.querySelectorAll('details[open]')].map(e=>e.dataset.i));
     const ev=(e,i,p)=>`<details class="ev ${esc(e.kind)}" data-i="${p}${i}" ${e.kind==='message'||open.has(p+i)?'open':''}><summary><span class="k ${esc(e.status||'')}">${esc(e.kind)}</span><span class="t">${esc(e.title)}</span><span class="${esc(e.status||'')}">${esc(e.status||'')}</span></summary>${e.body?`<pre>${esc(e.body)}</pre>`:''}</details>`;
     const subs=(v.subagents||[]).map((a,j)=>`<details class="sub" data-i="s${j}" ${open.has('s'+j)?'open':''}><summary>🧩 Sub-agent ${esc(a.name||a.id)} <span class="muted">${esc(a.agent_path||'')} · ${a.entries.length} events</span></summary>${a.entries.map((e,i)=>ev(e,i,'s'+j+'-')).join('')||'<p class="muted">No readable events.</p>'}</details>`).join('');
-    view.innerHTML=`<details class="ev prompt" data-i="p" ${open.has('p')?'open':''}><summary><span class="k">→ prompt</span><span class="t">Instruction the controller sent to the model this turn (${v.prompt.length.toLocaleString()} chars)</span></summary><pre>${esc(v.prompt)}</pre></details>`+v.entries.map((e,i)=>ev(e,i,'')).join('')+(subs?`<h2 style="margin-top:14px">Sub-agents (${v.subagents.length})</h2>`+subs:'')+(v.running?'<p class="running">… turn in progress (auto-refreshing)</p>':'');
+    const cx=v.context,cxb=cx?`<details class="ev prompt" data-i="c" ${open.has('c')?'open':''}><summary><span class="k">Σ context</span><span class="t">${esc(bill(cx,true))}</span></summary><pre>${esc(Object.entries(cx.sections||{}).map(([k,n])=>k.padEnd(14)+n.toLocaleString()+' chars').join('\n')+'\n\nLargest reads into context:\n'+(cx.top_reads||[]).map(([k,n])=>'  '+kb(n).padStart(8)+'  '+k).join('\n'))}</pre></details>`:'';
+    view.innerHTML=cxb+`<details class="ev prompt" data-i="p" ${open.has('p')?'open':''}><summary><span class="k">→ prompt</span><span class="t">Instruction the controller sent to the model this turn (${v.prompt.length.toLocaleString()} chars)</span></summary><pre>${esc(v.prompt)}</pre></details>`+v.entries.map((e,i)=>ev(e,i,'')).join('')+(subs?`<h2 style="margin-top:14px">Sub-agents (${v.subagents.length})</h2>`+subs:'')+(v.running?'<p class="running">… turn in progress (auto-refreshing)</p>':'');
     if(atEnd)toEnd(view);jump=false;lastTurnKey=key}}}
  if(tab==='runner'){const v=await get('/api/log?'+q()),el=$('runnerlog');if(v.text!==lastRunner){const end=jump||nearEnd(el);el.textContent=v.text||'(empty)';lastRunner=v.text;if(end)toEnd(el)}jump=false}
  if(tab==='checkl'){const d=await get('/api/checks?'+q());const cl=$('checklist');cl.innerHTML=d.checks.slice().reverse().map(c=>`<div class="${c.id===selCheck?'sel':''}" data-c="${esc(c.id)}"><span class="${esc(c.status)}">${esc(c.status)}</span> <code>${esc(c.id)}</code><div class="muted">${esc(c.finished_at||'')} · exit ${esc(c.exit_code)}</div></div>`).join('')||'<p class="muted">No checks have run.</p>';
@@ -141,7 +145,7 @@ def payload(project: Project, goal_id: str | None) -> dict:
 def turns(store) -> dict:
     state = store.state()
     rows = {t["n"]: {k: t.get(k) for k in ("n", "action", "outcome", "seconds", "progress", "summary", "adapter",
-                                           "model", "effort", "role")}
+                                           "model", "effort", "role", "context")}
             for t in state["turns"]}
     runner = store.runner() or {}
     current = runner.get("turn") if not runner.get("exited_at") else None
@@ -177,7 +181,12 @@ def turn(store, n: int) -> dict:
             _SUBAGENT_CACHE[key] = transcript.subagents(directory, started)
         except OSError:
             _SUBAGENT_CACHE[key] = []
-    return {"n": n, "running": running, "prompt": prompt[:40000],
+    bill = directory / "context.json"
+    try:
+        context = json.loads(bill.read_text(encoding="utf-8")) if bill.is_file() else None
+    except (OSError, ValueError):
+        context = None
+    return {"n": n, "running": running, "prompt": prompt[:40000], "context": context,
             "entries": transcript.parse(directory / "stdout.log", directory / "stderr.log"),
             "subagents": _SUBAGENT_CACHE[key]}
 

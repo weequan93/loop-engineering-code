@@ -324,9 +324,10 @@ class Runner:
         mode = goal["policy"]["fresh_session_each_turn"]
         session = state.get("session_id") if mode is False else task_session(state, act) if mode == "task" else None
         if session and mode == "task":  # same task as last turn: its session already holds the full prompt
-            prompt = prompts.continuation_prompt(goal, state, act, n, self.project.root)
+            sections = [("continuation", prompts.continuation_prompt(goal, state, act, n, self.project.root))]
         else:
-            prompt = prompts.turn_prompt(goal, state, act, n, self.project.root)
+            sections = prompts.turn_sections(goal, state, act, n, self.project.root)
+        prompt = "\n\n".join(text for _, text in sections)
         (workdir / "prompt.md").write_text(prompt, encoding="utf-8")
         turn_goal = {**goal, "agent": {**goal["agent"], "model": chosen["model"], "effort": chosen["effort"]}}
         if goal["policy"]["max_cost_usd"]:
@@ -378,6 +379,10 @@ class Runner:
         self.current_pgid = None
         self._set_turn(None)
         report = adapter.parse(result.stdout, result.stderr, workdir)
+        # The turn's context bill: what the prompt sent and what the agent read into its context.
+        bill = {"prompt_chars": len(prompt), "sections": {name: len(text) for name, text in sections},
+                "resumed": bool(session), "input_tokens": report.input_tokens, **(report.context or {})}
+        write_json(workdir / "context.json", bill)
         stamp_after = checks_mod.fingerprint(self.project.root)
         events = [e for e in self.store.events() if e["seq"] > seq_before]
         substantive = [e["type"] for e in events if e["type"].startswith(SUBSTANTIVE)
@@ -411,6 +416,8 @@ class Runner:
                                    "outcome": outcome, "started_at": started, "finished_at": now(),
                                    "seconds": result.duration_ms / 1000, "progress": progress,
                                    "events": substantive[:20], "cost_usd": report.cost_usd,
+                                   "context": {k: v for k, v in bill.items() if k != "top_reads"}
+                                   | {"top_reads": (bill.get("top_reads") or [])[:3]},
                                    "summary": (report.error or report.summary or "")[:2000],
                                    "log": str(workdir.relative_to(self.project.root))})
             state["turns"] = state["turns"][-50:]

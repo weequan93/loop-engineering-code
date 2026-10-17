@@ -13,7 +13,8 @@ scripts, the goal's acceptance checks, and the design review findings if a revie
   hardware or the budget allows. If one is infeasible, say so and ask with `loop_ask`; do not plan around it.
 - `loop_plan` tasks, each with `id`, `title`, `detail` (the outcome and the interfaces it touches), `covers`
   (requirement IDs), `depends_on`, `role` (architect, backend, frontend, mobile, data, tester, security,
-  devops, or a project role), and `checks`: fast, real commands that fail if the task is not done.
+  devops, or a project role), `checks`: fast, real commands that fail if the task is not done, and `reads`:
+  the few files or doc sections (`path#heading`) the task needs, so its turn starts there.
 
 Contracts first, implementation next, test suites last (unit, integration, e2e, performance, security as the
 requirements demand). At most about 20 tasks, each finishing in a few turns. Finish with

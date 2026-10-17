@@ -173,6 +173,10 @@ runner 在后台运行，关掉终端或聊天后也会继续。只有关机或�
 | 文件 | `.loop/STATUS.md`（Claude、Codex 或你自己都可以直接读） |
 | runner 日志 | `.loop/goals/<id>/runs/runner.log`，每一轮的完整输出在 `runs/turn-NNNN/` |
 | 事件历史 | `.loop/bin/loop log`；`.loop/bin/loop audit` 校验历史有没有被篡改 |
+| 每轮上下文账单 | 看板每轮显示输入 token、缓存比例、prompt 大小、工具调用和最大的读取；明细在 `runs/turn-NNNN/context.json` |
+| 目标全文 | `.loop/goals/<id>/GOAL.md`：每轮 prompt 只带目标的精简版（约束过长时只带每条首句），全文在这里 |
+
+单次工具输出有硬上限：Codex 用 `tool_output_token_limit`（adapters.json 里 codex 的 `tool_output_token_limit`，默认 6000），Claude Code 用 `BASH_MAX_OUTPUT_LENGTH`（claude 的 `bash_output_max_chars`，默认 20000）。
 
 ## 6. 收到提醒后怎么做
 

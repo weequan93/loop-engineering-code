@@ -776,3 +776,54 @@ class TaskSessionTests(ProjectCase):
         self.assertIn("Task `fix`", prompt)
         self.assertNotIn("## Loop protocol", prompt)          # the session already has it
         self.assertEqual(store.state()["task_session"]["turns"], 2)
+
+
+class ContextDietTests(ProjectCase):
+    def test_long_goal_goes_by_reference_and_goal_md_holds_the_full_text(self):
+        from loop_engineering import prompts, status
+        long_rule = "Never touch production data. " + "Details about the staging copy and its refresh. " * 40
+        store = self.goal(constraints=[long_rule, "Use Docker for integration tests. Limits are set."] * 3)
+        approve(store)
+        for i in range(5):
+            store.mutate("q", lambda g, s, i=i: s["questions"].append(
+                {"id": f"q{i}", "kind": "question", "text": f"question {i}", "answer": f"answer {i}",
+                 "answered_at": "2026-01-01T00:00:00Z", "blocking": False}))
+        goal, state = store.goal(), store.state()
+        block = prompts.context_block(goal, state)
+        self.assertIn(f".loop/goals/{goal['id']}/GOAL.md", block)
+        self.assertIn("1. Never touch production data.", block)
+        self.assertNotIn("Details about the staging copy", block)
+        self.assertNotIn("answer 1", block)                       # only the latest three answers
+        self.assertIn("answer 4", block)
+        status.render_files(store)
+        full = (store.dir / "GOAL.md").read_text()
+        self.assertIn(long_rule.strip(), full)                    # nothing lost: the full text is one read away
+        self.assertIn("answer 0", full)
+
+    def test_task_working_set_reaches_the_assignment(self):
+        from loop_engineering import prompts
+        store = self.goal()
+        approve(store)
+        Service(self.project, actor="agent", interactive=False).plan(
+            [{"id": "fix", "title": "Fix", "reads": ["calc.py", "docs/spec.md#add"],
+              "checks": [{"id": "unit", "run": "python3 test_calc.py"}]}])
+        with self.assertRaises(LoopError):
+            Service(self.project, actor="agent", interactive=False).plan([{"id": "bad", "title": "B", "reads": "x"}])
+        text = prompts.turn_prompt(store.goal(), store.state(), {"kind": "work", "task": "fix", "summary": "f"}, 1,
+                                   self.root)
+        self.assertIn("Read first (working set", text)
+        self.assertIn("`docs/spec.md#add`", text)
+        self.assertIn("rg -n", text)                              # locate-then-read rule
+        self.assertIn("handoff note is the report", text)
+
+    def test_each_turn_records_its_context_bill(self):
+        store = self.goal()
+        approve(store)
+        Runner(self.project, store.id, log=lambda m: None).run()
+        turn = store.state()["turns"][0]
+        self.assertGreater(turn["context"]["prompt_chars"], 0)
+        self.assertEqual(set(turn["context"]["sections"]), {"intro", "goal", "assignment", "playbook", "protocol"})
+        bill = json.loads((store.runs / "turn-0001" / "context.json").read_text())
+        self.assertEqual(bill["prompt_chars"], turn["context"]["prompt_chars"])
+        from loop_engineering import dashboard
+        self.assertIn("context", dashboard.turns(store)["turns"][-1])

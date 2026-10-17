@@ -317,7 +317,7 @@ def _strings(values, field: str) -> list[str]:
 def task(values: dict, existing: dict | None = None) -> dict:
     if not isinstance(values, dict):
         raise LoopError("A task must be an object")
-    allowed = {"id", "title", "detail", "depends_on", "checks", "role", "covers", "team"}
+    allowed = {"id", "title", "detail", "depends_on", "checks", "role", "covers", "team", "reads"}
     unknown = set(values) - allowed
     if unknown:
         raise LoopError(f"Unknown task fields {sorted(unknown)} (status changes use loop_task)")
@@ -345,6 +345,11 @@ def task(values: dict, existing: dict | None = None) -> dict:
         if not isinstance(covers, list) or not all(isinstance(c, str) and c for c in covers):
             raise LoopError("covers must be a list of requirement ids")
         base["covers"] = list(dict.fromkeys(covers))
+    if "reads" in values:  # the task's working set: files or doc sections its turn reads first
+        reads = values.get("reads") or []
+        if not isinstance(reads, list) or len(reads) > 12 or not all(isinstance(r, str) and r.strip() for r in reads):
+            raise LoopError("reads must be a list of at most 12 file paths or doc sections")
+        base["reads"] = [text(r, "task reads entry", 300) for r in dict.fromkeys(reads)]
     base["updated_at"] = now()
     return base
 

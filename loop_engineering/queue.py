@@ -56,16 +56,15 @@ def approved(store) -> bool:
 
 
 def next_after(project, current_id: str | None) -> str | None:
-    """The next unfinished queued goal after ``current_id`` (queue order)."""
-    goals = [g for g in load(project) if g in set(project.goal_ids())]
-    if current_id in goals:
-        goals = goals[goals.index(current_id) + 1:]
-    for goal_id in goals:
-        if goal_id == current_id:
-            continue
-        if project.goal(goal_id).state()["status"] not in model.TERMINAL:
-            return goal_id
-    return None
+    """The first unfinished queued goal other than ``current_id``, from the head of the queue.
+
+    Goals earlier in the queue are not skipped just because the current goal sits behind them. A goal that is
+    blocked or paused waits for a person, so the queue passes over it to the next runnable goal."""
+    known = set(project.goal_ids())
+    open_goals = [g for g in load(project) if g in known and g != current_id
+                  and project.goal(g).state()["status"] not in model.TERMINAL]
+    runnable = [g for g in open_goals if project.goal(g).state()["status"] not in {"blocked", "paused"}]
+    return (runnable or [None])[0]
 
 
 def view(project) -> list[dict]:

@@ -313,7 +313,7 @@ class DashboardTests(ProjectCase):
         from loop_engineering.util import now
         store = self.goal()
         Service(self.project, actor="chat").plan([{"id": "fix", "title": "Fix it", "checks": [
-            {"id": "a", "run": "true"}, {"id": "b", "run": "true"}]}])
+            {"id": "a", "run": "test -d ."}, {"id": "b", "run": "test -d ."}]}])
 
         def busy(goal, state):
             engine.start_task(goal, state, "fix")

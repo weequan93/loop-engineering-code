@@ -19,7 +19,8 @@ KINDS = ("develop", "operate", "investigate")
 GOAL_STATUSES = ("draft", "ready", "running", "waiting", "blocked", "paused", "idle",
                  "done", "failed", "limit", "stopped")
 TERMINAL = {"done", "failed", "stopped"}
-TASK_STATUSES = ("pending", "active", "done", "blocked", "dropped")
+TASK_STATUSES = ("pending", "active", "done", "blocked", "deferred", "dropped")
+HELD = ("blocked", "deferred")  # a held task waits for a person (or, deferred, a condition); other tasks go on
 BLOCK_CATEGORIES = ("decision", "permission", "external", "environment", "scope", "other")
 
 TEST_STAGES = ("unit", "integration", "e2e", "performance", "security", "regression", "acceptance")

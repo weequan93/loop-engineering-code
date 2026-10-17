@@ -66,7 +66,10 @@ final_review, planner) and `agent.roles` (architect, backend, tester, ...). Each
   (deploys, data deletion, spending, messages, credentials, history rewrites). Wait for the
   answer.
 - In chat, relay the user's answers with `loop_answer`. Record only what they actually said.
-- Use `loop_block` only when no progress is possible. permission, environment and external
+- One task can't go on (needs a person, or waits for a condition such as a quiet machine)? Hold just that
+  task: `loop_task(action="block"|"defer", reason=...)`. Other tasks keep running; a person resumes it with
+  `loop task resume <id>`.
+- Use `loop_block` only when no progress is possible on the whole goal. permission, environment and external
   blockers need the exact reproduction and what you already tried. "Permission denied" is
   often a fixable tooling problem, so investigate it first.
 

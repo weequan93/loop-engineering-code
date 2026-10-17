@@ -39,6 +39,9 @@ def task_by_id(state: dict, task_id: str) -> dict:
     raise LoopError(f"Unknown task {task_id}. Known: {[t['id'] for t in state['tasks']]}")
 
 
+MAX_TASK_COVERS, MAX_TASK_CHECKS = 6, 8  # task size limits checked by loop_plan
+
+
 def ready_tasks(state: dict) -> list[dict]:
     finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
     return [t for t in state["tasks"] if t["status"] == "pending" and set(t["depends_on"]) <= finished]
@@ -303,7 +306,7 @@ def next_action(goal: dict, state: dict, fingerprint: str | None = None) -> dict
         return action("work", "agent", f"{verb} task {first['id']}: {first['title']}"
                       + (f" (+ {len(batch)} in parallel: {', '.join(batch)})" if batch else ""),
                       task=first["id"], batch=batch)
-    pending = [t for t in state["tasks"] if t["status"] in {"pending", "blocked", "active"}]
+    pending = [t for t in state["tasks"] if t["status"] not in {"done", "dropped"}]
     if pending:
         return action("unblock", "human", "Remaining tasks wait on blocked or missing dependencies: " +
                       ", ".join(f"{t['id']}<-{t['depends_on']}" for t in pending))
@@ -575,6 +578,19 @@ def plan(goal: dict, state: dict, upsert: list[dict] | None, drop: list[dict] | 
         if seats > limit:
             raise LoopError(f"Task {task['id']} asks for {seats} specialists; the limit is {limit} "
                             "(agent.team_limit). Split the task or reduce the team.")
+    for task_id in changed:  # a task is one result: small enough to pass its checks in a few turns
+        task = by_id.get(task_id)
+        if not task or task["status"] in {"done", "dropped"}:
+            continue
+        trivial = [c["id"] for c in task["checks"] if _cannot_fail(c)]
+        if trivial:
+            raise LoopError(f"Task {task_id} checks {trivial} cannot fail, so they prove nothing. Give each check "
+                            "a real command that fails while the task is not done.")
+        if len(task.get("covers", [])) > MAX_TASK_COVERS or len(task["checks"]) > MAX_TASK_CHECKS:
+            raise LoopError(f"Task {task_id} is too large ({len(task.get('covers', []))} requirements, "
+                            f"{len(task['checks'])} checks; at most {MAX_TASK_COVERS} and {MAX_TASK_CHECKS}). "
+                            "Split it into tasks that each deliver one result; mark depends_on only where one "
+                            "really needs another, so the rest run in parallel.")
     if len(state["tasks"]) > 200:
         raise LoopError("Plans are limited to 200 tasks; group work into larger tasks")
     if pipeline(goal):
@@ -691,20 +707,94 @@ def apply_task_checks(goal: dict, state: dict, task_id: str, results: dict) -> d
     if not failing:
         _finish_task(task, "Task checks passed.")
         _resume_status(state, f"Task {task_id} verified.")
+        _block_if_all_held(state)
         return {"_event": {"task": task_id, "passed": True}}
-    task["attempts"] = task.get("attempts", 0) + 1
+    # Each task carries its own result: which of its checks pass. A claim that passes more checks than ever
+    # before is progress on this task and costs no attempt; only claims that gain nothing count toward the limit.
+    passed = len(results) - len(failing)
+    gained = passed > task.get("best_passed", 0)
+    if gained:
+        task["best_passed"], task["stall_turns"] = passed, 0
+    else:
+        task["attempts"] = task.get("attempts", 0) + 1
     task["last_failure"] = {"checks": failing, "at": now(),
                             "tail": tail("\n\n".join(f"## {k}\n{results[k]['tail']}" for k in failing), 6000)}
+    task.pop("claim", None)
     task["updated_at"] = now()
     if task["attempts"] >= goal["policy"]["max_task_attempts"]:
-        task["status"] = "blocked"
-        state["blocker"] = {"category": "other", "reason": f"Task {task_id} failed its checks "
-                            f"{task['attempts']} times ({', '.join(failing)}).", "evidence": task["last_failure"]["tail"],
-                            "attempted": "Repeated repair turns", "at": now(), "by": "controller"}
-        state["status"], state["status_reason"] = "blocked", state["blocker"]["reason"]
+        # Only this task stops; independent tasks continue (see hold_task).
+        hold_task(goal, state, task_id, f"failed its checks {task['attempts']} times without passing more of them "
+                  f"({', '.join(failing)}). Split it into smaller tasks, change the approach, or decide.",
+                  task["last_failure"]["tail"], "controller")
     else:
-        state["status_reason"] = f"Task {task_id} checks failed: {', '.join(failing)}."
-    return {"_event": {"task": task_id, "passed": False, "failing": failing}}
+        state["status_reason"] = (f"Task {task_id}: {passed}/{len(results)} checks pass"
+                                  + (" (more than before)" if gained else "") + f"; failing: {', '.join(failing)}.")
+    return {"_event": {"task": task_id, "passed": False, "failing": failing, "gained": gained}}
+
+
+def _cannot_fail(check: dict) -> bool:
+    command = " ".join((check.get("run") or " ".join(check.get("argv") or [])).split())
+    if check.get("expect_exit", 0) != 0:
+        return False
+    if command in {"true", ":", "exit 0", "/usr/bin/true", "/bin/true"}:
+        return True
+    return command.startswith("echo ") and not any(op in command for op in ("|", "&&", "||", ";", "$(", "`", ">"))
+
+
+def workable_tasks(state: dict) -> list[dict]:
+    """Tasks an agent turn can take now: active ones with their dependencies met, then ready pending ones."""
+    finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
+    active = [t for t in state["tasks"] if t["status"] == "active" and set(t["depends_on"]) <= finished]
+    return active + [t for t in ready_tasks(state) if t not in active]
+
+
+def hold_task(goal: dict, state: dict, task_id: str, reason: str, evidence: str = "", by: str = "agent",
+              status: str = "blocked") -> dict:
+    """Block or defer one task. The goal keeps running its other tasks; it blocks only when nothing is left to do."""
+    task = task_by_id(state, task_id)
+    if task["status"] in {"done", "dropped"}:
+        raise LoopError(f"Task {task_id} is already {task['status']}")
+    task.pop("claim", None)
+    task.update(status=status, hold={"reason": text(reason, "reason", 2000), "at": now(), "by": by,
+                                     "evidence": tail(evidence or "", 4000)}, updated_at=now())
+    state["status_reason"] = f"Task {task_id} {status}: {reason[:160]}"
+    _block_if_all_held(state)
+    return {"_event": {"task": task_id, "status": status, "by": by}}
+
+
+def resume_task(goal: dict, state: dict, task_id: str, note: str, by: str) -> dict:
+    task = task_by_id(state, task_id)
+    if task["status"] not in model.HELD:
+        raise LoopError(f"Task {task_id} is {task['status']}, not blocked or deferred")
+    if task["status"] == "blocked" and by.startswith("agent"):
+        raise LoopError(f"Task {task_id} is blocked; a person resumes it (`loop task resume {task_id}`). You can "
+                        "re-plan instead: drop it with loop_plan and add smaller tasks that cover its requirements.")
+    _release(task)
+    task["notes"].append({"at": now(), "by": by, "text": "Resumed: " + text(note or "resumed", "note", 2000)})
+    if (state.get("blocker") or {}).get("held_tasks"):  # the goal was waiting only on held tasks
+        state["blocker"] = None
+        state["status"] = "ready"
+    state["status_reason"] = f"Task {task_id} resumed by {by}."
+    return {"_event": {"task": task_id, "by": by}}
+
+
+def _release(task: dict) -> None:
+    begun = task.get("started_at") or task.get("last_failure")
+    task.update(status="active" if begun else "pending", attempts=0, stall_turns=0,
+                updated_at=now())
+    task.pop("hold", None)
+
+
+def _block_if_all_held(state: dict) -> None:
+    held = [t for t in state["tasks"] if t["status"] in model.HELD]
+    if not held or state.get("blocker") or workable_tasks(state) or any(
+            j["status"] == "running" for j in state.get("jobs", {}).values()):
+        return
+    reason = "Every remaining task is blocked or deferred: " + "; ".join(
+        f"{t['id']} ({t['status']}: {(t.get('hold') or {}).get('reason', '')[:120]})" for t in held[:8])
+    state["blocker"] = {"category": "other", "reason": reason, "evidence": "", "at": now(), "by": "controller",
+                        "attempted": "Other tasks finished or wait on these", "held_tasks": [t["id"] for t in held]}
+    state["status"], state["status_reason"] = "blocked", reason
 
 
 def apply_verification(goal: dict, state: dict, results: dict, fingerprint: str) -> dict:
@@ -895,8 +985,8 @@ def unblock(goal: dict, state: dict, note_text: str, by: str) -> dict:
     previous = state["blocker"]
     state["blocker"] = None
     for task in state["tasks"]:
-        if task["status"] == "blocked":
-            task.update(status="active", attempts=0)
+        if task["status"] in model.HELD:
+            _release(task)
     if state["status"] == "limit":
         state["iteration_base"] = state["iteration"]
         state["started_at"] = now()
@@ -914,7 +1004,7 @@ def unblock(goal: dict, state: dict, note_text: str, by: str) -> dict:
 
 
 def finish(goal: dict, state: dict, report: str, fingerprint: str | None = None) -> dict:
-    unfinished = [t["id"] for t in state["tasks"] if t["status"] in {"pending", "active", "blocked"}]
+    unfinished = [t["id"] for t in state["tasks"] if t["status"] not in {"done", "dropped"}]
     if unfinished:
         raise LoopError(f"Finish or drop these tasks first: {unfinished}")
     if goal["kind"] == "operate":

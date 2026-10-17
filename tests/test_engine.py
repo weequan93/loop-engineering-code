@@ -57,7 +57,7 @@ class GoalLifecycleTests(ProjectCase):
         self.assertEqual(result["goal_status"], "done")
         self.assertEqual(store.verify(), [])
 
-    def test_task_attempt_limit_blocks_goal(self):
+    def test_task_attempt_limit_blocks_goal_when_nothing_else_is_left(self):
         store = self.goal(policy={"max_task_attempts": 2})
         service = Service(self.project, actor="chat")
         service.goal_approve(True)
@@ -65,7 +65,9 @@ class GoalLifecycleTests(ProjectCase):
         service.task("done", "fix", "a", wait_seconds=30)
         service.task("done", "fix", "b", wait_seconds=30)
         state = store.state()
-        self.assertEqual(state["status"], "blocked")
+        self.assertEqual(engine.task_by_id(state, "fix")["status"], "blocked")
+        self.assertEqual(state["status"], "blocked")             # the only task is held: a person decides
+        self.assertEqual(state["blocker"]["held_tasks"], ["fix"])
         self.assertEqual(engine.next_action(store.goal(), state)["kind"], "unblock")
         service.unblock("Investigated; retry with the real fix")
         self.assertEqual(engine.task_by_id(store.state(), "fix")["status"], "active")
@@ -362,10 +364,10 @@ class ParallelWorkTests(ProjectCase):
         Service(self.project, actor="chat").goal_approve(True)
         Service(self.project, actor="chat").plan([
             {"id": "a", "title": "A", "checks": [{"id": "slow", "run": "sleep 2"}]},
-            {"id": "b", "title": "B", "checks": [{"id": "ok", "run": "true"}]},
-            {"id": "c", "title": "C", "checks": [{"id": "ok", "run": "true"}]},
-            {"id": "d", "title": "D", "depends_on": ["a"], "checks": [{"id": "ok", "run": "true"}]},
-            {"id": "e", "title": "E", "checks": [{"id": "ok", "run": "true"}]}])
+            {"id": "b", "title": "B", "checks": [{"id": "ok", "run": "test -d ."}]},
+            {"id": "c", "title": "C", "checks": [{"id": "ok", "run": "test -d ."}]},
+            {"id": "d", "title": "D", "depends_on": ["a"], "checks": [{"id": "ok", "run": "test -d ."}]},
+            {"id": "e", "title": "E", "checks": [{"id": "ok", "run": "test -d ."}]}])
         act = engine.next_action(store.goal(), store.state())
         self.assertEqual((act["kind"], act["task"], act["batch"]), ("work", "a", ["b", "c"]))  # default 3, d waits
         engine.start_work(store, act)
@@ -390,7 +392,7 @@ class ParallelWorkTests(ProjectCase):
     def test_parallel_tasks_one_means_serial(self):
         store = self.goal(agent={"adapter": "fake", "parallel_tasks": 1})
         Service(self.project, actor="chat").goal_approve(True)
-        Service(self.project, actor="chat").plan([{"id": x, "title": x, "checks": [{"id": "ok", "run": "true"}]}
+        Service(self.project, actor="chat").plan([{"id": x, "title": x, "checks": [{"id": "ok", "run": "test -d ."}]}
                                                   for x in "ab"])
         self.assertEqual(engine.next_action(store.goal(), store.state())["batch"], [])
 
@@ -438,3 +440,83 @@ class FingerprintTests(ProjectCase):
         (self.root / ".loop" / "x.json").write_text("{}")  # framework files never count
         git("rm", "-q", "--cached", "new.txt")
         self.assertEqual(checks.fingerprint(self.root), checks.fingerprint(self.root))
+
+
+class TaskIsolationTests(ProjectCase):
+    """Each task has its own result; a stuck task holds only itself."""
+
+    def setUp(self):
+        super().setUp()
+        self.store = self.goal(policy={"max_task_attempts": 2})
+        self.human = Service(self.project, actor="human")
+        self.agent = Service(self.project, actor="agent", interactive=False)
+        self.human.goal_approve(True)
+
+    def status(self, task_id):
+        return engine.task_by_id(self.store.state(), task_id)["status"]
+
+    def test_a_failing_task_holds_only_itself(self):
+        self.human.plan([{"id": "hard", "title": "Hard", "checks": [{"id": "c", "run": "test -f nope"}]},
+                         {"id": "after", "title": "After", "depends_on": ["hard"],
+                          "checks": [{"id": "c", "run": "test -d ."}]},
+                         {"id": "free", "title": "Free", "checks": [{"id": "c", "run": "test -d ."}]}])
+        self.agent.task("done", "hard", "try 1", wait_seconds=30)
+        self.agent.task("done", "hard", "try 2", wait_seconds=30)
+        state = self.store.state()
+        self.assertEqual(self.status("hard"), "blocked")
+        self.assertIsNone(state["blocker"])                       # the goal is not blocked ...
+        act = engine.next_action(self.store.goal(), state)
+        self.assertEqual((act["kind"], act["task"]), ("work", "free"))  # ... independent work goes on
+        self.agent.task("done", "free", "did it", wait_seconds=30)
+        state = self.store.state()
+        self.assertEqual(state["status"], "blocked")              # now only held work is left: a person decides
+        self.assertEqual(state["blocker"]["held_tasks"], ["hard"])
+        self.assertIn("loop task resume hard", (self.store.dir / "STATUS.md").read_text())
+        with self.assertRaises(LoopError):
+            self.agent.task("resume", "hard", reason="I will try again")  # the agent cannot lift its own limit
+        self.human.task("resume", "hard", reason="Use the other API")
+        state = self.store.state()
+        self.assertIsNone(state["blocker"])
+        self.assertEqual((self.status("hard"), engine.task_by_id(state, "hard")["attempts"]), ("active", 0))
+
+    def test_passing_more_checks_is_progress_and_costs_no_attempt(self):
+        self.human.plan([{"id": "two", "title": "Two", "checks": [{"id": "one", "run": "test -f one"},
+                                                                    {"id": "two", "run": "test -f two"}]}])
+        (self.root / "one").write_text("x")
+        self.agent.task("done", "two", "half", wait_seconds=30)
+        task = engine.task_by_id(self.store.state(), "two")
+        self.assertEqual((task["best_passed"], task["attempts"], task["status"]), (1, 0, "active"))
+        self.agent.task("done", "two", "no change", wait_seconds=30)
+        self.assertEqual(engine.task_by_id(self.store.state(), "two")["attempts"], 1)
+        (self.root / "two").write_text("x")
+        self.agent.task("done", "two", "all", wait_seconds=30)
+        self.assertEqual(self.status("two"), "done")
+
+    def test_defer_one_task_and_resume_it(self):
+        self.human.plan([{"id": "perf", "title": "Perf", "checks": [{"id": "c", "run": "test -d ."}]},
+                         {"id": "ui", "title": "UI", "checks": [{"id": "c", "run": "test -d ."}]}])
+        self.agent.task("defer", "perf", reason="needs a quiet machine")
+        self.assertEqual(self.status("perf"), "deferred")
+        self.assertEqual(engine.next_action(self.store.goal(), self.store.state())["task"], "ui")
+        self.agent.task("done", "ui", "done", wait_seconds=30)
+        with self.assertRaises(LoopError):
+            self.agent.finish("all done?")                       # deferred work still has to be finished
+        self.assertEqual(self.store.state()["status"], "blocked")
+        self.agent.task("resume", "perf", reason="machine is quiet now")  # an agent may resume a deferred task
+        self.assertEqual(self.status("perf"), "pending")
+        self.assertIsNone(self.store.state()["blocker"])
+
+    def test_plan_rejects_oversized_tasks_and_checks_that_cannot_fail(self):
+        with self.assertRaisesRegex(LoopError, "too large"):
+            self.human.plan([{"id": "big", "title": "Big",
+                              "checks": [{"id": f"c{i}", "run": f"test -f f{i}"} for i in range(9)]}])
+        with self.assertRaisesRegex(LoopError, "cannot fail"):
+            self.human.plan([{"id": "fake", "title": "Fake", "checks": [{"id": "c", "run": "echo ok"}]}])
+        self.human.plan([{"id": "real", "title": "Real", "checks": [{"id": "c", "run": "echo ok | grep -q ok"}]}])
+
+    def test_dropping_a_task_is_not_progress(self):
+        from loop_engineering.runner import progress_mark
+        self.human.plan([{"id": "a", "title": "A", "checks": [{"id": "c", "run": "test -d ."}]}])
+        before = progress_mark(self.store.state())
+        self.agent.plan(None, [{"id": "a", "reason": "too hard"}])
+        self.assertEqual(progress_mark(self.store.state()), before)

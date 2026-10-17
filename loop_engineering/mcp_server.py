@@ -82,10 +82,12 @@ TOOLS = [
           "drop": {"type": "array", "items": {"type": "object", "properties": {"id": S, "reason": S},
                                               "required": ["id", "reason"]}},
           "final": {"type": "boolean"}}),
-    tool("loop_task", "start | done a task. 'done' makes the controller run the task's checks "
-         "(waits up to wait_seconds, then poll loop_check with job_id).",
-         {"action": {"type": "string", "enum": ["start", "done"]}, "task_id": S,
+    tool("loop_task", "start | done | block | defer | resume a task. 'done' makes the controller run the task's "
+         "checks (waits up to wait_seconds, then poll loop_check with job_id). 'block' (needs a person) and 'defer' "
+         "(waits for a condition) hold only this task; other tasks go on. A person resumes a blocked task.",
+         {"action": {"type": "string", "enum": ["start", "done", "block", "defer", "resume"]}, "task_id": S,
           "summary": {"type": "string", "description": "What you changed and how you verified it"},
+          "reason": {"type": "string", "description": "block/defer/resume: why, and what would release it"},
           "wait_seconds": {"type": "number"}}, ["action", "task_id"]),
     tool("loop_check", "Ask the controller to run checks: scope 'acceptance' (default), a task id, or 'all'; or ids "
          "like 'acceptance.tests'. Runs in the background; poll with job_id.",
@@ -189,7 +191,7 @@ class Server:
                 "loop_requirements": lambda: s.requirements(args.get("requirements"), args.get("drop"),
                                                             args.get("final", False), goal),
                 "loop_task": lambda: s.task(args["action"], args["task_id"], args.get("summary"),
-                                            float(args.get("wait_seconds", 45)), goal),
+                                            float(args.get("wait_seconds", 45)), goal, reason=args.get("reason")),
                 "loop_check": lambda: s.check(args.get("scope"), args.get("ids"), args.get("job_id"),
                                               float(args.get("wait_seconds", 45)), goal),
                 "loop_note": lambda: s.note(args["kind"], args["text"], args.get("task_id"), args.get("finding_id"),

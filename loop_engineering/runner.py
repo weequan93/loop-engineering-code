@@ -347,6 +347,7 @@ class Runner:
         # Compare with the mark left by the previous turn, so results that background check jobs record
         # between turns (a task done by the controller) count too; the first turn falls back to its start.
         mark_before = state.get("progress_mark") or progress_mark(state)
+        best_before = {t["id"]: t.get("best_passed", 0) for t in state["tasks"]}
 
         def reserve(goal, state):
             state["iteration"] = n
@@ -438,6 +439,20 @@ class Runner:
                                              else state.get("turns_without_result", 0) + (0 if judging else 1))
             state["progress_mark"] = progress_mark(state)
             drift_limit = drift_setting(self.project)
+            # Per task: a task that spends the drift limit in turns without passing one more of its checks is held
+            # alone (split it, or a person decides) while independent tasks keep going.
+            for task_id in ([act["task"], *(act.get("batch") or [])] if act["kind"] == "work" else []):
+                task = next((t for t in state["tasks"] if t["id"] == task_id), None)
+                if not task or task["status"] != "active" or (task.get("claim") or {}).get("queued"):
+                    continue
+                if task.get("best_passed", 0) > best_before.get(task_id, 0) or judging:
+                    continue
+                task["stall_turns"] = task.get("stall_turns", 0) + 1
+                others = [t for t in engine.workable_tasks(state) if t["id"] != task_id]
+                if task["stall_turns"] >= drift_limit and others:  # alone, the goal's drift check handles it
+                    engine.hold_task(goal, state, task_id, f"{task['stall_turns']} turns on this task passed no "
+                                     "new check of it. Split it into smaller tasks, change the approach, or decide.",
+                                     task.get("summary") or "", "controller")
             if state["turns_without_result"] == 0:
                 state["drift_refocused"] = False
             if (state["turns_without_result"] >= drift_limit and not state["blocker"]
@@ -510,7 +525,7 @@ def concrete_progress(state: dict) -> tuple:
     """What counts as a real result: finished tasks, passing checks, passed reviews, completed stages, verification.
 
     A failed review or a re-submitted document is not progress: otherwise review/rework cycles look busy forever."""
-    return (sum(t["status"] in {"done", "dropped"} for t in state["tasks"]),
+    return (sum(t["status"] == "done" for t in state["tasks"]),  # dropping a task is not a result
             sum(1 for c in state["checks"].values() if c.get("status") == "pass"),
             tuple(sorted(k for k, v in state.get("reviews", {}).items() if v.get("verdict") == "pass")),
             tuple(sorted(k for k, v in (state.get("stages") or {}).items()

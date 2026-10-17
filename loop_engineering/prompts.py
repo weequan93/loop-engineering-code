@@ -18,7 +18,9 @@ example `loop task done <id> --summary ...`.
 - Full pipeline (brief → design → design review → develop → final review): `loop_stage_done` records the brief
   or design document; `loop_requirements` records requirements; `loop_plan` adds or updates tasks (with checks,
   `covers`, `role`, `team`, and `final=true` to submit the plan).
-- `loop_task` starts or finishes a task.
+- `loop_task` starts or finishes a task. `block` (needs a person) or `defer` (waits for a condition) holds
+  only that task, with the reason; the other tasks go on. A task stuck on its checks: split it with `loop_plan`
+  (drop it, add smaller tasks that cover its requirements) rather than retrying the same thing.
 - `loop_check` asks the controller to run checks; only controller-run checks count as evidence.
 - `loop_note` records progress, decisions and findings. Before you stop, write one
   `kind="handoff"` note: what changed, what is next, and any traps. The next turn starts fresh
@@ -147,6 +149,7 @@ def _assignment(goal: dict, state: dict, act: dict) -> str:
             "`covers` (requirement IDs), `depends_on` (only real ones; independent tasks run in parallel), a `detail`, "
             "a `role` (architect, backend, frontend, mobile, data, tester, security, devops, or a project role), and "
             "real `checks` that prove its requirements. These checks are the test design: no separate test plan. "
+            "Each task is one result with its own pass/fail: at most 6 requirements and 8 checks. "
             "Give each task `reads`: the few files or doc sections (`path#heading`) it needs, so its turn starts "
             "there instead of searching the repository. "
             "Size each task to finish in a few turns; at most about 20 tasks. Use `team` only when a task really "

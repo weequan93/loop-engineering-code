@@ -146,7 +146,7 @@ class Service:
         store.mutate("plan.updated", lambda g, s: engine.plan(g, s, tasks, drop, bool(final)))
         state = store.state()
         # Echo what changed, not the whole plan: the reply stays in the agent's context for the rest of the turn.
-        touched = {t.get("id") for t in tasks or []} | set(drop or [])
+        touched = {t.get("id") for t in tasks or []} | {d.get("id") if isinstance(d, dict) else d for d in drop or []}
         counts = {s: sum(1 for t in state["tasks"] if t["status"] == s) for s in model.TASK_STATUSES}
         return {"changed": [{k: t[k] for k in ("id", "title", "status", "depends_on")} | {
             "covers": t.get("covers", []), "checks": [c["id"] for c in t["checks"]]}
@@ -187,15 +187,21 @@ class Service:
                                 "task's checks next. Do not wait; continue with your other work."}
             job = checks_mod.wait_job(store, job_id, wait_seconds)
             return self._job_view(store, job) | {"task": self._task_view(store, task_id)}
-        if action == "block":
-            store.mutate("goal.blocked", lambda g, s: engine.block(g, s, category, reason or summary or "",
-                                                                    evidence or "", attempted or "", self.actor))
-            return self.status(store.id)
-        raise LoopError("action must be start, done or block")
+        if action in {"block", "defer"}:  # holds this task only; the goal keeps running its other tasks
+            status = "blocked" if action == "block" else "deferred"
+            store.mutate(f"task.{status}", lambda g, s: engine.hold_task(g, s, task_id, reason or summary or "",
+                                                                      evidence or "", self.actor, status),
+                         task=task_id)
+            return {"task": self._task_view(store, task_id), "goal_status": store.state()["status"]}
+        if action == "resume":
+            store.mutate("task.resumed", lambda g, s: engine.resume_task(g, s, task_id, reason or summary or "",
+                                                                      self.actor), task=task_id)
+            return {"task": self._task_view(store, task_id), "goal_status": store.state()["status"]}
+        raise LoopError("action must be start, done, block, defer or resume")
 
     def _task_view(self, store, task_id):
         task = engine.task_by_id(store.state(), task_id)
-        view = {k: task.get(k) for k in ("id", "title", "status", "attempts", "summary")}
+        view = {k: task.get(k) for k in ("id", "title", "status", "attempts", "summary", "hold") if task.get(k) is not None}
         if task.get("last_failure") and task["status"] != "done":
             view["last_failure"] = task["last_failure"]
         return view

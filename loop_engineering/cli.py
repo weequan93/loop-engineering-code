@@ -86,10 +86,11 @@ def parser() -> argparse.ArgumentParser:
     x = add("requirements", "Full pipeline: record requirements from a JSON list, or show them")
     x.add_argument("--file", type=Path)
     x.add_argument("--final", action="store_true")
-    x = add("task", "start or finish a task")
-    x.add_argument("action", choices=["start", "done"])
+    x = add("task", "start, finish, block, defer or resume one task (the others keep running)")
+    x.add_argument("action", choices=["start", "done", "block", "defer", "resume"])
     x.add_argument("task_id")
     x.add_argument("--summary", default="")
+    x.add_argument("--reason", default="", help="block/defer/resume: why")
     x.add_argument("--wait", type=float, default=600)
     x = add("check", "Run checks through the controller")
     x.add_argument("--scope", default=None, help="acceptance (default), a task id, or all")
@@ -309,7 +310,7 @@ def dispatch(args, project, goal_id):
             return {"requirements": project.goal(goal_id).state().get("requirements", [])}
         return service.requirements(read_json(args.file) if args.file else None, None, args.final, goal_id)
     if c == "task":
-        return service.task(args.action, args.task_id, args.summary, args.wait, goal_id)
+        return service.task(args.action, args.task_id, args.summary, args.wait, goal_id, reason=args.reason)
     if c == "check":
         return service.check(args.scope, args.ids, None, args.wait, goal_id)
     if c == "verify":

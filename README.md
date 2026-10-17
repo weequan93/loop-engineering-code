@@ -191,6 +191,7 @@ runner 在后台运行，关掉终端或聊天后也会继续。只有关机或�
 |---|---|
 | ❓ 问题或 🔐 审批 | `.loop/bin/loop answer <问题ID> "你的回答"`（审批回答 `approve`，拒绝回答 `deny` 并写明原因） |
 | ⛔ 阻塞 | 先读 `STATUS.md` 里写的原因和证据，处理好后运行 `.loop/bin/loop unblock --note "改了什么或决定了什么"` |
+| ⏸ 单个任务被挂起 | 其他任务照常进行。`STATUS.md` 的任务行写了原因；处理好后 `.loop/bin/loop task resume <任务id> --reason "..."`。想主动暂缓某个任务：`.loop/bin/loop task defer <任务id> --reason "..."` |
 | 💰 预算用完 | `.loop/bin/loop resume`（追加一份同样的预算），或者先修改 `goal.json` 里的 `policy` 再 `loop approve` |
 | 👤 人工评审 | 按问题里的步骤检查一遍，通过回答 `approve`，不通过就写明哪里有问题 |
 | ✅ 完成 | 运行 `.loop/bin/loop status` 看结果和报告 |

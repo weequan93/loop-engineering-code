@@ -5,7 +5,7 @@ from __future__ import annotations
 from . import model
 from .util import age_seconds, atomic_write
 
-ICONS = {"pending": "○", "active": "◐", "done": "●", "blocked": "✖", "dropped": "–",
+ICONS = {"pending": "○", "active": "◐", "done": "●", "blocked": "✖", "deferred": "⏸", "dropped": "–",
          "pass": "✓", "fail": "✗", "error": "!", "timeout": "⏱", "cancelled": "–", "running": "…"}
 
 
@@ -92,7 +92,7 @@ def working_on(state: dict) -> dict:
     finished = {t["id"] for t in state["tasks"] if t["status"] in {"done", "dropped"}}
     tasks = []
     for task in state["tasks"]:
-        if task["status"] not in {"active", "blocked"}:
+        if task["status"] not in {"active", "blocked", "deferred"}:
             continue
         results = [state["checks"].get(f"{task['id']}.{c['id']}", {}).get("status") for c in task["checks"]]
         mine = [t for t in recent if t["task"] == task["id"] or task["id"] in (t.get("batch") or [])]
@@ -224,8 +224,12 @@ def markdown(store) -> str:
         out += [f"## Tasks ({t['done']}/{t['total']} done)", ""]
         for task in state["tasks"]:
             extra = ""
+            if task.get("best_passed") and task["status"] != "done":
+                extra = f" — {task['best_passed']}/{len(task['checks'])} checks passed"
             if task.get("last_failure") and task["status"] != "done":
-                extra = f" — last checks failed: {', '.join(task['last_failure']['checks'])}"
+                extra += f" — last checks failed: {', '.join(task['last_failure']['checks'])}"
+            if task.get("hold"):
+                extra += f" — {task['status']}: {task['hold']['reason'][:200]} (`loop task resume {task['id']}`)"
             deps = f" ← {', '.join(task['depends_on'])}" if task["depends_on"] else ""
             who = ([f"{s['count']}×{s['role']}" for s in task.get("team", [])] or
                    ([task["role"]] if task.get("role") else []))

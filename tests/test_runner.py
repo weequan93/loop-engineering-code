@@ -226,6 +226,16 @@ class QueueTests(ProjectCase):
         self.assertEqual(result["status"], "blocked")
         self.assertEqual(self.project.goal("second").state()["status"], "ready")
 
+    def test_queue_starts_from_its_head_and_passes_over_blocked_goals(self):
+        from loop_engineering import queue
+        for goal_id in ("f05", "f06", "f07"):
+            self.make(goal_id)
+        queue.add(self.project, ["f05", "f06", "f07"])
+        # F05 sits ahead of the goal that just finished: it is next, not skipped (the F05-behind-F06 trap).
+        self.assertEqual(queue.next_after(self.project, "f06"), "f05")
+        self.project.goal("f05").mutate("b", lambda g, s: engine.block(g, s, "other", "waits", "", "", "human"))
+        self.assertEqual(queue.next_after(self.project, "f06"), "f07")   # a blocked goal waits for its person
+
     def test_enqueue_keeps_current_goal_and_project_lock(self):
         from loop_engineering import queue
         from loop_engineering.store import try_lock
@@ -368,14 +378,14 @@ class PipelineTests(ProjectCase):
             {"id": "R2", "text": "b", "source": "doc", "verify": "unit"}], None, True))
         with self.assertRaises(LoopError):
             store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R1"],
-                                                              "checks": [{"id": "c", "run": "true"}]}], None, True))
+                                                              "checks": [{"id": "c", "run": "test -d ."}]}], None, True))
         with self.assertRaises(LoopError):
             store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R1", "R2"]}],
                                                        None, True))
         with self.assertRaises(LoopError):
             store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R9"]}], None))
         store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R1", "R2"],
-                                                          "checks": [{"id": "c", "run": "true"}]}], None, True))
+                                                          "checks": [{"id": "c", "run": "test -d ."}]}], None, True))
         self.assertTrue(store.state()["plan_final"])
         for sid in ("brief", "design"):
             store.mutate("d", lambda g, s, sid=sid: s.setdefault("stages", {}).update({sid: {"done": True}}))
@@ -391,14 +401,14 @@ class PipelineTests(ProjectCase):
         store.mutate("r", lambda g, s: engine.set_requirements(g, s, [
             {"id": "R1", "text": "a", "source": "doc", "verify": "unit"}], None, True))
         store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T", "covers": ["R1"],
-                                                          "checks": [{"id": "c", "run": "true"}]}], None, True))
+                                                          "checks": [{"id": "c", "run": "test -d ."}]}], None, True))
         for sid in ("brief", "design"):
             store.mutate("d", lambda g, s, sid=sid: s.setdefault("stages", {}).update({sid: {"done": True}}))
         Service(self.project, actor="human").review("design_review", "pass", "")
         self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "work")
         # A task edit during development keeps the design accepted: no new plan stage, no new review.
         store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "t", "title": "T v2", "covers": ["R1"],
-                                                          "checks": [{"id": "c", "run": "true"}]}], None))
+                                                          "checks": [{"id": "c", "run": "test -d ."}]}], None))
         self.assertTrue(store.state()["plan_final"])
         self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "work")
         # A new requirement nobody covers sends the design back, but the review is not repeated.
@@ -406,7 +416,7 @@ class PipelineTests(ProjectCase):
             {"id": "R2", "text": "b", "source": "doc", "verify": "unit"}], None, True))
         self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "design")
         store.mutate("p", lambda g, s: engine.plan(g, s, [{"id": "u", "title": "U", "covers": ["R2"],
-                                                          "checks": [{"id": "c", "run": "true"}]}], None, True))
+                                                          "checks": [{"id": "c", "run": "test -d ."}]}], None, True))
         self.assertEqual(engine.next_action(store.goal(), store.state())["kind"], "work")
 
     def test_failed_reviews_and_resubmissions_are_not_progress(self):
@@ -603,7 +613,7 @@ class SchedulingAndDriftTests(ProjectCase):
         (self.root / ".loop" / "settings.json").write_text(json.dumps({"propose_next": False, "drift_limit": 3}))
         store = self.goal(policy={"stagnation_limit": 50, "max_iterations": 20})
         approve(store)
-        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [{"id": "c", "run": "true"}]}])
+        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [{"id": "c", "run": "test -d ."}]}])
         # Idle turns that still touch files would fool the stagnation check; drift catches them.
         import loop_engineering.runner as runner_mod
         original = runner_mod.checks_mod.fingerprint
@@ -650,7 +660,7 @@ class SchedulingAndDriftTests(ProjectCase):
         (self.root / ".loop" / "settings.json").write_text(json.dumps({"propose_next": False, "drift_limit": 3}))
         store = self.goal(policy={"stagnation_limit": 50, "max_iterations": 20})
         approve(store)
-        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [{"id": "c", "run": "true"}]}])
+        Service(self.project, actor="chat").plan([{"id": "t", "title": "T", "checks": [{"id": "c", "run": "test -d ."}]}])
         # A mark from before a background job finished a task: the first turn must see that result.
         store.mutate("test.mark", lambda g, s: s.update(progress_mark="before-the-job"))
         import loop_engineering.runner as runner_mod

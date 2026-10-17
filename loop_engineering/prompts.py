@@ -337,6 +337,24 @@ def requirements_markdown(goal: dict, state: dict) -> str:
     return "\n".join(lines)
 
 
+def continuation_prompt(goal: dict, state: dict, act: dict, iteration: int, project_root: Path | None = None) -> str:
+    """A resumed session already holds the goal, playbook and protocol: send only the current step and what changed."""
+    since = state["turns"][-1]["started_at"] if state["turns"] else ""
+    lines = [f"You are turn {iteration} of the same autonomous Loop Engineering run, continuing in this session. "
+             "Your earlier context, playbook and protocol still apply; below is the current step and what changed."]
+    answers = [q for q in state["questions"] if q["answer"] is not None and (q.get("answered_at") or "") > since]
+    if answers:
+        lines.append("Human answers since your last turn:\n" + "\n".join(
+            f"- {q['text'][:200]} → **{q['answer'][:400]}**" for q in answers))
+    notes = [n for n in state["notes"] if n["kind"] in {"decision", "risk"} and n["at"] > since
+             and not str(n.get("by", "")).startswith("agent")][-3:]
+    if notes:
+        lines.append("Decisions recorded since your last turn:\n" + "\n".join(f"- {n['text'][:1200]}" for n in notes))
+    lines.append(_assignment(goal, state, act))
+    lines.append("Before you stop, record a `loop_note(kind=\"handoff\")` as usual.")
+    return "\n\n".join(lines)
+
+
 def _stage_documents(goal: dict, state: dict) -> str:
     rows = []
     for sid, record in (state.get("stages") or {}).items():

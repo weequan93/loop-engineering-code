@@ -659,3 +659,65 @@ class FirstPlanTests(ProjectCase):
         prompt = next((self.root / ".loop" / "proposals").iterdir()) / "prompt.md"
         self.assertIn("this is a new project", prompt.read_text())
         self.assertEqual(self.project.current_id(), "next-1")
+
+
+class TaskSessionTests(ProjectCase):
+    """fresh_session_each_turn="task": consecutive turns on the same task resume one session with a short prompt."""
+
+    def test_policy_accepts_task_mode_and_existing_values(self):
+        from loop_engineering import model
+        self.assertEqual(model.policy({"fresh_session_each_turn": "task"})["fresh_session_each_turn"], "task")
+        self.assertIs(model.policy({})["fresh_session_each_turn"], True)
+        with self.assertRaises(LoopError):
+            model.policy({"fresh_session_each_turn": "always"})
+
+    def test_session_is_reused_only_for_the_same_task_contract_and_within_the_bound(self):
+        from loop_engineering.runner import TASK_SESSION_TURNS, next_task_session, task_session
+        state = {"approved_digest": "d1", "task_session": {"task": "a", "kind": "work", "session_id": "S",
+                                                             "digest": "d1", "turns": 1}}
+        work_a = {"kind": "work", "task": "a"}
+        self.assertEqual(task_session(state, work_a), "S")
+        self.assertIsNone(task_session(state, {"kind": "work", "task": "b"}))        # another task: fresh
+        self.assertIsNone(task_session(state, {"kind": "review", "review": "code"}))  # reviews never resume
+        self.assertIsNone(task_session({**state, "approved_digest": "d2"}, work_a))   # contract changed
+        state["task_session"]["turns"] = TASK_SESSION_TURNS
+        self.assertIsNone(task_session(state, work_a))                                 # bounded context
+        record = next_task_session({"approved_digest": "d1"}, {"turns": 2}, work_a, "S2", resumed=True)
+        self.assertEqual(record, {"task": "a", "kind": "work", "session_id": "S2", "digest": "d1", "turns": 3})
+        self.assertEqual(next_task_session({"approved_digest": "d1"}, None, work_a, "S3", resumed=False)["turns"], 1)
+        self.assertIsNone(next_task_session({}, None, {"kind": "plan"}, "S", resumed=False))
+
+    def test_runner_resumes_the_task_session_with_a_continuation_prompt(self):
+        from unittest import mock
+        from loop_engineering import adapters as adapters_mod
+        store = self.goal(policy={"max_iterations": 10, "stagnation_limit": 2, "fresh_session_each_turn": "task"})
+        approve(store)
+        Service(self.project, actor="agent", interactive=False).plan(
+            [{"id": "fix", "title": "Fix", "checks": [{"id": "unit", "run": "python3 test_calc.py"}]}])
+        digest = store.state()["approved_digest"]
+        store.mutate("seed", lambda g, s: s.update(task_session={"task": "fix", "kind": "work", "session_id": "S1",
+                                                                 "digest": digest, "turns": 1}))
+        seen = []
+        real_get = adapters_mod.get
+
+        def stub_get(name, root):
+            adapter = real_get(name, root)
+
+            class Stub(type(adapter)):
+                def build(self, prompt, project, workdir, goal, session, **kw):
+                    seen.append((session, prompt))
+                    return super().build(prompt, project, workdir, goal, session, **kw)
+
+                def parse(self, stdout, stderr, workdir):
+                    report = super().parse(stdout, stderr, workdir)
+                    report.session_id = "S1"
+                    return report
+            return Stub(adapter.config)
+        with mock.patch.object(adapters_mod, "get", stub_get):
+            Runner(self.project, store.id, log=lambda m: None, max_turns=1).run()
+        session, prompt = seen[0]
+        self.assertEqual(session, "S1")
+        self.assertIn("continuing in this session", prompt)
+        self.assertIn("Task `fix`", prompt)
+        self.assertNotIn("## Loop protocol", prompt)          # the session already has it
+        self.assertEqual(store.state()["task_session"]["turns"], 2)

@@ -321,9 +321,13 @@ class Runner:
         workdir = self.store.runs / f"turn-{n:04d}"
         workdir.mkdir(parents=True, exist_ok=True)
         state = self.store.state()
-        prompt = prompts.turn_prompt(goal, state, act, n, self.project.root)
+        mode = goal["policy"]["fresh_session_each_turn"]
+        session = state.get("session_id") if mode is False else task_session(state, act) if mode == "task" else None
+        if session and mode == "task":  # same task as last turn: its session already holds the full prompt
+            prompt = prompts.continuation_prompt(goal, state, act, n, self.project.root)
+        else:
+            prompt = prompts.turn_prompt(goal, state, act, n, self.project.root)
         (workdir / "prompt.md").write_text(prompt, encoding="utf-8")
-        session = None if goal["policy"]["fresh_session_each_turn"] else state.get("session_id")
         turn_goal = {**goal, "agent": {**goal["agent"], "model": chosen["model"], "effort": chosen["effort"]}}
         if goal["policy"]["max_cost_usd"]:
             remaining = max(0.01, goal["policy"]["max_cost_usd"] - state["usage"]["cost_usd"])
@@ -397,6 +401,9 @@ class Runner:
             usage["output_tokens"] += report.output_tokens or 0
             if report.session_id:
                 state["session_id"] = report.session_id
+            if mode == "task":
+                state["task_session"] = (next_task_session(state, state.get("task_session"), act, report.session_id,
+                                                           resumed=bool(session)) if outcome == "ok" else None)
             state["turns"].append({"n": n, "action": act["kind"], "task": act.get("task"), "batch": act.get("batch"),
                                    "adapter": adapter.name,
                                    "model": chosen["model"], "effort": chosen["effort"], "stage": chosen["stage"],
@@ -565,3 +572,22 @@ def start_background(project: Project, goal_id: str | None, adapter: str | None)
         time.sleep(0.1)
     return {"started": True, "pid": pid, "log": str(log.relative_to(project.root)),
             "watch": "loop status --watch   or   loop dashboard"}
+
+
+TASK_SESSION_TURNS = 4  # bound the resumed context; a long-running task starts a fresh session after this
+
+
+def task_session(state: dict, act: dict) -> str | None:
+    """The session of the previous turn if this turn continues the same work/repair task under the same contract."""
+    last = state.get("task_session") or {}
+    if (act["kind"] in {"work", "repair"} and last.get("kind") == act["kind"] and last.get("task") == act.get("task")
+            and last.get("digest") == state.get("approved_digest") and last.get("turns", 0) < TASK_SESSION_TURNS):
+        return last.get("session_id")
+    return None
+
+
+def next_task_session(state: dict, last: dict | None, act: dict, session_id: str | None, resumed: bool) -> dict | None:
+    if act["kind"] not in {"work", "repair"} or not session_id:
+        return None
+    return {"task": act.get("task"), "kind": act["kind"], "session_id": session_id,
+            "digest": state.get("approved_digest"), "turns": ((last or {}).get("turns", 0) + 1) if resumed else 1}

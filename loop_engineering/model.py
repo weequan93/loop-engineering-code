@@ -163,9 +163,12 @@ def policy(values) -> dict:
     if not isinstance(result["approval_required"], list) or not all(
             isinstance(x, str) for x in result["approval_required"]):
         raise LoopError("policy.approval_required must be a list of strings")
-    for key in ("allow_network", "fresh_session_each_turn", "pause_on_interrupt"):
+    for key in ("allow_network", "pause_on_interrupt"):
         if type(result[key]) is not bool:
             raise LoopError(f"policy.{key} must be true or false")
+    if result["fresh_session_each_turn"] not in (True, False, "task"):
+        raise LoopError('policy.fresh_session_each_turn must be true, false or "task" '
+                        "(fresh per turn, except consecutive turns on the same task resume its session)")
     return result
 
 
